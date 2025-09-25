@@ -34,6 +34,8 @@ interface PomodoroStore {
   getSessionsByTopicId: (topicId: string) => PomodoroSession[];
   getTotalStudyTimeByTopicId: (topicId: string) => number; // Tempo total histórico apenas das sessões pomodoro
   getCurrentSessionTime: () => number; // Retorna o tempo da sessão atual em minutos
+  completeFocusSession: (topicId: string, durationInSeconds: number) => void;
+  interruptFocusSession: (topicId: string, durationInSeconds: number) => void;
 }
 
 const DEFAULT_SETTINGS: PomodoroSettings = {
@@ -261,6 +263,20 @@ export const usePomodoroStore = create<PomodoroStore>()(
         const { elapsedSeconds, currentState, currentTopicId, isRunning } = get();
         if (currentState !== 'focus' || !currentTopicId || !isRunning) return 0;
         return Math.floor(elapsedSeconds / 60);
+      },
+      
+      completeFocusSession: (topicId, durationInSeconds) => {
+        const durationInMinutes = Math.floor(durationInSeconds / 60);
+        if (durationInMinutes > 0) {
+          get().addSession(topicId, durationInMinutes);
+        }
+      },
+      
+      interruptFocusSession: (topicId, durationInSeconds) => {
+        const durationInMinutes = Math.floor(durationInSeconds / 60);
+        if (durationInMinutes > 0) {
+          get().addSession(topicId, durationInMinutes);
+        }
       },
     }),
     {

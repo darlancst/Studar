@@ -45,4 +45,15 @@ export interface StudyStats {
   studyTimeBySubject: Record<string, number>; // subjectId -> tempo em minutos
 }
 
-export type TabName = 'calendar' | 'pomodoro' | 'stats'; 
+export type TabName = 'calendar' | 'pomodoro' | 'stats' | 'simulados';
+
+export interface Simulado {
+  id: string;
+  name?: string; // Nome passa a ser opcional
+  date: string;
+  subjectId: string;
+  topicId?: string; // Tópico é opcional
+  timeSpent?: number; // Tempo gasto em minutos (opcional)
+  questions: number;
+  hits: number;
+} 

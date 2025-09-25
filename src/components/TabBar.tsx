@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarIcon, ClockIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ClockIcon, ChartBarIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline';
 import { TabName } from '@/types';
 
 interface TabBarProps {
@@ -13,6 +13,7 @@ export default function TabBar({ activeTab, setActiveTab }: TabBarProps) {
     { name: 'calendar', label: 'Calendário', shortLabel: 'Calendar', icon: CalendarIcon },
     { name: 'pomodoro', label: 'Pomodoro', shortLabel: 'Pomodoro', icon: ClockIcon },
     { name: 'stats', label: 'Estatísticas', shortLabel: 'Stats', icon: ChartBarIcon },
+    { name: 'simulados', label: 'Simulados', shortLabel: 'Simulados', icon: DocumentChartBarIcon },
   ] as const;
 
   return (
@@ -27,8 +28,8 @@ export default function TabBar({ activeTab, setActiveTab }: TabBarProps) {
               key={tab.name}
               onClick={() => setActiveTab(tab.name)}
               className={`
-                flex-1 flex items-center justify-center py-3 sm:py-4 px-1 sm:px-3 text-sm font-medium 
-                border-b-2 transition-colors
+                flex-1 flex flex-col sm:flex-row items-center justify-center py-2 sm:py-3 px-1 text-center
+                border-b-2 transition-colors duration-150 ease-in-out focus:outline-none
                 ${
                   isActive
                     ? 'border-primary-600 text-primary-600 dark:text-primary-400 dark:border-primary-400'
@@ -37,8 +38,8 @@ export default function TabBar({ activeTab, setActiveTab }: TabBarProps) {
               `}
               aria-current={isActive ? 'page' : undefined}
             >
-              <Icon className={`h-5 w-5 sm:mr-2 ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500'}`} aria-hidden="true" />
-              <span className="ml-1 sm:ml-0 text-xs sm:text-sm whitespace-nowrap">{tab.label}</span>
+              <Icon className={`h-5 w-5 mb-1 sm:mb-0 sm:mr-2 ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500'}`} aria-hidden="true" />
+              <span className="text-xs sm:text-sm whitespace-nowrap">{tab.label}</span>
             </button>
           );
         })}

@@ -2,10 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { Review } from '@/types';
+import { useSettingsStore } from './settingsStore';
+import { addDays } from 'date-fns';
 
 interface ReviewState {
   reviews: Review[];
   addReview: (topicId: string, scheduledDate: Date) => void;
+  scheduleReviewsForTopic: (topicId: string) => void;
   toggleReviewCompletion: (id: string) => void;
   deleteReview: (id: string) => void;
   deleteReviewsByTopicId: (topicId: string) => void;
@@ -29,6 +32,17 @@ export const useReviewStore = create<ReviewState>()(
         set((state) => ({
           reviews: [...state.reviews, newReview],
         }));
+      },
+      scheduleReviewsForTopic: (topicId) => {
+        const { reviewIntervals } = useSettingsStore.getState();
+        const today = new Date();
+        
+        reviewIntervals.forEach(days => {
+          const scheduledDate = addDays(today, days);
+          get().addReview(topicId, scheduledDate);
+        });
+
+        console.log(`Scheduled ${reviewIntervals.length} reviews for topic ${topicId}`);
       },
       toggleReviewCompletion: (id) => {
         set((state) => ({

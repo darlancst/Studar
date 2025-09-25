@@ -114,233 +114,235 @@ export default function Pomodoro() {
   const displaySessionMinutes = Math.floor(elapsedSeconds / 60);
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-      <div className="flex justify-between mb-6">
-        <h2 className="text-2xl font-bold dark:text-white">Timer Pomodoro</h2>
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Timer Pomodoro</h2>
         <button
           onClick={() => setShowSettings(!showSettings)}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
-          Configurações
+          {showSettings ? 'Fechar Configurações' : 'Configurações'}
         </button>
       </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        {/* Seleção de tópico */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Tópico de Estudo
+          </label>
+          <select
+            value={currentTopicId || ''}
+            onChange={(e) => {
+              const newTopicId = e.target.value || null;
+              const state = usePomodoroStore.getState();
+              const previousTopicId = state.currentTopicId; // Guarda o ID anterior
+              
+              // Antes de mudar, INTERROMPE a sessão do TÓPICO ANTERIOR (se estava em foco)
+              if (state.currentState === 'focus' && previousTopicId && state.elapsedSeconds > 0) {
+                 // Chama a ação centralizada para atualizar a sessão anterior
+                 interruptFocusSession(previousTopicId, state.elapsedSeconds);
+                // Resetar elapsedSeconds ao trocar de tópico durante foco
+                usePomodoroStore.setState({ elapsedSeconds: 0, lastMinuteUpdate: 0 });
+              }
+              
+              // Atualiza o tópico atual no estado
+              usePomodoroStore.setState({ currentTopicId: newTopicId });
+              
+              // Lógica para mostrar botão "Começar" e resetar timer
+              if (newTopicId && !state.isRunning) {
+                setShowStartButton(true);
+                resetTimer(); 
+              } else {
+                setShowStartButton(false);
+              }
+            }}
+            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            disabled={isRunning}
+          >
+            <option value="">Selecione um tópico</option>
+            {/* Mapear sobre os tópicos de hoje */}
+            {todaysTopics.map((topic) => {
+              const subject = subjects.find((s) => s.id === topic.subjectId);
+              return (
+                <option key={topic.id} value={topic.id}>
+                  {subject?.name} - {topic.title}
+                </option>
+              );
+            })}
+          </select>
+        </div>
       
-      {/* Seleção de tópico */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Tópico de Estudo
-        </label>
-        <select
-          value={currentTopicId || ''}
-          onChange={(e) => {
-            const newTopicId = e.target.value || null;
-            const state = usePomodoroStore.getState();
-            const previousTopicId = state.currentTopicId; // Guarda o ID anterior
-            
-            // Antes de mudar, INTERROMPE a sessão do TÓPICO ANTERIOR (se estava em foco)
-            if (state.currentState === 'focus' && previousTopicId && state.elapsedSeconds > 0) {
-               // Chama a ação centralizada para atualizar a sessão anterior
-               interruptFocusSession(previousTopicId, state.elapsedSeconds);
-              // Resetar elapsedSeconds ao trocar de tópico durante foco
-              usePomodoroStore.setState({ elapsedSeconds: 0, lastMinuteUpdate: 0 });
-            }
-            
-            // Atualiza o tópico atual no estado
-            usePomodoroStore.setState({ currentTopicId: newTopicId });
-            
-            // Lógica para mostrar botão "Começar" e resetar timer
-            if (newTopicId && !state.isRunning) {
-              setShowStartButton(true);
-              resetTimer(); 
-            } else {
-              setShowStartButton(false);
-            }
-          }}
-          className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          disabled={isRunning}
-        >
-          <option value="">Selecione um tópico</option>
-          {/* Mapear sobre os tópicos de hoje */}
-          {todaysTopics.map((topic) => {
-            const subject = subjects.find((s) => s.id === topic.subjectId);
-            return (
-              <option key={topic.id} value={topic.id}>
-                {subject?.name} - {topic.title}
-              </option>
-            );
-          })}
-        </select>
-      </div>
-      
-      {/* Exibição do Timer */}
-      <div className="timer-display dark:text-white">
-        {formatTime(timeRemaining)}
-      </div>
-      
-      <div className="text-center mb-4">
-        <p className="text-lg font-medium dark:text-white">{getStateTitle()}</p>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Pomodoros completados: {completedPomodoros}
-        </p>
+        {/* Exibição do Timer */}
+        <div className="timer-display dark:text-white">
+          {formatTime(timeRemaining)}
+        </div>
         
-        {/* Mostra o tempo contabilizado na sessão atual usando displaySessionMinutes */}
-        {currentState === 'focus' && currentTopicId && isRunning && (
-          <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-            Tempo atual: {displaySessionMinutes} min contabilizados
+        <div className="text-center mb-4">
+          <p className="text-lg font-medium dark:text-white">{getStateTitle()}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Pomodoros completados: {completedPomodoros}
           </p>
-        )}
-      </div>
-      
-      {/* Controles */}
-      <div className="timer-controls">
-        {/* Botão Começar (aparece apenas quando showStartButton é true) */}
-        {showStartButton && (
-          <button
-            onClick={() => {
-              if (currentTopicId) {
-                startTimer(currentTopicId);
-                setShowStartButton(false); // Esconde o botão ao iniciar
-              }
-            }}
-            className="timer-button bg-green-600 text-white hover:bg-green-700"
-            disabled={!currentTopicId} // Desabilitado se, por algum motivo, não houver tópico
-          >
-            Começar
-          </button>
-        )}
-        
-        {/* Botões Play/Pause (aparem apenas quando showStartButton é false) */}
-        {!showStartButton && (
-          <button
-            // OnClick: Lógica completa para iniciar/pausar/retomar
-            onClick={() => {
-              if (isRunning) {
-                pauseTimer(); // Pausa qualquer timer que esteja rodando
-              } else { // Se não está rodando
-                if (currentState === 'focus' || currentState === 'idle') {
-                  if(currentTopicId) {
-                    // Se idle ou se o tempo restante for igual ao total, inicia NOVO timer
-                    if (currentState === 'idle' || timeRemaining === settings.focusDuration * 60) {
-                        startTimer(currentTopicId); 
-                    } else {
-                       // Se já começou (tempo restante < total), apenas RETOMA
-                       usePomodoroStore.setState({ isRunning: true });
-                    }
-                    setShowStartButton(false); // Garante que o botão Começar não apareça
-                  } 
-                  // Não faz nada se não tiver tópico (botão já desabilitado)
-                } else { // Se for shortBreak ou longBreak parado
-                  usePomodoroStore.setState({ isRunning: true }); // Retoma o timer da pausa
-                }
-              }
-            }}
-            className={`timer-button bg-primary-600 text-white hover:bg-primary-700 ${
-              // Desabilita apenas se for iniciar foco/idle SEM tópico
-              (!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId)
-               ? 'opacity-50 cursor-not-allowed' 
-               : ''
-            }`}
-            // Desabilita apenas se for iniciar foco/idle SEM tópico
-            disabled={!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId}
-          >
-            {/* Label: Pausar (rodando); Iniciar (parado e foco/idle); Retomar (parado e pausa) */}
-            {isRunning 
-              ? 'Pausar' 
-              : (currentState === 'focus' || currentState === 'idle') 
-                ? 'Iniciar' 
-                : 'Retomar'}
-          </button>
-        )}
-        
-        <button
-          onClick={resetTimer}
-          className={`timer-button bg-gray-200 text-gray-700 hover:bg-gray-300 ${
-            // Desabilita reset apenas se idle E zerado E parado
-            currentState === 'idle' && !isRunning && elapsedSeconds === 0
-              ? 'opacity-50 cursor-not-allowed' 
-              : ''
-          }`}
-          disabled={currentState === 'idle' && !isRunning && elapsedSeconds === 0}
-        >
-          Reiniciar
-        </button>
-        
-        <button
-          onClick={skipToNext} // skipToNext agora inicia a pausa automaticamente
-          className="timer-button bg-gray-200 text-gray-700 hover:bg-gray-300"
-        >
-          Pular
-        </button>
-      </div>
-      
-      {/* Configurações */}
-      {showSettings && (
-        <div className="mt-8 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <h3 className="text-lg font-medium mb-4 dark:text-white">Configurações</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Duração de Foco (minutos)
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="60"
-                value={settings.focusDuration}
-                onChange={(e) => updateSettings({ focusDuration: Number(e.target.value) })}
-                className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                disabled={isRunning}
-              />
-            </div>
+          {/* Mostra o tempo contabilizado na sessão atual usando displaySessionMinutes */}
+          {currentState === 'focus' && currentTopicId && isRunning && (
+            <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+              Tempo atual: {displaySessionMinutes} min contabilizados
+            </p>
+          )}
+        </div>
+        
+        {/* Controles */}
+        <div className="timer-controls">
+          {/* Botão Começar (aparece apenas quando showStartButton é true) */}
+          {showStartButton && (
+            <button
+              onClick={() => {
+                if (currentTopicId) {
+                  startTimer(currentTopicId);
+                  setShowStartButton(false); // Esconde o botão ao iniciar
+                }
+              }}
+              className="timer-button bg-green-600 text-white hover:bg-green-700"
+              disabled={!currentTopicId} // Desabilitado se, por algum motivo, não houver tópico
+            >
+              Começar
+            </button>
+          )}
+          
+          {/* Botões Play/Pause (aparem apenas quando showStartButton é false) */}
+          {!showStartButton && (
+            <button
+              // OnClick: Lógica completa para iniciar/pausar/retomar
+              onClick={() => {
+                if (isRunning) {
+                  pauseTimer(); // Pausa qualquer timer que esteja rodando
+                } else { // Se não está rodando
+                  if (currentState === 'focus' || currentState === 'idle') {
+                    if(currentTopicId) {
+                      // Se idle ou se o tempo restante for igual ao total, inicia NOVO timer
+                      if (currentState === 'idle' || timeRemaining === settings.focusDuration * 60) {
+                          startTimer(currentTopicId); 
+                      } else {
+                         // Se já começou (tempo restante < total), apenas RETOMA
+                         usePomodoroStore.setState({ isRunning: true });
+                      }
+                      setShowStartButton(false); // Garante que o botão Começar não apareça
+                    } 
+                    // Não faz nada se não tiver tópico (botão já desabilitado)
+                  } else { // Se for shortBreak ou longBreak parado
+                    usePomodoroStore.setState({ isRunning: true }); // Retoma o timer da pausa
+                  }
+                }
+              }}
+              className={`timer-button bg-primary-600 text-white hover:bg-primary-700 ${
+                // Desabilita apenas se for iniciar foco/idle SEM tópico
+                (!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId)
+                 ? 'opacity-50 cursor-not-allowed' 
+                 : ''
+              }`}
+              // Desabilita apenas se for iniciar foco/idle SEM tópico
+              disabled={!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId}
+            >
+              {/* Label: Pausar (rodando); Iniciar (parado e foco/idle); Retomar (parado e pausa) */}
+              {isRunning 
+                ? 'Pausar' 
+                : (currentState === 'focus' || currentState === 'idle') 
+                  ? 'Iniciar' 
+                  : 'Retomar'}
+            </button>
+          )}
+          
+          <button
+            onClick={resetTimer}
+            className={`timer-button bg-gray-200 text-gray-700 hover:bg-gray-300 ${
+              // Desabilita reset apenas se idle E zerado E parado
+              currentState === 'idle' && !isRunning && elapsedSeconds === 0
+                ? 'opacity-50 cursor-not-allowed' 
+                : ''
+            }`}
+            disabled={currentState === 'idle' && !isRunning && elapsedSeconds === 0}
+          >
+            Reiniciar
+          </button>
+          
+          <button
+            onClick={skipToNext} // skipToNext agora inicia a pausa automaticamente
+            className="timer-button bg-gray-200 text-gray-700 hover:bg-gray-300"
+          >
+            Pular
+          </button>
+        </div>
+        
+        {/* Configurações */}
+        {showSettings && (
+          <div className="mt-8 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <h3 className="text-lg font-medium mb-4 dark:text-white">Configurações</h3>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Pausa Curta (minutos)
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="30"
-                value={settings.shortBreakDuration}
-                onChange={(e) => updateSettings({ shortBreakDuration: Number(e.target.value) })}
-                className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                disabled={isRunning}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Pausa Longa (minutos)
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="60"
-                value={settings.longBreakDuration}
-                onChange={(e) => updateSettings({ longBreakDuration: Number(e.target.value) })}
-                className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                disabled={isRunning}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Intervalos até Pausa Longa
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="10"
-                value={settings.longBreakInterval}
-                onChange={(e) => updateSettings({ longBreakInterval: Number(e.target.value) })}
-                className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                disabled={isRunning}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Duração de Foco (minutos)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={settings.focusDuration}
+                  onChange={(e) => updateSettings({ focusDuration: Number(e.target.value) })}
+                  className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                  disabled={isRunning}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Pausa Curta (minutos)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={settings.shortBreakDuration}
+                  onChange={(e) => updateSettings({ shortBreakDuration: Number(e.target.value) })}
+                  className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                  disabled={isRunning}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Pausa Longa (minutos)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={settings.longBreakDuration}
+                  onChange={(e) => updateSettings({ longBreakDuration: Number(e.target.value) })}
+                  className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                  disabled={isRunning}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Intervalos até Pausa Longa
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={settings.longBreakInterval}
+                  onChange={(e) => updateSettings({ longBreakInterval: Number(e.target.value) })}
+                  className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                  disabled={isRunning}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 } 

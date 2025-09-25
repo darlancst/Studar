@@ -9,6 +9,7 @@ import Stats from '@/components/Stats';
 import SubjectTopicManager from '@/components/SubjectTopicManager';
 import SettingsModal from '@/components/SettingsModal';
 import { TabName } from '@/types';
+import SimuladosPage from './simulados/page';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabName>('calendar');
@@ -41,6 +42,8 @@ export default function Home() {
           {activeTab === 'pomodoro' && <Pomodoro />}
           
           {activeTab === 'stats' && <Stats />}
+
+          {activeTab === 'simulados' && <SimuladosPage />}
         </div>
       </div>
       
