@@ -17,6 +17,10 @@ import { Pie, Bar } from 'react-chartjs-2';
 import { useSubjectStore } from '@/store/subjectStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useReviewStore } from '@/store/reviewStore';
+import { useIntelligenceStore } from '@/store/intelligenceStore';
+import SmartRecommendations from '@/components/SmartRecommendations';
+import AutoPilotMode from '@/components/AutoPilotMode';
+import SmartNotifications from '@/components/SmartNotifications';
 import { useDatesStore } from '@/store/datesStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useSimuladosStore } from '@/store/simuladosStore';
@@ -727,6 +731,33 @@ export default function Stats() {
           </div>
         </div>
       )}
+
+      {/* Sistema de Notificações Inteligentes */}
+      <SmartNotifications
+        maxNotifications={4}
+        onAction={(action, data) => {
+          // Handle notification actions
+          switch (action) {
+            case 'navigate-to-calendar':
+              const calendarEvent = new CustomEvent('navigate-to-calendar', { detail: data });
+              window.dispatchEvent(calendarEvent);
+              break;
+            case 'navigate-to-pomodoro':
+              const pomodoroEvent = new CustomEvent('navigate-to-pomodoro', { detail: data });
+              window.dispatchEvent(pomodoroEvent);
+              break;
+            case 'navigate-to-simulados':
+              const simuladosEvent = new CustomEvent('navigate-to-simulados', { detail: data });
+              window.dispatchEvent(simuladosEvent);
+              break;
+            case 'high-priority-action':
+              // Start auto-pilot focused on specific topic
+              const autoPilotEvent = new CustomEvent('start-autopilot', { detail: data });
+              window.dispatchEvent(autoPilotEvent);
+              break;
+          }
+        }}
+      />
       
       {/* Principais cards de estatísticas - melhorada responsividade */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -844,6 +875,42 @@ export default function Stats() {
             </div>
           </div>
         )}
+
+        {/* Sistema de Recomendações Inteligentes */}
+        <SmartRecommendations
+          maxRecommendations={3}
+          showFullDetails={false}
+          onStartPomodoro={(topicId) => {
+            // Navigate to pomodoro with topic pre-selected
+            const event = new CustomEvent('navigate-to-pomodoro', { 
+              detail: { topicId } 
+            });
+            window.dispatchEvent(event);
+          }}
+          onCreateSimulado={(topicId) => {
+            // Navigate to simulados and open form with topic pre-selected
+            const event = new CustomEvent('navigate-to-simulados', { 
+              detail: { action: 'create-simulado', topicId } 
+            });
+            window.dispatchEvent(event);
+          }}
+          onStartReview={(topicId) => {
+            // Navigate to calendar with topic highlighted
+            const event = new CustomEvent('navigate-to-calendar', { 
+              detail: { topicId, action: 'review' } 
+            });
+            window.dispatchEvent(event);
+          }}
+                 />
+
+        {/* Modo Auto-Pilot */}
+        <AutoPilotMode
+          onNavigate={(tab, data) => {
+            // Dispatch navigation events based on tab
+            const event = new CustomEvent(`navigate-to-${tab}`, { detail: data });
+            window.dispatchEvent(event);
+          }}
+        />
         
         {/* Gráficos - compactos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
