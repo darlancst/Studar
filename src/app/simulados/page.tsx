@@ -103,11 +103,11 @@ const SimuladosPage = () => {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
         <h1 className="text-2xl font-bold">Meus Simulados</h1>
         <button
           onClick={handleAddNew}
-          className="w-full sm:w-auto bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
+          className="w-full sm:w-auto bg-primary-600 text-white px-3 py-1.5 rounded-md hover:bg-primary-700 transition-colors text-sm"
         >
           Adicionar Simulado
         </button>
@@ -127,13 +127,13 @@ const SimuladosPage = () => {
       />
 
       {/* Layout Principal - 2 Colunas */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
         {/* Coluna Principal - Lista de Simulados */}
         <div className="xl:col-span-2">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Lista de Simulados</h2>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-semibold">Lista de Simulados</h2>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {filteredSimulados.length} simulado(s)
               </span>
             </div>
@@ -147,7 +147,7 @@ const SimuladosPage = () => {
         </div>
 
         {/* Sidebar - Estatísticas e Análises */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <SimuladosStats simulados={filteredSimulados} onAnalyze={handleAnalyze} />
           <SimuladosChart simulados={filteredSimulados} />
         </div>

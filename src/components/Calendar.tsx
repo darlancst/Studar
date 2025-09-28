@@ -64,39 +64,39 @@ function DayDetails({ date, topics, reviews, onClose, onCompleteReview, onTopicA
   return (
     <div className="fixed inset-0 z-50 bg-gray-700 bg-opacity-50 dark:bg-black dark:bg-opacity-60 overflow-y-auto flex justify-center items-center">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-xl mx-4 max-h-[90vh]">
-        <div className="flex items-center justify-between p-4 border-b dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
-          <h2 className="text-xl font-semibold dark:text-white">
+        <div className="flex items-center justify-between p-3 border-b dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
+          <h2 className="text-lg font-semibold dark:text-white">
             Detalhes de {format(date, "dd 'de' MMMM, yyyy", { locale: ptBR })}
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
-            <XMarkIcon className="h-6 w-6" />
+            <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}> 
+        <div className="p-4 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}> 
           {/* Seção de Tópicos */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Tópicos do dia</h3>
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-base font-medium text-gray-900 dark:text-white">Tópicos do dia</h3>
             <button 
                 onClick={() => setShowTopicForm(prev => !prev)}
-                className="flex items-center px-3 py-1 bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 text-sm rounded-md hover:bg-primary-200 dark:hover:bg-primary-800"
+                className="flex items-center px-2 py-1 bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 text-xs rounded-md hover:bg-primary-200 dark:hover:bg-primary-800"
             >
-                  <PlusIcon className="h-4 w-4 mr-1" />
+                  <PlusIcon className="h-3 w-3 mr-1" />
                 {showTopicForm ? 'Cancelar' : 'Adicionar Tópico'}
             </button>
           </div>
 
           {showTopicForm ? (
-            <form onSubmit={handleCreateTopic} className="mb-6 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-              <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <form onSubmit={handleCreateTopic} className="mb-4 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+              <div className="mb-2">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Matéria
                 </label>
                 <select
                   value={selectedSubjectId}
                   onChange={(e) => setSelectedSubjectId(e.target.value)}
-                  className="w-full p-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  className="w-full p-2 text-sm border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                   required
                 >
                   <option value="" disabled>Selecione uma matéria</option>
@@ -108,29 +108,29 @@ function DayDetails({ date, topics, reviews, onClose, onCompleteReview, onTopicA
                 </select>
               </div>
               
-              <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <div className="mb-2">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Título
                 </label>
                 <input
                   type="text"
                   value={newTopicTitle}
                   onChange={(e) => setNewTopicTitle(e.target.value)}
-                  className="w-full p-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  className="w-full p-2 text-sm border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                   placeholder="Digite o título do tópico"
                   required
                 />
               </div>
               
-              <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <div className="mb-2">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Descrição (opcional)
                 </label>
                 <textarea
                   value={newTopicDescription}
                   onChange={(e) => setNewTopicDescription(e.target.value)}
                     rows={2}
-                  className="w-full p-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  className="w-full p-2 text-sm border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                     placeholder="Descreva o conteúdo deste tópico..."
                 />
               </div>
@@ -139,7 +139,7 @@ function DayDetails({ date, topics, reviews, onClose, onCompleteReview, onTopicA
               <button
                 type="submit"
                     disabled={!selectedSubjectId || !newTopicTitle.trim()}
-                    className="px-4 py-2 bg-primary-600 text-white text-sm rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1 bg-primary-600 text-white text-xs rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Criar Tópico
               </button>
@@ -147,7 +147,7 @@ function DayDetails({ date, topics, reviews, onClose, onCompleteReview, onTopicA
             </form>
           ) : (
             // Lista de tópicos existentes
-            <div className="mb-6">
+            <div className="mb-4">
               {topics.length > 0 ? (
                 <div className="space-y-2">
                   {topics.map((topic) => {
@@ -155,25 +155,25 @@ function DayDetails({ date, topics, reviews, onClose, onCompleteReview, onTopicA
                     return (
                       <div 
                         key={topic.id} 
-                        className="p-3 rounded-md dark:bg-opacity-20"
+                        className="p-2 rounded-md dark:bg-opacity-20"
                         style={{ backgroundColor: `${subject?.color}20` }}
                       >
                         <div className="flex items-center">
                           <div 
-                            className="w-3 h-3 rounded-full mr-2" 
+                            className="w-2 h-2 rounded-full mr-2" 
                             style={{ backgroundColor: subject?.color }}
                           />
-                          <span className="font-medium dark:text-white">{topic.title}</span>
+                          <span className="font-medium dark:text-white text-sm">{topic.title}</span>
                         </div>
                         {topic.description && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{topic.description}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{topic.description}</p>
                         )}
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Nenhum tópico criado neste dia.</p>
+                <p className="text-gray-500 dark:text-gray-400 text-xs">Nenhum tópico criado neste dia.</p>
               )}
             </div>
           )}
@@ -181,7 +181,7 @@ function DayDetails({ date, topics, reviews, onClose, onCompleteReview, onTopicA
 
           {/* Seção de revisões */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Revisões agendadas</h3>
+            <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Revisões agendadas</h3>
             {reviews.length > 0 ? (
               <div className="space-y-2">
                 {reviews.map((review) => {
@@ -202,17 +202,17 @@ function DayDetails({ date, topics, reviews, onClose, onCompleteReview, onTopicA
                   return (
                     <div 
                       key={review.id} 
-                      className={`p-3 rounded-md flex items-center justify-between ${completedClasses}`}
+                      className={`p-2 rounded-md flex items-center justify-between ${completedClasses}`}
                     >
                       <div>
                         <div className="flex items-center">
                           {subject && (
                             <div 
-                              className="w-3 h-3 rounded-full mr-2" 
+                              className="w-2 h-2 rounded-full mr-2" 
                               style={{ backgroundColor: subject?.color }}
                             />
                           )}
-                          <span className="font-medium dark:text-white">{topic?.title || 'Tópico não encontrado'}</span>
+                          <span className="font-medium dark:text-white text-sm">{topic?.title || 'Tópico não encontrado'}</span>
                         </div>
                         <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">
                           {isCompleted ? 'Revisão concluída' : 'Revisão pendente'}
@@ -222,7 +222,7 @@ function DayDetails({ date, topics, reviews, onClose, onCompleteReview, onTopicA
                       {/* Botão de Toggle */}
                         <button
                         onClick={() => onCompleteReview(review.id)} // Chama a função passada como prop
-                        className={`ml-2 px-3 py-1 text-sm rounded-md ${buttonClasses}`}
+                        className={`ml-2 px-2 py-1 text-xs rounded-md ${buttonClasses}`}
                         >
                         {buttonText}
                         </button>
@@ -231,7 +231,7 @@ function DayDetails({ date, topics, reviews, onClose, onCompleteReview, onTopicA
                 })}
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Nenhuma revisão agendada para este dia.</p>
+              <p className="text-gray-500 dark:text-gray-400 text-xs">Nenhuma revisão agendada para este dia.</p>
             )}
           </div>
         </div>
@@ -338,28 +338,28 @@ export default function Calendar() {
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-        <h2 className="text-lg font-semibold dark:text-white">
+      <div className="flex items-center justify-between p-3 border-b dark:border-gray-700">
+        <h2 className="text-base font-semibold dark:text-white">
           {format(currentMonth, "MMMM yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())}
         </h2>
-        <div className="flex space-x-2">
+        <div className="flex space-x-1">
           <button
             onClick={prevMonth}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            <ChevronLeftIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+            <ChevronLeftIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
           </button>
           <button
             onClick={goToToday}
-            className="px-3 py-1 text-sm bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 rounded-md hover:bg-primary-200 dark:hover:bg-primary-800"
+            className="px-2 py-1 text-xs bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 rounded-md hover:bg-primary-200 dark:hover:bg-primary-800"
           >
             Hoje
           </button>
           <button
             onClick={nextMonth}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            <ChevronRightIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+            <ChevronRightIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
           </button>
         </div>
       </div>
@@ -367,7 +367,7 @@ export default function Calendar() {
       <div className="flex-grow">
         <div className="grid grid-cols-7 bg-gray-50 dark:bg-gray-900">
           {weekDays.map((day) => (
-            <div key={day} className="p-2 text-center text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div key={day} className="p-1.5 text-center text-xs font-medium text-gray-700 dark:text-gray-300">
               {day}
             </div>
           ))}
@@ -393,7 +393,7 @@ export default function Calendar() {
                 `}
                 style={{
                   position: 'relative',
-                  minHeight: '80px',
+                  minHeight: '64px',
                   overflow: 'hidden'
                 }}
               >
@@ -412,7 +412,7 @@ export default function Calendar() {
                 </div>
                 
                 <div className="calendar-day-content" style={{ 
-                  maxHeight: 'calc(100% - 20px)',
+                  maxHeight: 'calc(100% - 16px)',
                   overflow: 'hidden',
                   opacity: isCurrentMonth ? '1' : '0.6'
                 }}>
@@ -463,11 +463,12 @@ export default function Calendar() {
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
-                          fontSize: '0.75rem',
-                          marginBottom: '2px'
+                          fontSize: '0.65rem',
+                          marginBottom: '1px',
+                          padding: '1px 2px'
                         }}
                       >
-                        <span className="font-semibold">{subject?.name?.substring(0, 10)}:</span> {topic.title}
+                        <span className="font-semibold">{subject?.name?.substring(0, 8)}:</span> {topic.title}
                       </div>
                     );
                   })}
@@ -493,10 +494,10 @@ export default function Calendar() {
                         style={{
                           backgroundColor,
                           borderLeft: `3px solid ${borderColor}`,
-                          padding: '2px 4px',
-                          marginTop: '2px',
+                          padding: '1px 2px',
+                          marginTop: '1px',
                           borderRadius: '2px',
-                          fontSize: '0.7rem',
+                          fontSize: '0.6rem',
                           lineHeight: '1rem',
                           color: darkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)',
                           boxShadow: darkMode ? '0 0 0 1px rgba(255,255,255,0.1)' : 'none',
@@ -508,7 +509,7 @@ export default function Calendar() {
                         }}
                         title={`${subject?.name} - ${topic?.title}`}
                       >
-                        <span className="font-semibold">Rev:</span> {subject?.name ? subject.name.substring(0, 5) : ""} - {topic?.title ? topic.title.substring(0, 5) : ""}
+                        <span className="font-semibold">Rev:</span> {subject?.name ? subject.name.substring(0, 4) : ""} - {topic?.title ? topic.title.substring(0, 4) : ""}
                       </div>
                     );
                   })}
@@ -520,36 +521,36 @@ export default function Calendar() {
       </div>
       
       {/* Resumo das tarefas do dia */}
-      <div className="border-t dark:border-gray-700 p-4">
-        <div className="flex items-center mb-3">
-          <h3 className="font-medium dark:text-white">
+      <div className="border-t dark:border-gray-700 p-2">
+        <div className="flex items-center mb-2">
+          <h3 className="font-medium dark:text-white text-sm">
             Tarefas para {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
           </h3>
           <button
             onClick={() => setShowDayDetails(true)}
-            className="ml-auto text-sm text-primary-600 dark:text-primary-400 hover:underline flex items-center"
+            className="ml-auto text-xs text-primary-600 dark:text-primary-400 hover:underline flex items-center"
           >
-            <PlusIcon className="h-4 w-4 mr-1" />
+            <PlusIcon className="h-3 w-3 mr-1" />
             Adicionar
           </button>
         </div>
         
         {hasTasks ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* Tópicos do dia */}
             {dayTopics.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Tópicos:</h4>
-                <div className="flex flex-wrap gap-2">
+                <h4 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Tópicos:</h4>
+                <div className="flex flex-wrap gap-1">
                   {dayTopics.map(topic => {
                     const subject = subjects.find(s => s.id === topic.subjectId);
                     return (
                       <div 
                         key={topic.id} 
-                        className="inline-flex items-center py-1 px-2 rounded-md text-sm"
+                        className="inline-flex items-center py-0.5 px-1.5 rounded-md text-xs"
                         style={{ 
                           backgroundColor: subject ? `${subject.color}20` : undefined,
-                          borderLeft: subject ? `3px solid ${subject.color}` : undefined
+                          borderLeft: subject ? `2px solid ${subject.color}` : undefined
                         }}
                       >
                         <span className="font-medium mr-1">{subject?.name}:</span> {topic.title}
@@ -563,8 +564,8 @@ export default function Calendar() {
             {/* Revisões do dia */}
             {dayReviews.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Revisões:</h4>
-                <div className="flex flex-wrap gap-2">
+                <h4 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Revisões:</h4>
+                <div className="flex flex-wrap gap-1">
                   {dayReviews.map(review => {
                     const topic = topics.find(t => t.id === review.topicId);
                     const subject = subjects.find(s => s.id === topic?.subjectId);
@@ -573,21 +574,21 @@ export default function Calendar() {
                     return (
                       <div 
                         key={review.id} 
-                        className={`inline-flex items-center py-1 px-2 rounded-md text-sm ${
+                        className={`inline-flex items-center py-0.5 px-1.5 rounded-md text-xs ${
                           isCompleted 
                             ? 'bg-green-50 dark:bg-green-900/30 border-l-2 border-green-500' 
                             : 'bg-yellow-50 dark:bg-yellow-900/30 border-l-2 border-yellow-500'
                         }`}
                       >
                         {subject && <span className="font-medium mr-1">{subject.name}:</span>}
-                        <span className="truncate max-w-40">{topic?.title}</span>
+                        <span className="truncate max-w-32">{topic?.title}</span>
                         {!isCompleted && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleToggleReview(review.id);
                             }}
-                            className="ml-2 text-xs bg-green-600 text-white px-1.5 py-0.5 rounded hover:bg-green-700"
+                            className="ml-1 text-xs bg-green-600 text-white px-1 py-0.5 rounded hover:bg-green-700"
                           >
                             ✓
                           </button>
@@ -600,7 +601,7 @@ export default function Calendar() {
             )}
           </div>
         ) : (
-          <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+          <p className="text-gray-500 dark:text-gray-400 text-center py-2 text-xs">
             Nenhuma tarefa para este dia. Clique em "Adicionar" para criar uma.
           </p>
         )}
@@ -621,15 +622,15 @@ export default function Calendar() {
       <style jsx>{`
         /* Estilo para células do calendário */
         .calendar-day {
-          padding: 6px;
+          padding: 4px;
           border-bottom: 1px solid #e5e7eb;
           border-right: 1px solid #e5e7eb;
           transition: background-color 0.2s;
         }
         
         .calendar-day-header {
-          font-size: 0.875rem;
-          margin-bottom: 6px;
+          font-size: 0.75rem;
+          margin-bottom: 4px;
           position: relative;
           display: flex;
           align-items: center;
@@ -637,7 +638,7 @@ export default function Calendar() {
         
         /* Estilos para destacar o dia atual */
         .today-cell {
-          box-shadow: inset 0 0 0 2.5px ${darkMode ? '#a855f7' : '#8b5cf6'};
+          box-shadow: inset 0 0 0 2px ${darkMode ? '#a855f7' : '#8b5cf6'};
           background-color: ${darkMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.08)'};
           position: relative;
           z-index: 1;
@@ -649,17 +650,17 @@ export default function Calendar() {
           top: 0;
           left: 0;
           width: 100%;
-          height: 4px;
+          height: 3px;
           background: linear-gradient(90deg, ${darkMode ? '#8b5cf680' : '#8b5cf6'}, ${darkMode ? '#a855f780' : '#a855f7'});
           z-index: 1;
         }
         
         .today-indicator {
-          width: 6px;
-          height: 6px;
+          width: 4px;
+          height: 4px;
           border-radius: 50%;
           background-color: ${darkMode ? '#a855f7' : '#8b5cf6'};
-          margin-left: 4px;
+          margin-left: 3px;
           display: inline-block;
           animation: pulse 2s infinite;
         }
@@ -672,7 +673,7 @@ export default function Calendar() {
           
           70% {
             transform: scale(1);
-            box-shadow: 0 0 0 4px ${darkMode ? 'rgba(168, 85, 247, 0)' : 'rgba(139, 92, 246, 0)'};
+            box-shadow: 0 0 0 3px ${darkMode ? 'rgba(168, 85, 247, 0)' : 'rgba(139, 92, 246, 0)'};
           }
           
           100% {

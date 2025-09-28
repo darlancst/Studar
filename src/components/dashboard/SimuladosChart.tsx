@@ -108,9 +108,9 @@ export default function SimuladosChart({ simulados }: SimuladosChartProps) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3">
-      <h3 className="text-sm font-bold mb-2">Evolução</h3>
-      <div style={{ height: '140px' }}>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+      <h3 className="text-lg font-bold mb-3">Evolução</h3>
+      <div style={{ height: '200px' }}>
         <Line data={chartData} options={chartOptions} />
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import TabBar from '@/components/TabBar';
 import Calendar from '@/components/Calendar';
@@ -16,6 +16,24 @@ export default function Home() {
   const [showSubjectManager, setShowSubjectManager] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
+  useEffect(() => {
+    const handleNavigateToSimulados = () => {
+      setActiveTab('simulados');
+    };
+
+    const handleNavigateToDashboard = () => {
+      setActiveTab('stats');
+    };
+
+    window.addEventListener('navigate-to-simulados', handleNavigateToSimulados);
+    window.addEventListener('navigate-to-dashboard', handleNavigateToDashboard);
+    
+    return () => {
+      window.removeEventListener('navigate-to-simulados', handleNavigateToSimulados);
+      window.removeEventListener('navigate-to-dashboard', handleNavigateToDashboard);
+    };
+  }, []);
+
   return (
     <main className="flex min-h-screen flex-col">
       <Header onSettingsClick={() => setShowSettings(true)} />
@@ -23,10 +41,10 @@ export default function Home() {
       <div className="flex-1 container mx-auto px-4 pb-20">
         <TabBar activeTab={activeTab} setActiveTab={setActiveTab} />
         
-        <div className="mt-6">
+        <div className="mt-3">
           {activeTab === 'calendar' && (
             <div>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 sm:gap-0">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-2 sm:gap-0">
                 <h2 className="text-2xl font-bold">Calendário</h2>
                 <button
                   onClick={() => setShowSubjectManager(true)}

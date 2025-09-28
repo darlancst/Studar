@@ -34,8 +34,8 @@ export default function SimuladosList({ simulados, onEdit, onRemove }: Simulados
 
   if (simulados.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500 dark:text-gray-400">
+      <div className="text-center py-4">
+        <p className="text-gray-500 dark:text-gray-400 text-sm">
           Nenhum simulado encontrado para os filtros selecionados.
         </p>
       </div>
@@ -43,38 +43,38 @@ export default function SimuladosList({ simulados, onEdit, onRemove }: Simulados
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {simulados.map((simulado) => {
         const percentage = (simulado.hits / simulado.questions) * 100;
         return (
-          <div key={simulado.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+          <div key={simulado.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 {/* Header do Simulado */}
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate mr-2">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-xs font-semibold text-gray-900 dark:text-white truncate mr-2">
                     {simulado.name || `Simulado de ${new Date(simulado.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}`}
                   </h3>
                   <div className="flex space-x-1">
                     <button 
                       onClick={() => onEdit(simulado)} 
-                      className="p-1 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                      className="p-0.5 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                       title="Editar simulado"
                     >
-                      <PencilIcon className="h-4 w-4" />
+                      <PencilIcon className="h-3 w-3" />
                     </button>
                     <button 
                       onClick={() => onRemove(simulado.id)} 
-                      className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                      className="p-0.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                       title="Excluir simulado"
                     >
-                      <TrashIcon className="h-4 w-4" />
+                      <TrashIcon className="h-3 w-3" />
                     </button>
                   </div>
                 </div>
 
                 {/* Informações do Simulado */}
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <p className="text-xs text-gray-600 dark:text-gray-400">
                     {getSubjectName(simulado.subjectId)} → {getTopicTitle(simulado.topicId)}
                   </p>
@@ -92,18 +92,18 @@ export default function SimuladosList({ simulados, onEdit, onRemove }: Simulados
                 </div>
 
                 {/* Resultado */}
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="flex items-baseline space-x-2">
-                    <span className={`text-lg font-bold ${getPerformanceColor(percentage)}`}>
+                <div className="mt-1 flex items-center justify-between">
+                  <div className="flex items-baseline space-x-1.5">
+                    <span className={`text-base font-bold ${getPerformanceColor(percentage)}`}>
                       {percentage.toFixed(1)}%
                     </span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
                       ({simulado.hits}/{simulado.questions})
                     </span>
                   </div>
                   
                   {/* Badge de Performance */}
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  <span className={`px-1.5 py-0.5 text-xs font-medium rounded-full ${
                     percentage >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
                     percentage >= 70 ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
                     percentage >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :

@@ -12,7 +12,7 @@ export default function TabBar({ activeTab, setActiveTab }: TabBarProps) {
   const tabs = [
     { name: 'calendar', label: 'Calendário', shortLabel: 'Calendar', icon: CalendarIcon },
     { name: 'pomodoro', label: 'Pomodoro', shortLabel: 'Pomodoro', icon: ClockIcon },
-    { name: 'stats', label: 'Estatísticas', shortLabel: 'Stats', icon: ChartBarIcon },
+    { name: 'stats', label: 'Dashboard', shortLabel: 'Dashboard', icon: ChartBarIcon },
     { name: 'simulados', label: 'Simulados', shortLabel: 'Simulados', icon: DocumentChartBarIcon },
   ] as const;
 
@@ -28,7 +28,7 @@ export default function TabBar({ activeTab, setActiveTab }: TabBarProps) {
               key={tab.name}
               onClick={() => setActiveTab(tab.name)}
               className={`
-                flex-1 flex flex-col sm:flex-row items-center justify-center py-2 sm:py-3 px-1 text-center
+                flex-1 flex flex-col sm:flex-row items-center justify-center py-1.5 sm:py-2 px-1 text-center
                 border-b-2 transition-colors duration-150 ease-in-out focus:outline-none
                 ${
                   isActive

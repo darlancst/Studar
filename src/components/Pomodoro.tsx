@@ -110,25 +110,50 @@ export default function Pomodoro() {
     }
   };
 
-  // Calcula os minutos diretamente do estado elapsedSeconds
+    // Calcula os minutos diretamente do estado elapsedSeconds
   const displaySessionMinutes = Math.floor(elapsedSeconds / 60);
-  
+
+  // Função para calcular a porcentagem de progresso do timer
+  const getProgressPercentage = (): number => {
+    let totalTime: number;
+    
+    switch (currentState) {
+      case 'focus':
+        totalTime = settings.focusDuration * 60;
+        break;
+      case 'shortBreak':
+        totalTime = settings.shortBreakDuration * 60;
+        break;
+      case 'longBreak':
+        totalTime = settings.longBreakDuration * 60;
+        break;
+      default:
+        totalTime = settings.focusDuration * 60;
+        break;
+    }
+    
+    if (totalTime === 0) return 0;
+    
+    const elapsed = totalTime - timeRemaining;
+    return Math.min(Math.max(elapsed / totalTime, 0), 1);
+  };
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-3">
         <h2 className="text-2xl font-bold">Timer Pomodoro</h2>
         <button
           onClick={() => setShowSettings(!showSettings)}
-          className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           {showSettings ? 'Fechar Configurações' : 'Configurações'}
         </button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-2.5">
         {/* Seleção de tópico */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <div className="mb-2">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Tópico de Estudo
           </label>
           <select
@@ -157,7 +182,7 @@ export default function Pomodoro() {
                 setShowStartButton(false);
               }
             }}
-            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            className="w-full p-2 text-sm border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             disabled={isRunning}
           >
             <option value="">Selecione um tópico</option>
@@ -173,116 +198,171 @@ export default function Pomodoro() {
           </select>
         </div>
       
-        {/* Exibição do Timer */}
-        <div className="timer-display dark:text-white">
-          {formatTime(timeRemaining)}
-        </div>
-        
-        <div className="text-center mb-4">
-          <p className="text-lg font-medium dark:text-white">{getStateTitle()}</p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Pomodoros completados: {completedPomodoros}
-          </p>
-          
-          {/* Mostra o tempo contabilizado na sessão atual usando displaySessionMinutes */}
-          {currentState === 'focus' && currentTopicId && isRunning && (
-            <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-              Tempo atual: {displaySessionMinutes} min contabilizados
-            </p>
-          )}
-        </div>
-        
-        {/* Controles */}
-        <div className="timer-controls">
-          {/* Botão Começar (aparece apenas quando showStartButton é true) */}
-          {showStartButton && (
-            <button
-              onClick={() => {
-                if (currentTopicId) {
-                  startTimer(currentTopicId);
-                  setShowStartButton(false); // Esconde o botão ao iniciar
-                }
-              }}
-              className="timer-button bg-green-600 text-white hover:bg-green-700"
-              disabled={!currentTopicId} // Desabilitado se, por algum motivo, não houver tópico
+        {/* Exibição do Timer com Layout Compacto */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-2">
+          {/* SVG Circle Progress - Menor */}
+          <div className="relative w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0">
+            <svg 
+              className="transform -rotate-90 w-full h-full" 
+              viewBox="0 0 240 240"
             >
-              Começar
-            </button>
-          )}
-          
-          {/* Botões Play/Pause (aparem apenas quando showStartButton é false) */}
-          {!showStartButton && (
-            <button
-              // OnClick: Lógica completa para iniciar/pausar/retomar
-              onClick={() => {
-                if (isRunning) {
-                  pauseTimer(); // Pausa qualquer timer que esteja rodando
-                } else { // Se não está rodando
-                  if (currentState === 'focus' || currentState === 'idle') {
-                    if(currentTopicId) {
-                      // Se idle ou se o tempo restante for igual ao total, inicia NOVO timer
-                      if (currentState === 'idle' || timeRemaining === settings.focusDuration * 60) {
-                          startTimer(currentTopicId); 
-                      } else {
-                         // Se já começou (tempo restante < total), apenas RETOMA
-                         usePomodoroStore.setState({ isRunning: true });
-                      }
-                      setShowStartButton(false); // Garante que o botão Começar não apareça
-                    } 
-                    // Não faz nada se não tiver tópico (botão já desabilitado)
-                  } else { // Se for shortBreak ou longBreak parado
-                    usePomodoroStore.setState({ isRunning: true }); // Retoma o timer da pausa
-                  }
-                }
-              }}
-              className={`timer-button bg-primary-600 text-white hover:bg-primary-700 ${
-                // Desabilita apenas se for iniciar foco/idle SEM tópico
-                (!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId)
-                 ? 'opacity-50 cursor-not-allowed' 
-                 : ''
+              {/* Background circle */}
+              <circle
+                cx="120"
+                cy="120"
+                r="100"
+                stroke="currentColor"
+                strokeWidth="8"
+                fill="none"
+                className="text-gray-200 dark:text-gray-700"
+              />
+              {/* Progress circle */}
+              <circle
+                cx="120"
+                cy="120"
+                r="100"
+                stroke="currentColor"
+                strokeWidth="8"
+                fill="none"
+                strokeLinecap="round"
+                className={`transition-all duration-1000 ease-linear ${
+                  currentState === 'focus' ? 'text-primary-500' :
+                  currentState === 'shortBreak' ? 'text-green-500' :
+                  currentState === 'longBreak' ? 'text-blue-500' :
+                  'text-gray-400'
+                } ${timeRemaining <= 60 && isRunning ? 'animate-pulse' : ''}`}
+                style={{
+                  strokeDasharray: `${2 * Math.PI * 100}`,
+                  strokeDashoffset: `${2 * Math.PI * 100 * (1 - getProgressPercentage())}`,
+                  filter: timeRemaining <= 10 && isRunning ? 'drop-shadow(0 0 8px currentColor)' : 'none',
+                }}
+              />
+            </svg>
+            {/* Timer Text */}
+            <div 
+              className={`absolute inset-0 flex items-center justify-center dark:text-white text-xl sm:text-2xl font-bold transition-all duration-300 ${
+                timeRemaining <= 10 && isRunning ? 'animate-pulse text-red-500 dark:text-red-400' : ''
               }`}
-              // Desabilita apenas se for iniciar foco/idle SEM tópico
-              disabled={!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId}
             >
-              {/* Label: Pausar (rodando); Iniciar (parado e foco/idle); Retomar (parado e pausa) */}
-              {isRunning 
-                ? 'Pausar' 
-                : (currentState === 'focus' || currentState === 'idle') 
-                  ? 'Iniciar' 
-                  : 'Retomar'}
-            </button>
-          )}
+              {formatTime(timeRemaining)}
+            </div>
+          </div>
           
-          <button
-            onClick={resetTimer}
-            className={`timer-button bg-gray-200 text-gray-700 hover:bg-gray-300 ${
-              // Desabilita reset apenas se idle E zerado E parado
-              currentState === 'idle' && !isRunning && elapsedSeconds === 0
-                ? 'opacity-50 cursor-not-allowed' 
-                : ''
-            }`}
-            disabled={currentState === 'idle' && !isRunning && elapsedSeconds === 0}
-          >
-            Reiniciar
-          </button>
-          
-          <button
-            onClick={skipToNext} // skipToNext agora inicia a pausa automaticamente
-            className="timer-button bg-gray-200 text-gray-700 hover:bg-gray-300"
-          >
-            Pular
-          </button>
+          {/* Informações do Timer - Ao Lado */}
+          <div className="text-center sm:text-left space-y-1">
+            <p className="text-lg font-medium dark:text-white">{getStateTitle()}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Pomodoros completados: <span className="font-semibold">{completedPomodoros}</span>
+            </p>
+            
+            {/* Mostra o tempo contabilizado na sessão atual */}
+            {currentState === 'focus' && currentTopicId && isRunning && (
+              <p className="text-xs text-green-600 dark:text-green-400">
+                ⏱️ Tempo atual: <span className="font-semibold">{displaySessionMinutes} min</span>
+              </p>
+            )}
+
+            {/* Informação do estado atual em mobile */}
+            <div className="sm:hidden mt-2">
+              <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                currentState === 'focus' ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400' :
+                currentState === 'shortBreak' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                currentState === 'longBreak' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+              }`}>
+                {currentState === 'focus' ? '🎯 Foco' :
+                 currentState === 'shortBreak' ? '☕ Pausa Curta' :
+                 currentState === 'longBreak' ? '🛋️ Pausa Longa' : '⏸️ Pausado'}
+              </div>
+            </div>
+          </div>
         </div>
         
-        {/* Configurações */}
+        {/* Controles Compactos */}
+        <div className="timer-controls mt-1">
+          {/* Botão Começar (aparece apenas quando showStartButton é true) */}
+          {showStartButton ? (
+            <div className="flex justify-center">
+              <button
+                onClick={() => {
+                  if (currentTopicId) {
+                    startTimer(currentTopicId);
+                    setShowStartButton(false);
+                  }
+                }}
+                className="px-6 py-2 text-sm font-medium bg-green-600 text-white hover:bg-green-700 rounded-md transition-colors"
+                disabled={!currentTopicId}
+              >
+                🎯 Começar
+              </button>
+            </div>
+          ) : (
+            /* Layout organizado para 3 botões - Mais compacto */
+            <div className="flex justify-center gap-2 max-w-sm mx-auto">
+              <button
+                onClick={() => {
+                  if (isRunning) {
+                    pauseTimer();
+                  } else {
+                    if (currentState === 'focus' || currentState === 'idle') {
+                      if(currentTopicId) {
+                        if (currentState === 'idle' || timeRemaining === settings.focusDuration * 60) {
+                            startTimer(currentTopicId); 
+                        } else {
+                           usePomodoroStore.setState({ isRunning: true });
+                        }
+                        setShowStartButton(false);
+                      } 
+                    } else {
+                      usePomodoroStore.setState({ isRunning: true });
+                    }
+                  }
+                }}
+                className={`flex-1 px-3 py-1.5 text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 rounded-md transition-colors ${
+                  (!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId)
+                   ? 'opacity-50 cursor-not-allowed' 
+                   : ''
+                }`}
+                disabled={!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId}
+              >
+                {isRunning 
+                  ? '⏸️ Pausar' 
+                  : (currentState === 'focus' || currentState === 'idle') 
+                    ? '▶️ Iniciar' 
+                    : '▶️ Retomar'}
+              </button>
+              
+              <button
+                onClick={resetTimer}
+                className={`px-3 py-1.5 text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 rounded-md transition-colors ${
+                  currentState === 'idle' && !isRunning && elapsedSeconds === 0
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : ''
+                }`}
+                disabled={currentState === 'idle' && !isRunning && elapsedSeconds === 0}
+              >
+                🔄
+              </button>
+              
+              <button
+                onClick={skipToNext}
+                className="px-3 py-1.5 text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 rounded-md transition-colors"
+              >
+                ⏭️
+              </button>
+            </div>
+          )}
+        </div>
+        
+        {/* Configurações Compactas */}
         {showSettings && (
-          <div className="mt-8 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <h3 className="text-lg font-medium mb-4 dark:text-white">Configurações</h3>
+          <div className="mt-2 p-2.5 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <h3 className="text-sm font-medium mb-1.5 dark:text-white">⚙️ Configurações</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Duração de Foco (minutos)
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">
+                  Foco (min)
                 </label>
                 <input
                   type="number"
@@ -290,14 +370,14 @@ export default function Pomodoro() {
                   max="60"
                   value={settings.focusDuration}
                   onChange={(e) => updateSettings({ focusDuration: Number(e.target.value) })}
-                  className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                  className="w-full p-1.5 text-xs border rounded dark:bg-gray-600 dark:border-gray-500 dark:text-white"
                   disabled={isRunning}
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Pausa Curta (minutos)
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">
+                  Pausa Curta (min)
                 </label>
                 <input
                   type="number"
@@ -305,14 +385,14 @@ export default function Pomodoro() {
                   max="30"
                   value={settings.shortBreakDuration}
                   onChange={(e) => updateSettings({ shortBreakDuration: Number(e.target.value) })}
-                  className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                  className="w-full p-1.5 text-xs border rounded dark:bg-gray-600 dark:border-gray-500 dark:text-white"
                   disabled={isRunning}
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Pausa Longa (minutos)
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">
+                  Pausa Longa (min)
                 </label>
                 <input
                   type="number"
@@ -320,14 +400,14 @@ export default function Pomodoro() {
                   max="60"
                   value={settings.longBreakDuration}
                   onChange={(e) => updateSettings({ longBreakDuration: Number(e.target.value) })}
-                  className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                  className="w-full p-1.5 text-xs border rounded dark:bg-gray-600 dark:border-gray-500 dark:text-white"
                   disabled={isRunning}
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Intervalos até Pausa Longa
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">
+                  Intervalo P. Longa
                 </label>
                 <input
                   type="number"
@@ -335,7 +415,7 @@ export default function Pomodoro() {
                   max="10"
                   value={settings.longBreakInterval}
                   onChange={(e) => updateSettings({ longBreakInterval: Number(e.target.value) })}
-                  className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                  className="w-full p-1.5 text-xs border rounded dark:bg-gray-600 dark:border-gray-500 dark:text-white"
                   disabled={isRunning}
                 />
               </div>

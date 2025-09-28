@@ -93,6 +93,15 @@
   @apply flex justify-center space-x-4 my-5;
 }
 
+/* Otimização para o círculo de progresso do timer */
+.timer-display svg {
+  will-change: transform;
+}
+
+.timer-display circle {
+  will-change: stroke-dashoffset;
+}
+
 .timer-button {
   @apply px-6 py-2 rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
 }
@@ -108,4 +117,31 @@
 
 .color-option.selected {
   @apply border-gray-900 shadow-md;
+}
+
+/* Fix para inputs numéricos - esconder setas de increment/decrement em telas pequenas */
+input[type="number"] {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"]::-moz-inner-spin-button,
+input[type="number"]::-moz-outer-spin-button {
+  -moz-appearance: none;
+  margin: 0;
+}
+
+/* Em telas pequenas, garantir que não há overflow */
+@media (max-width: 768px) {
+  input[type="number"] {
+    padding-right: 0.5rem;
+    text-align: center;
+  }
 } 

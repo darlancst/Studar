@@ -217,7 +217,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                       type="number"
                       id="goalHours"
                       min="0"
-                      className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                      className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-8"
+                      style={{ appearance: 'textfield' }}
                       value={goalHours}
                       onChange={(e) => setGoalHours(parseInt(e.target.value) || 0)}
                     />
@@ -232,7 +233,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                       id="goalMinutes"
                       min="0"
                       max="59"
-                      className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                      className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-8"
+                      style={{ appearance: 'textfield' }}
                       value={goalMinutes}
                       onChange={(e) => setGoalMinutes(parseInt(e.target.value) || 0)}
                     />
@@ -285,7 +287,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                       type="number"
                       id="newInterval"
                       min="1"
-                      className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                      className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-8"
+                      style={{ appearance: 'textfield' }}
                       value={newInterval}
                       onChange={(e) => setNewInterval(parseInt(e.target.value) || 1)}
                     />
@@ -330,7 +333,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                       max="999"
                       value={thresholds.level1}
                       onChange={(e) => handleThresholdChange('level1', parseInt(e.target.value) || 1)}
-                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-6"
+                      style={{ appearance: 'textfield' }}
                     />
                     <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
                   </div>
@@ -349,7 +353,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                       max="999"
                       value={thresholds.level2}
                       onChange={(e) => handleThresholdChange('level2', parseInt(e.target.value) || 1)}
-                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-6"
+                      style={{ appearance: 'textfield' }}
                     />
                     <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
                   </div>
@@ -368,7 +373,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                       max="999"
                       value={thresholds.level3}
                       onChange={(e) => handleThresholdChange('level3', parseInt(e.target.value) || 1)}
-                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-6"
+                      style={{ appearance: 'textfield' }}
                     />
                     <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
                   </div>
@@ -387,7 +393,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                       max="999"
                       value={thresholds.level4}
                       onChange={(e) => handleThresholdChange('level4', parseInt(e.target.value) || 1)}
-                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-6"
+                      style={{ appearance: 'textfield' }}
                     />
                     <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
                   </div>
@@ -406,7 +413,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                       max="999"
                       value={thresholds.level5}
                       onChange={(e) => handleThresholdChange('level5', parseInt(e.target.value) || 1)}
-                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-6"
+                      style={{ appearance: 'textfield' }}
                     />
                     <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
                   </div>
