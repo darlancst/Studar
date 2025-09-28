@@ -6,6 +6,7 @@ import { useSimuladosStore } from '@/store/simuladosStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { format } from 'date-fns';
 
 type InterfaceMode = 'student' | 'competitor' | 'casual' | 'professional';
 type LayoutDensity = 'compact' | 'comfortable' | 'spacious';
@@ -118,7 +119,7 @@ const useAdaptiveInterfaceStore = create<AdaptiveInterfaceState>()(
             changes.showAdvancedFeatures = true;
             changes.preferredDashboardLayout = 'grid';
             reason = 'Detectado foco em simulados - interface otimizada para competições';
-          } else if (mostUsedTab === 'pomodoro' && settings.interfaceMode !== 'focused') {
+          } else if (mostUsedTab === 'pomodoro' && settings.colorScheme !== 'focused') {
             changes.layoutDensity = 'compact';
             changes.colorScheme = 'focused';
             changes.prioritizeQuickActions = true;
@@ -191,6 +192,7 @@ interface AdaptiveContextType {
   settings: AdaptationSettings;
   recordInteraction: (feature: string, tab?: string) => void;
   getAdaptiveStyles: () => AdaptiveStyles;
+  styles: AdaptiveStyles;
 }
 
 interface AdaptiveStyles {
@@ -320,7 +322,8 @@ export function AdaptiveInterfaceProvider({ children }: AdaptiveInterfaceProvide
   const contextValue: AdaptiveContextType = {
     settings,
     recordInteraction,
-    getAdaptiveStyles
+    getAdaptiveStyles,
+    styles: getAdaptiveStyles()
   };
 
   return (

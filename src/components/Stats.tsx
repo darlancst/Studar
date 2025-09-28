@@ -24,6 +24,8 @@ import SmartNotifications from '@/components/SmartNotifications';
 import ContextualDashboard from '@/components/ContextualDashboard';
 import DataCorrelationInsights from '@/components/DataCorrelationInsights';
 import StudyTemplates from '@/components/StudyTemplates';
+import StudyBuddyChat from '@/components/StudyBuddyChat';
+import AutomaticPlanner from '@/components/AutomaticPlanner';
 import { useDatesStore } from '@/store/datesStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useSimuladosStore } from '@/store/simuladosStore';
@@ -945,6 +947,21 @@ export default function Stats() {
              // Could open a template creation modal
            }}
          />
+
+         {/* Planner Automático */}
+         <AutomaticPlanner
+           planDays={7}
+           onExecuteTask={(task) => {
+             console.log('Executing task:', task);
+             // Navigate to appropriate tab based on task type
+             const event = new CustomEvent(`navigate-to-${task.type === 'study' ? 'pomodoro' : 
+               task.type === 'review' ? 'calendar' : 
+               task.type === 'simulate' ? 'simulados' : 'dashboard'}`, { 
+               detail: { topicId: task.topicId, subjectId: task.subjectId } 
+             });
+             window.dispatchEvent(event);
+           }}
+         />
         
         {/* Gráficos - compactos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1617,6 +1634,9 @@ export default function Stats() {
         }
       `}</style>
       </div>
+      
+      {/* Study Buddy Chat - Componente Flutuante */}
+      <StudyBuddyChat />
     </div>
   );
 } 
