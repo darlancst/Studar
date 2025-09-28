@@ -21,6 +21,9 @@ import { useIntelligenceStore } from '@/store/intelligenceStore';
 import SmartRecommendations from '@/components/SmartRecommendations';
 import AutoPilotMode from '@/components/AutoPilotMode';
 import SmartNotifications from '@/components/SmartNotifications';
+import ContextualDashboard from '@/components/ContextualDashboard';
+import DataCorrelationInsights from '@/components/DataCorrelationInsights';
+import StudyTemplates from '@/components/StudyTemplates';
 import { useDatesStore } from '@/store/datesStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useSimuladosStore } from '@/store/simuladosStore';
@@ -756,10 +759,18 @@ export default function Stats() {
               window.dispatchEvent(autoPilotEvent);
               break;
           }
-        }}
-      />
-      
-      {/* Principais cards de estatísticas - melhorada responsividade */}
+                 }}
+       />
+
+       {/* Dashboard Contextual Baseado no Horário */}
+       <ContextualDashboard
+         onNavigate={(tab, data) => {
+           const event = new CustomEvent(`navigate-to-${tab}`, { detail: data });
+           window.dispatchEvent(event);
+         }}
+       />
+       
+       {/* Principais cards de estatísticas - melhorada responsividade */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
             <h3 className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">Tempo Total</h3>
@@ -909,8 +920,31 @@ export default function Stats() {
             // Dispatch navigation events based on tab
             const event = new CustomEvent(`navigate-to-${tab}`, { detail: data });
             window.dispatchEvent(event);
-          }}
-        />
+                     }}
+         />
+
+         {/* Sistema de Correlação de Dados */}
+         <DataCorrelationInsights
+           maxInsights={3}
+           onShowDetails={(correlation) => {
+             console.log('Correlation details:', correlation);
+             // Could open a detailed modal here
+           }}
+         />
+
+         {/* Sistema de Templates e Rotinas */}
+         <StudyTemplates
+           onStartTemplate={(template) => {
+             console.log('Starting template:', template);
+             // Could start an auto-pilot session based on the template
+             const event = new CustomEvent('start-template', { detail: { template } });
+             window.dispatchEvent(event);
+           }}
+           onCreateTemplate={() => {
+             console.log('Create custom template');
+             // Could open a template creation modal
+           }}
+         />
         
         {/* Gráficos - compactos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
