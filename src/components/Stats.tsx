@@ -355,31 +355,7 @@ export default function Stats() {
     };
   };
   
-  // Prepara dados para gráfico de barras (Revisões Completadas vs. Pendentes)
-  const getBarChartData = () => {
-    const filteredReviews = getFilteredReviews(); // Pega revisões filtradas pelo período
-    const completed = filteredReviews.filter(review => review.completed).length;
-    const pending = filteredReviews.filter(review => !review.completed).length;
-    
-    return {
-      labels: ['Completadas', 'Pendentes'], // Labels para as barras
-      datasets: [
-        {
-          label: 'Número de Revisões', // Label geral do dataset
-          data: [completed, pending], // Dados: [contagem_completadas, contagem_pendentes]
-          backgroundColor: [
-            'rgba(75, 192, 192, 0.6)', // Cor para completadas
-            'rgba(255, 159, 64, 0.6)' // Cor para pendentes
-          ],
-          borderColor: [
-            'rgb(75, 192, 192)',
-            'rgb(255, 159, 64)'
-          ],
-          borderWidth: 1,
-        },
-      ],
-    };
-  };
+
   
 
   
@@ -736,7 +712,6 @@ export default function Stats() {
   }, [reviews, topics, subjects, simulados]);
   
   const pieChartData = getPieChartData();
-  const barChartData = getBarChartData();
   
   const pieOptions = {
     responsive: true,
