@@ -9,14 +9,14 @@ import { useSubjectStore } from '@/store/subjectStore';
 import { 
   ChartBarIcon,
   LightBulbIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   ClockIcon,
   SparklesIcon,
   EyeIcon,
   ArrowRightIcon,
 } from '@heroicons/react/24/outline';
-import { format, getDay, getHour, differenceInDays, isWithinInterval, subDays } from 'date-fns';
+import { format, getDay, getHours, differenceInDays, isWithinInterval, subDays } from 'date-fns';
 import { pt } from 'date-fns/locale';
 
 interface Correlation {
@@ -168,7 +168,7 @@ export default function DataCorrelationInsights({
                 : `Correlação negativa detectada: pode estar estudando demais sem consolidar`,
               strength: Math.abs(correlation) > 0.6 ? 'strong' : Math.abs(correlation) > 0.4 ? 'moderate' : 'weak',
               confidence: Math.round(Math.abs(correlation) * 100),
-              icon: isPositive ? TrendingUpIcon : TrendingDownIcon,
+              icon: isPositive ? ArrowTrendingUpIcon : ArrowTrendingDownIcon,
               color: isPositive 
                 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300'
                 : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300',
@@ -268,7 +268,7 @@ export default function DataCorrelationInsights({
             description: `${decliningSubject.subject.name}: queda de ${Math.abs(decliningSubject.trend).toFixed(0)} pontos percentuais`,
             strength: Math.abs(decliningSubject.trend) > 20 ? 'strong' : 'moderate',
             confidence: Math.min(90, Math.round(Math.abs(decliningSubject.trend) * 2)),
-            icon: TrendingDownIcon,
+            icon: ArrowTrendingDownIcon,
             color: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300',
             actionable: true,
             recommendation: `Dedique mais tempo estudando ${decliningSubject.subject.name} nos próximos dias`,

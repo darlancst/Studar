@@ -18,7 +18,7 @@ import {
   BookOpenIcon,
   DocumentChartBarIcon,
   ArrowRightIcon,
-  RefreshIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { 
   format, 
@@ -454,7 +454,7 @@ export default function AutomaticPlanner({
             className="p-1 hover:bg-indigo-100 dark:hover:bg-indigo-800/50 rounded transition-colors"
             title="Regenerar plano"
           >
-            <RefreshIcon className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+            <ArrowPathIcon className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
           </button>
         </div>
       </div>
