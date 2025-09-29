@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Chart as ChartJS, 
   ArcElement, 
@@ -9,40 +9,30 @@ import {
   CategoryScale,
   LinearScale,
   PointElement,
-  BarElement,
   Title,
   TooltipItem
 } from 'chart.js';
-import { Pie, Bar } from 'react-chartjs-2';
+import { Pie } from 'react-chartjs-2';
 import { useSubjectStore } from '@/store/subjectStore';
+import { useTopicStore } from '@/store/topicStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useReviewStore } from '@/store/reviewStore';
-import { useIntelligenceStore } from '@/store/intelligenceStore';
-import SmartRecommendations from '@/components/SmartRecommendations';
-import AutoPilotMode from '@/components/AutoPilotMode';
-import SmartNotifications from '@/components/SmartNotifications';
-import ContextualDashboard from '@/components/ContextualDashboard';
-import DataCorrelationInsights from '@/components/DataCorrelationInsights';
-import StudyTemplates from '@/components/StudyTemplates';
-import StudyBuddyChat from '@/components/StudyBuddyChat';
-import AutomaticPlanner from '@/components/AutomaticPlanner';
 import { useDatesStore } from '@/store/datesStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useSimuladosStore } from '@/store/simuladosStore';
-import { format, subDays, startOfToday, endOfToday, isSameDay, parseISO, startOfDay, startOfWeek, endOfWeek, subYears, addDays, formatISO, endOfDay } from 'date-fns';
+import { format, subDays, startOfToday, endOfToday, isSameDay, parseISO, startOfDay, startOfWeek, endOfWeek, subYears, addDays, formatISO, endOfDay, startOfMonth, subMonths, differenceInDays } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Subject, Review, PomodoroSession, Topic } from '@/types';
 import { useDarkMode } from '@/hooks/useDarkMode';
 
 // Registrando os componentes necessários
 ChartJS.register(
-  ArcElement,
-  Tooltip,
+  ArcElement, 
+  Tooltip, 
   Legend,
   CategoryScale,
   LinearScale,
   PointElement,
-  BarElement,
   Title
 );
 
@@ -86,6 +76,7 @@ export default function Stats() {
   const { heatmapThresholds } = useSettingsStore();
   
   const { getSubjectsWithTopics } = useSubjectStore();
+  const { topics } = useTopicStore();
   const { 
     sessions: pomodoroSessions, 
     isRunning, 
@@ -190,13 +181,16 @@ export default function Stats() {
   
   // Formata o tempo de estudo
   const formatStudyTime = (minutes: number): string => {
-    if (minutes < 1) return '0 min';
+    // Arredonda para evitar casas decimais desnecessárias
+    const roundedMinutes = Math.round(minutes);
     
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
+    if (roundedMinutes < 1) return '0 min';
+    
+    const hours = Math.floor(roundedMinutes / 60);
+    const remainingMinutes = roundedMinutes % 60;
     
     if (hours === 0) {
-      return `${minutes} min`;
+      return `${roundedMinutes} min`;
     } else {
       return `${hours}h${remainingMinutes > 0 ? `:${remainingMinutes.toString().padStart(2, '0')}` : ''}`;
     }
@@ -537,6 +531,209 @@ export default function Stats() {
 
   // Calcula a porcentagem de progresso
   const weeklyProgress = Math.min(100, Math.round((weeklyStudyTime / weeklyGoal) * 100));
+
+  // ========== NOVAS FUNCIONALIDADES ==========
+  
+  // 1. COMPARATIVO TEMPORAL INTELIGENTE
+  const temporalComparisons = useMemo(() => {
+    const now = new Date();
+    const currentWeekStart = startOfWeek(now, { weekStartsOn: 0 });
+    const lastWeekStart = subDays(currentWeekStart, 7);
+    const lastWeekEnd = subDays(currentWeekStart, 1);
+    
+    const currentMonthStart = startOfMonth(now);
+    const lastMonthStart = subMonths(currentMonthStart, 1);
+    const lastMonthEnd = subDays(currentMonthStart, 1);
+    
+    // Tempo desta semana vs semana passada
+    const thisWeekTime = weeklyStudyTime;
+    const lastWeekTime = getFilteredPomodoroSessions()
+      .filter(session => {
+        const sessionDate = parseISO(session.date);
+        return sessionDate >= lastWeekStart && sessionDate <= lastWeekEnd;
+      })
+      .reduce((total, session) => total + session.duration, 0);
+    
+    // Tempo este mês vs mês passado
+    const thisMonthTime = getFilteredPomodoroSessions()
+      .filter(session => {
+        const sessionDate = parseISO(session.date);
+        return sessionDate >= currentMonthStart;
+      })
+      .reduce((total, session) => total + session.duration, 0);
+    
+    const lastMonthTime = getFilteredPomodoroSessions()
+      .filter(session => {
+        const sessionDate = parseISO(session.date);
+        return sessionDate >= lastMonthStart && sessionDate <= lastMonthEnd;
+      })
+      .reduce((total, session) => total + session.duration, 0);
+    
+    // Simulados este mês vs mês passado
+    const currentMonth = format(now, 'yyyy-MM');
+    const lastMonth = format(subMonths(now, 1), 'yyyy-MM');
+    
+    const thisMonthSimulados = simulados.filter(s => s.date.startsWith(currentMonth)).length;
+    const lastMonthSimulados = simulados.filter(s => s.date.startsWith(lastMonth)).length;
+    
+    // Melhor e pior dia da semana (média histórica)
+    const dayAverages = Array.from({ length: 7 }, (_, dayIndex) => {
+      const dayName = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][dayIndex];
+      const daySessions = getFilteredPomodoroSessions()
+        .filter(session => parseISO(session.date).getDay() === dayIndex);
+      
+      const totalTime = daySessions.reduce((sum, session) => sum + session.duration, 0);
+      const avgTime = daySessions.length > 0 ? totalTime / daySessions.length : 0;
+      
+      return { day: dayName, avgTime, totalSessions: daySessions.length };
+    }).filter(day => day.totalSessions > 0);
+    
+    const bestDay = dayAverages.reduce((best, current) => 
+      current.avgTime > best.avgTime ? current : best, 
+      dayAverages[0] || { day: 'N/A', avgTime: 0 }
+    );
+    
+    const worstDay = dayAverages.reduce((worst, current) => 
+      current.avgTime < worst.avgTime ? current : worst,
+      dayAverages[0] || { day: 'N/A', avgTime: 0 }
+    );
+    
+    return {
+      weekComparison: { current: thisWeekTime, previous: lastWeekTime },
+      monthComparison: { current: thisMonthTime, previous: lastMonthTime },
+      simuladosComparison: { current: thisMonthSimulados, previous: lastMonthSimulados },
+      bestDay,
+      worstDay
+    };
+  }, [weeklyStudyTime, simulados, period]);
+  
+  // 2. SISTEMA DE METAS DINÂMICAS
+  const dynamicGoals = useMemo(() => {
+    const now = new Date();
+    const weekStart = startOfWeek(now, { weekStartsOn: 0 });
+    const weekEnd = endOfWeek(now, { weekStartsOn: 0 });
+    const daysInWeek = 7;
+    const daysPassed = differenceInDays(now, weekStart) + 1; // +1 para incluir hoje
+    const daysRemaining = daysInWeek - daysPassed;
+    
+    // Meta diária baseada na meta semanal
+    const dailyGoal = weeklyGoal / daysInWeek;
+    
+    // Tempo estudado hoje
+    const todayTime = getFilteredPomodoroSessions()
+      .filter(session => isSameDay(parseISO(session.date), now))
+      .reduce((total, session) => total + session.duration, 0);
+    
+    // Progresso da meta diária
+    const dailyProgress = Math.min(100, Math.round((todayTime / dailyGoal) * 100));
+    
+    // Projeção semanal baseada no ritmo atual
+    const projectedWeeklyTime = daysPassed > 0 ? (weeklyStudyTime / daysPassed) * daysInWeek : 0;
+    
+    // Tempo necessário por dia restante para atingir meta
+    const timeNeededPerRemainingDay = daysRemaining > 0 ? 
+      Math.max(0, (weeklyGoal - weeklyStudyTime) / daysRemaining) : 0;
+    
+    return {
+      dailyGoal,
+      todayTime,
+      dailyProgress,
+      projectedWeeklyTime,
+      timeNeededPerRemainingDay,
+      daysRemaining,
+      daysPassed
+    };
+  }, [weeklyStudyTime, weeklyGoal]);
+  
+  // 3. INSIGHTS DA SEMANA
+  const weeklyInsights = useMemo(() => {
+    const now = new Date();
+    const weekStart = startOfWeek(now, { weekStartsOn: 0 });
+    
+    // Revisões desta semana
+    const thisWeekReviews = reviews.filter(review => {
+      if (!review.completed) return false;
+      const reviewDate = new Date(review.date);
+      return reviewDate >= weekStart;
+    });
+    
+    // Tópico mais revisado
+    const topicReviewCounts = thisWeekReviews.reduce((acc, review) => {
+      acc[review.topicId] = (acc[review.topicId] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const mostReviewedTopicId = Object.entries(topicReviewCounts)
+      .sort(([,a], [,b]) => b - a)[0]?.[0];
+    
+    const mostReviewedTopic = mostReviewedTopicId ? 
+      topics.find((t: Topic) => t.id === mostReviewedTopicId) : null;
+    
+    const mostReviewedCount = topicReviewCounts[mostReviewedTopicId] || 0;
+    
+    // Performance em simulados desta semana
+    const thisWeekSimulados = simulados.filter(s => {
+      const simuladoDate = parseISO(s.date);
+      return simuladoDate >= weekStart;
+    });
+    
+    let bestPerformanceSubject = null;
+    let worstPerformanceSubject = null;
+    let avgPerformance = 0;
+    
+    if (thisWeekSimulados.length > 0) {
+      // Performance por matéria
+      const subjectPerformances = subjects.map(subject => {
+        const subjectSimulados = thisWeekSimulados.filter(s => s.subjectId === subject.id);
+        if (subjectSimulados.length === 0) return null;
+        
+        const avgScore = subjectSimulados.reduce((acc, s) => acc + (s.hits / s.questions), 0) / subjectSimulados.length * 100;
+        return { subject, avgScore, count: subjectSimulados.length };
+      }).filter(Boolean);
+      
+      if (subjectPerformances.length > 0) {
+        bestPerformanceSubject = subjectPerformances.reduce((best, current) => 
+          current!.avgScore > best!.avgScore ? current : best
+        );
+        worstPerformanceSubject = subjectPerformances.reduce((worst, current) => 
+          current!.avgScore < worst!.avgScore ? current : worst
+        );
+      }
+      
+      // Performance média geral desta semana
+      avgPerformance = thisWeekSimulados.reduce((acc, s) => acc + (s.hits / s.questions), 0) / thisWeekSimulados.length * 100;
+    }
+    
+    // Matéria com mais tempo estudado
+    const subjectStudyTime = subjects.map(subject => {
+      const subjectTime = getFilteredPomodoroSessions()
+        .filter(session => {
+          const sessionDate = parseISO(session.date);
+          if (sessionDate < weekStart) return false;
+          
+          const topic = topics.find((t: Topic) => t.id === session.topicId);
+          return topic?.subjectId === subject.id;
+        })
+        .reduce((total, session) => total + session.duration, 0);
+      
+      return { subject, time: subjectTime };
+    }).filter(item => item.time > 0);
+    
+    const mostStudiedSubject = subjectStudyTime.reduce((most, current) => 
+      current.time > most.time ? current : most,
+      subjectStudyTime[0] || null
+    );
+    
+    return {
+      mostReviewedTopic,
+      mostReviewedCount,
+      bestPerformanceSubject,
+      worstPerformanceSubject,
+      avgPerformance,
+      mostStudiedSubject,
+      thisWeekSimulados: thisWeekSimulados.length
+    };
+  }, [reviews, topics, subjects, simulados]);
   
   const pieChartData = getPieChartData();
   const barChartData = getBarChartData();
@@ -546,7 +743,7 @@ export default function Stats() {
     maintainAspectRatio: false,
     plugins: {
       legend: { position: 'bottom' as const },
-      title: { display: true, text: 'Distribuição do tempo por disciplina' },
+      title: { display: false, text: 'Distribuição do tempo por disciplina' },
       tooltip: {
         callbacks: {
           label: function(context: TooltipItem<"pie">) {
@@ -670,973 +867,639 @@ export default function Stats() {
         </div>
       </div>
 
-      <div className="space-y-4 relative">
-      {showConfetti && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
-          <div className="confetti-container">
-            {Array.from({ length: 50 }).map((_, index) => (
-              <div 
-                key={index}
-                className="confetti-piece"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `-5%`,
-                  animationDelay: `${Math.random() * 3}s`,
-                  backgroundColor: [
-                    '#1a73e8', '#ea4335', '#34a853', '#fbbc04', 
-                    '#ff6d01', '#9c27b0', '#673ab7', '#2196f3'
-                  ][Math.floor(Math.random() * 8)],
-                  width: `${5 + Math.random() * 7}px`,
-                  height: `${5 + Math.random() * 7}px`,
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Inputs de Data Personalizada (aparem condicionalmente) */}
-      {period === 'custom' && (
-          <div className="flex flex-wrap items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <div className="w-full sm:w-auto">
-            <label htmlFor="customStartDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Data de Início:
-            </label>
-            <input
-              type="date"
-              id="customStartDate"
-              value={format(customStartDate, 'yyyy-MM-dd')}
-              onChange={(e) => {
-                const dateValue = e.target.value;
-                if (dateValue) {
-                  setCustomStartDate(startOfDay(parseISO(dateValue)));
-                }
-              }}
-              className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-              max={format(customEndDate, 'yyyy-MM-dd')} 
-            />
-          </div>
-          <div className="w-full sm:w-auto">
-            <label htmlFor="customEndDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Data de Fim:
-            </label>
-            <input
-              type="date"
-              id="customEndDate"
-              value={format(customEndDate, 'yyyy-MM-dd')}
-              onChange={(e) => {
-                const dateValue = e.target.value;
-                if (dateValue) {
-                  setCustomEndDate(endOfDay(parseISO(dateValue)));
-                }
-              }}
-              className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-              min={format(customStartDate, 'yyyy-MM-dd')} 
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Sistema de Notificações Inteligentes */}
-      <SmartNotifications
-        maxNotifications={4}
-        onAction={(action, data) => {
-          // Handle notification actions
-          switch (action) {
-            case 'navigate-to-calendar':
-              const calendarEvent = new CustomEvent('navigate-to-calendar', { detail: data });
-              window.dispatchEvent(calendarEvent);
-              break;
-            case 'navigate-to-pomodoro':
-              const pomodoroEvent = new CustomEvent('navigate-to-pomodoro', { detail: data });
-              window.dispatchEvent(pomodoroEvent);
-              break;
-            case 'navigate-to-simulados':
-              const simuladosEvent = new CustomEvent('navigate-to-simulados', { detail: data });
-              window.dispatchEvent(simuladosEvent);
-              break;
-            case 'high-priority-action':
-              // Start auto-pilot focused on specific topic
-              const autoPilotEvent = new CustomEvent('start-autopilot', { detail: data });
-              window.dispatchEvent(autoPilotEvent);
-              break;
-          }
-                 }}
-       />
-
-       {/* Dashboard Contextual Baseado no Horário */}
-       <ContextualDashboard
-         onNavigate={(tab, data) => {
-           const event = new CustomEvent(`navigate-to-${tab}`, { detail: data });
-           window.dispatchEvent(event);
-         }}
-       />
-       
-       {/* Principais cards de estatísticas - melhorada responsividade */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-            <h3 className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">Tempo Total</h3>
-            <p className="text-lg sm:text-xl font-bold dark:text-white break-words">{formatStudyTime(totalStudyTime)}</p>
-        </div>
-          <div className="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
-            <h3 className="text-xs font-medium text-yellow-700 dark:text-yellow-300 mb-1">Revisões Feitas</h3>
-            <p className="text-lg sm:text-xl font-bold dark:text-white">{completedReviewsCount}</p>
-        </div>
-          <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
-            <h3 className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-1">Dias Estudados</h3>
-            <p className="text-lg sm:text-xl font-bold dark:text-white">{totalDatesStudied}</p>
-      </div>
-          <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
-            <h3 className="text-xs font-medium text-green-700 dark:text-green-300 mb-1">Último Estudo</h3>
-            <p className="text-xs sm:text-sm font-semibold dark:text-white">
-                {(() => {
-                  const dates = getDates();
-                  if (dates.length === 0) return 'Nenhum';
-                  const dateObjects = dates.map(dStr => {
-                    try {
-                      if (dStr.includes('T')) return parseISO(dStr);
-                      return parseISO(dStr + 'T00:00:00'); 
-                    } catch (e) {
-                      console.error("Erro ao parsear data de getDates:", dStr, e);
-                      return new Date(NaN); 
-                    }
-                }).filter(d => !isNaN(d.getTime()));
-
-                if (dateObjects.length === 0) return 'N/A';
-
-                  const maxTimestamp = Math.max(...dateObjects.map(d => d.getTime()));
-                return format(new Date(maxTimestamp), 'dd/MM', { locale: pt });
-                })()}
-            </p>
-          </div>
-        </div>
-
-        {/* Card de Meta Semanal - Mais compacto */}
-        <div className={`p-4 rounded-lg ${isGoalCompleted ? 'bg-green-50 dark:bg-green-900/30' : 'bg-teal-50 dark:bg-teal-900/30'}`}>
-          <div className="flex items-center justify-between mb-2">
-              <h3 className={`text-sm font-medium ${isGoalCompleted ? 'text-green-700 dark:text-green-300' : 'text-teal-700 dark:text-teal-300'}`}>
-                Meta Semanal
-              </h3>
-            <span className={`text-sm font-bold ${isGoalCompleted ? 'text-green-700 dark:text-green-300' : 'text-teal-700 dark:text-teal-300'}`}>
-                {weeklyProgress}%
-              </span>
-            </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-3">
-              <div 
-              className={`h-2 rounded-full ${isGoalCompleted ? 'bg-green-600 dark:bg-green-500' : 'bg-teal-600 dark:bg-teal-500'}`}
-                style={{ width: `${weeklyProgress}%` }}
-              ></div>
-            </div>
-          <div className="flex justify-between items-center">
-              <div>
-              <p className="text-lg font-bold dark:text-white">
-                  {isGoalCompleted ? (
-                  <span className="flex items-center text-green-600 dark:text-green-400">
-                    Parabéns! 🎉
-                    </span>
-                  ) : (
-                    formatRemainingTime()
-                  )}
-                </p>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                {isGoalCompleted ? "Meta concluída!" : "Faltando"}
-                </span>
-              </div>
-            <div className={`text-right ${isGoalCompleted ? 'text-green-700 dark:text-green-300' : 'text-teal-700 dark:text-teal-300'}`}>
-              <span className="text-xs">Meta: {formatStudyTime(weeklyGoal)}</span>
-              </div>
+      <div className="space-y-6 relative">
+        {showConfetti && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
+            <div className="confetti-container">
+              {Array.from({ length: 50 }).map((_, index) => (
+                <div 
+                  key={index}
+                  className="confetti-piece"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `-5%`,
+                    animationDelay: `${Math.random() * 3}s`,
+                    backgroundColor: [
+                      '#1a73e8', '#ea4335', '#34a853', '#fbbc04', 
+                      '#ff6d01', '#9c27b0', '#673ab7', '#2196f3'
+                    ][Math.floor(Math.random() * 8)],
+                    width: `${5 + Math.random() * 7}px`,
+                    height: `${5 + Math.random() * 7}px`,
+                  }}
+                />
+              ))}
             </div>
           </div>
+        )}
         
-        {/* Seção resumida de Simulados - Mais compacta */}
-        {simulados.length > 0 && (
-          <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-purple-700 dark:text-purple-300">📊 Performance em Simulados</h3>
-              <button
-                onClick={() => {
-                  const event = new CustomEvent('navigate-to-simulados');
-                  window.dispatchEvent(event);
+        {/* Inputs de Data Personalizada */}
+        {period === 'custom' && (
+          <div className="flex flex-wrap items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <div className="w-full sm:w-auto">
+              <label htmlFor="customStartDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Data de Início:
+              </label>
+              <input
+                type="date"
+                id="customStartDate"
+                value={format(customStartDate, 'yyyy-MM-dd')}
+                onChange={(e) => {
+                  const dateValue = e.target.value;
+                  if (dateValue) {
+                    setCustomStartDate(startOfDay(parseISO(dateValue)));
+                  }
                 }}
-                className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-200 font-medium underline"
-              >
-                Ver análise →
-              </button>
-        </div>
-            
-            <div className="grid grid-cols-3 gap-3">
-              <div className="text-center">
-                <p className="text-lg font-bold text-purple-700 dark:text-purple-300">
-                  {simulados.length}
-                </p>
-                <p className="text-xs text-purple-600 dark:text-purple-400">Total</p>
-      </div>
-              <div className="text-center">
-                <p className="text-lg font-bold text-purple-700 dark:text-purple-300">
-                  {simulados.length > 0 
-                    ? (simulados.reduce((acc, s) => acc + (s.hits / s.questions), 0) / simulados.length * 100).toFixed(1)
-                    : 0}%
-                </p>
-                <p className="text-xs text-purple-600 dark:text-purple-400">Média</p>
-              </div>
-              <div className="text-center">
-                <p className="text-lg font-bold text-purple-700 dark:text-purple-300">
-                  {simulados.filter(s => s.date.startsWith(format(new Date(), 'yyyy-MM'))).length}
-                </p>
-                <p className="text-xs text-purple-600 dark:text-purple-400">Este Mês</p>
-              </div>
+                className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                max={format(customEndDate, 'yyyy-MM-dd')} 
+              />
+            </div>
+            <div className="w-full sm:w-auto">
+              <label htmlFor="customEndDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Data de Fim:
+              </label>
+              <input
+                type="date"
+                id="customEndDate"
+                value={format(customEndDate, 'yyyy-MM-dd')}
+                onChange={(e) => {
+                  const dateValue = e.target.value;
+                  if (dateValue) {
+                    setCustomEndDate(endOfDay(parseISO(dateValue)));
+                  }
+                }}
+                className="w-full p-2 border rounded-md dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                min={format(customStartDate, 'yyyy-MM-dd')} 
+              />
             </div>
           </div>
         )}
 
-        {/* Sistema de Recomendações Inteligentes */}
-        <SmartRecommendations
-          maxRecommendations={3}
-          showFullDetails={false}
-          onStartPomodoro={(topicId) => {
-            // Navigate to pomodoro with topic pre-selected
-            const event = new CustomEvent('navigate-to-pomodoro', { 
-              detail: { topicId } 
-            });
-            window.dispatchEvent(event);
-          }}
-          onCreateSimulado={(topicId) => {
-            // Navigate to simulados and open form with topic pre-selected
-            const event = new CustomEvent('navigate-to-simulados', { 
-              detail: { action: 'create-simulado', topicId } 
-            });
-            window.dispatchEvent(event);
-          }}
-          onStartReview={(topicId) => {
-            // Navigate to calendar with topic highlighted
-            const event = new CustomEvent('navigate-to-calendar', { 
-              detail: { topicId, action: 'review' } 
-            });
-            window.dispatchEvent(event);
-          }}
-                 />
+        {/* SEÇÃO 1: VISÃO GERAL DO PERÍODO */}
+        <section aria-labelledby="overview-title">
+          <h3 id="overview-title" className="text-base font-semibold dark:text-white mb-3">Visão Geral do Período</h3>
+          <div className="space-y-4">
+            {/* Cards de estatísticas */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                <h3 className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">Tempo Total</h3>
+                <p className="text-lg sm:text-xl font-bold dark:text-white break-words">{formatStudyTime(totalStudyTime)}</p>
+              </div>
+              <div className="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
+                <h3 className="text-xs font-medium text-yellow-700 dark:text-yellow-300 mb-1">Revisões Feitas</h3>
+                <p className="text-lg sm:text-xl font-bold dark:text-white">{completedReviewsCount}</p>
+              </div>
+              <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
+                <h3 className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-1">Dias Estudados</h3>
+                <p className="text-lg sm:text-xl font-bold dark:text-white">{totalDatesStudied}</p>
+              </div>
+              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                <h3 className="text-xs font-medium text-green-700 dark:text-green-300 mb-1">Último Estudo</h3>
+                <p className="text-xs sm:text-sm font-semibold dark:text-white">
+                    {(() => {
+                      const dates = getDates();
+                      if (dates.length === 0) return 'Nenhum';
+                      const dateObjects = dates.map(dStr => {
+                        try {
+                          if (dStr.includes('T')) return parseISO(dStr);
+                          return parseISO(dStr + 'T00:00:00'); 
+                        } catch (e) {
+                          console.error("Erro ao parsear data de getDates:", dStr, e);
+                          return new Date(NaN); 
+                        }
+                    }).filter(d => !isNaN(d.getTime()));
 
-        {/* Modo Auto-Pilot */}
-        <AutoPilotMode
-          onNavigate={(tab, data) => {
-            // Dispatch navigation events based on tab
-            const event = new CustomEvent(`navigate-to-${tab}`, { detail: data });
-            window.dispatchEvent(event);
-                     }}
-         />
+                    if (dateObjects.length === 0) return 'N/A';
 
-         {/* Sistema de Correlação de Dados */}
-         <DataCorrelationInsights
-           maxInsights={3}
-           onShowDetails={(correlation) => {
-             console.log('Correlation details:', correlation);
-             // Could open a detailed modal here
-           }}
-         />
-
-         {/* Sistema de Templates e Rotinas */}
-         <StudyTemplates
-           onStartTemplate={(template) => {
-             console.log('Starting template:', template);
-             // Could start an auto-pilot session based on the template
-             const event = new CustomEvent('start-template', { detail: { template } });
-             window.dispatchEvent(event);
-           }}
-           onCreateTemplate={() => {
-             console.log('Create custom template');
-             // Could open a template creation modal
-           }}
-         />
-
-         {/* Planner Automático */}
-         <AutomaticPlanner
-           planDays={7}
-           onExecuteTask={(task) => {
-             console.log('Executing task:', task);
-             // Navigate to appropriate tab based on task type
-             const event = new CustomEvent(`navigate-to-${task.type === 'study' ? 'pomodoro' : 
-               task.type === 'review' ? 'calendar' : 
-               task.type === 'simulate' ? 'simulados' : 'dashboard'}`, { 
-               detail: { topicId: task.topicId, subjectId: task.subjectId } 
-             });
-             window.dispatchEvent(event);
-           }}
-         />
-        
-        {/* Gráficos - compactos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Gráfico de pizza */}
-          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg h-56">
-          {pieChartData.labels.length > 0 ? (
-            <Pie data={pieChartData} options={getChartOptions(pieOptions)} />
-          ) : (
-            <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-              Sem dados de tempo para o período.
+                      const maxTimestamp = Math.max(...dateObjects.map(d => d.getTime()));
+                    return format(new Date(maxTimestamp), 'dd/MM', { locale: pt });
+                    })()}
+                </p>
+              </div>
             </div>
-          )}
-        </div>
-        
-        {/* Gráfico de barras */}
-          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg h-56">
-          <Bar data={barChartData} options={getChartOptions(barOptions)} />
-        </div>
-        
-          {/* Heatmap de atividades - Compacto */}
-          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg lg:col-span-2">
-            <h3 className="text-base font-medium mb-3 text-center dark:text-white">Histórico de Atividades</h3>
-          <div ref={heatmapScrollRef} className="w-full overflow-x-auto" 
-               aria-label="Histórico de atividades de estudo" 
-               role="figure" 
-               aria-description="Mapa de calor mostrando a frequência de sessões de estudo durante os últimos 12 meses">
-            {(() => {
-              // 1. Obter os dados para o heatmap de forma simplificada
-              const heatmapData = (() => {
-                // Se não tiver sessões, retorna vazio
-                if (!pomodoroSessions || pomodoroSessions.length === 0) {
-                  return [];
-                }
-                
-                // Contar o tempo estudado em cada dia
-                const dateDurationMap = new Map<string, number>();
-                
-                pomodoroSessions.forEach(session => {
-                  if (!session.date || session.duration == null) return;
-                  
-                  try {
-                    const dateStr = session.date.split('T')[0]; // YYYY-MM-DD
-                    const currentDuration = dateDurationMap.get(dateStr) || 0;
-                    dateDurationMap.set(dateStr, currentDuration + session.duration);
-                  } catch (error) {
-                    console.error("Erro ao processar data:", error);
-                  }
-                });
-                
-                // Converter para o formato do heatmap
-                return Array.from(dateDurationMap.entries())
-                  .filter(([_, minutes]) => minutes > 0)
-                  .map(([date, minutes]) => ({
-                    date,
-                    count: minutes,
-                    content: `${date}: ${formatStudyTime(minutes)}`
-                  }));
-              })();
-              
-              // 2. Funções auxiliares para o heatmap
-              const getColor = (count: number) => {
-                if (!count || count === 0) return isDarkMode ? '#2d3748' : '#f3f4f6';
-                
-                // Esquema de cores para diferentes níveis de atividade - melhor gradiente para modo escuro
-                const colorLevels = isDarkMode 
-                  ? ['#4f46e530', '#4f46e545', '#6366f160', '#7c3aed75', '#9333ea85', '#a855f790'] 
-                  : ['#dbeafe', '#bfdbfe', '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb'];
-                
-                // Usa os limiares personalizados do store
-                if (count < heatmapThresholds.level1) return colorLevels[0];
-                if (count < heatmapThresholds.level2) return colorLevels[1];
-                if (count < heatmapThresholds.level3) return colorLevels[2];
-                if (count < heatmapThresholds.level4) return colorLevels[3];
-                if (count < heatmapThresholds.level5) return colorLevels[4];
-                return colorLevels[5];
-              };
-              
-              // 3. Construir o calendário personalizado
-              // Configuração do calendário
-              const endDate = new Date(); // Hoje
-              const startDate = subYears(endDate, 1); // Exatamente um ano atrás
-              const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-              
-              // Definindo tipos explícitos
-              type DayCellData = {
-                date: string; 
-                minutes: number;
-                tooltip: string;
-                isToday: boolean;
-              };
+            
+            {/* Gráficos */}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg h-56">
+                {pieChartData.labels.length > 0 ? (
+                  <Pie data={pieChartData} options={getChartOptions(pieOptions)} />
+                ) : (
+                  <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+                    Sem dados de tempo para o período.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
 
-              // Obter dados de atividade (minutos por dia)
-              const activityMap = new Map<string, number>(
-                heatmapData.map(item => [item.date, item.count])
-              );
-
-              // Gerar TODOS os dias do período (um ano completo)
-              const allDays: DayCellData[] = [];
-              const monthLabelsData: { label: string; columnIndex: number }[] = [];
-              
-              // Começar no domingo da primeira semana
-              let currentDay = startOfDay(startDate);
-              // Retroceder até o domingo anterior (início da semana)
-              while (currentDay.getDay() !== 0) {
-                currentDay = subDays(currentDay, 1);
-              }
-              
-              // Variáveis para controlar a posição
-              let weekIndex = 0;
-              let currentMonth = -1;
-              
-              // Gerar os dias até o final do período + dias restantes da última semana
-              while (currentDay <= endDate || currentDay.getDay() !== 0) {
-                const dateKey = format(currentDay, 'yyyy-MM-dd');
-                const minutes = activityMap.get(dateKey) || 0;
-                const inRange = currentDay >= startDate && currentDay <= endDate;
-                
-                // Verificar se começou um novo mês para os rótulos
-                if (currentDay.getMonth() !== currentMonth && currentDay.getDay() === 0) {
-                  currentMonth = currentDay.getMonth();
-                  const monthName = format(currentDay, 'MMM', { locale: pt });
-                  monthLabelsData.push({ 
-                    label: monthName, 
-                    columnIndex: weekIndex 
-                  });
-                }
-
-                // Adicionar o dia ao array principal (apenas se estiver no período de interesse)
-                if (inRange) {
-                  allDays.push({
-                    date: dateKey,
-                    minutes,
-                    tooltip: minutes > 0 
-                      ? `${format(currentDay, "dd 'de' MMMM, yyyy", { locale: pt })}: ${formatStudyTime(minutes)}`
-                      : `Sem estudo em ${format(currentDay, "dd 'de' MMMM, yyyy", { locale: pt })}`,
-                    isToday: isSameDay(currentDay, new Date())
-                  });
-                }
-
-                // Avança para o próximo dia
-                currentDay = addDays(currentDay, 1);
-                
-                // Se este era o último dia da semana, incrementa o índice da semana
-                if (currentDay.getDay() === 0) {
-                  weekIndex++;
-                }
-              }
-              
-              // Número total de semanas para o grid
-              const totalWeeks = weekIndex;
-              
-              // Determinar o tamanho adequado para as células e o grid
-              // Usando as variáveis do escopo do componente
-              const cellSize = heatmapCellSize; 
-              const cellGap = heatmapCellGap; 
-              const cellUnit = cellSize + cellGap; // Tamanho total incluindo espaço
-              
-              // 4. Renderizar o heatmap estilo GitHub
-              return (
-                <div className="github-style-heatmap centered-heatmap">
-                  {/* Container para meses e grid */}
-                  <div className="heatmap-content-wrapper">
-                    {/* Rótulos dos meses */}
-                    <div className="month-labels">
-                      {monthLabelsData.map(({ label, columnIndex }) => (
-                        <div 
-                          key={`month-${label}-${columnIndex}`} 
-                          className="month-label"
-                          style={{
-                            left: `${columnIndex * cellUnit}px`
-                          }}
-                        >
-                          {label}
-                        </div>
-                      ))}
+        {/* SEÇÃO 2: METAS E INSIGHTS */}
+        <section aria-labelledby="insights-title">
+          <h3 id="insights-title" className="text-base font-semibold dark:text-white mb-3">Metas e Insights</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+            {/* Sistema de Metas */}
+            <div className={`p-3 ${isGoalCompleted ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800' : 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800'} rounded-lg border lg:col-span-2`}>
+              <h3 className="text-sm font-semibold text-green-700 dark:text-green-300 mb-3 flex items-center">
+                🎯 Sistema de Metas
+              </h3>
+              <div className="space-y-3">
+                <div className="p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-green-700 dark:text-green-300">Meta Semanal</span>
+                    <span className={`text-sm font-bold ${isGoalCompleted ? 'text-green-600 dark:text-green-400' : 'text-green-700 dark:text-green-300'}`}>
+                      {weeklyProgress}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
+                    <div 
+                      className={`h-3 rounded-full transition-all duration-300 ${isGoalCompleted ? 'bg-green-600 dark:bg-green-500' : 'bg-green-600 dark:bg-green-500'}`}
+                      style={{ width: `${Math.min(100, weeklyProgress)}%` }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-lg font-bold text-green-700 dark:text-green-300">
+                        {isGoalCompleted ? (
+                          <span className="flex items-center text-green-600 dark:text-green-400">
+                            Parabéns! 🎉
+                          </span>
+                        ) : (
+                          formatRemainingTime()
+                        )}
+                      </p>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {isGoalCompleted ? "Meta concluída!" : "Faltando"}
+                      </span>
                     </div>
-                    
-                    {/* Container para dias da semana e grid */}
-                    <div className="days-and-grid-container">
-                      {/* Rótulos dos dias da semana */}
-                      <div className="weekday-labels">
-                        {dayNames.map((day, index) => (
-                          <div key={`day-${index}`} className="weekday-label">
-                            {day}
+                    <div className="text-right">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Meta: {formatStudyTime(weeklyGoal)}</span>
+                      <br />
+                      <span className="text-xs text-green-600 dark:text-green-400">Atual: {formatStudyTime(weeklyStudyTime)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-medium text-green-700 dark:text-green-300">Progresso Hoje</span>
+                      <span className="text-xs font-bold text-green-700 dark:text-green-300">{dynamicGoals.dailyProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-1">
+                      <div 
+                        className="bg-green-600 dark:bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, dynamicGoals.dailyProgress)}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-green-600 dark:text-green-400">{formatStudyTime(dynamicGoals.todayTime)}</span>
+                      <span className="text-gray-500 dark:text-gray-400">Meta: {formatStudyTime(dynamicGoals.dailyGoal)}</span>
+                    </div>
+                  </div>
+                  <div className="p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                    <p className="text-xs font-medium text-green-700 dark:text-green-300 mb-1">Projeção Semanal</p>
+                    <p className="text-lg font-bold text-green-700 dark:text-green-300">
+                      {formatStudyTime(dynamicGoals.projectedWeeklyTime)}
+                    </p>
+                    <p className={`text-xs ${dynamicGoals.projectedWeeklyTime >= weeklyGoal ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                      {dynamicGoals.projectedWeeklyTime >= weeklyGoal ? 
+                        `✅ Meta será atingida!` : 
+                        dynamicGoals.daysRemaining > 0 ?
+                          `Precisa de ${formatStudyTime(dynamicGoals.timeNeededPerRemainingDay)}/dia` :
+                          `Meta não atingida desta vez`
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Comparativo Temporal */}
+            <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2 flex items-center">
+                📊 Comparativo Temporal
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <div className="text-center p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                  <p className="font-medium text-blue-700 dark:text-blue-300">Esta Semana</p>
+                  <p className="text-lg font-bold">{formatStudyTime(temporalComparisons.weekComparison.current)}</p>
+                  <p className={`text-xs ${temporalComparisons.weekComparison.current >= temporalComparisons.weekComparison.previous ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {temporalComparisons.weekComparison.previous === 0 ? 'Primeira semana' : 
+                      `${temporalComparisons.weekComparison.current >= temporalComparisons.weekComparison.previous ? '+' : ''}${formatStudyTime(temporalComparisons.weekComparison.current - temporalComparisons.weekComparison.previous)}`
+                    }
+                  </p>
+                </div>
+                <div className="text-center p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                  <p className="font-medium text-blue-700 dark:text-blue-300">Este Mês</p>
+                  <p className="text-lg font-bold">{formatStudyTime(temporalComparisons.monthComparison.current)}</p>
+                  <p className={`text-xs ${temporalComparisons.monthComparison.current >= temporalComparisons.monthComparison.previous ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {temporalComparisons.monthComparison.previous === 0 ? 'Primeiro mês' :
+                      `${temporalComparisons.monthComparison.current >= temporalComparisons.monthComparison.previous ? '+' : ''}${formatStudyTime(temporalComparisons.monthComparison.current - temporalComparisons.monthComparison.previous)}`
+                    }
+                  </p>
+                </div>
+                <div className="text-center p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                  <p className="font-medium text-blue-700 dark:text-blue-300">Melhor Dia</p>
+                  <p className="text-sm font-bold">{temporalComparisons.bestDay.day}</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400">{formatStudyTime(temporalComparisons.bestDay.avgTime)} média</p>
+                </div>
+                <div className="text-center p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                  <p className="font-medium text-blue-700 dark:text-blue-300">Simulados</p>
+                  <p className="text-lg font-bold">{temporalComparisons.simuladosComparison.current}</p>
+                  <p className={`text-xs ${temporalComparisons.simuladosComparison.current >= temporalComparisons.simuladosComparison.previous ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {temporalComparisons.simuladosComparison.previous === 0 ? 'Primeiro mês' :
+                      `${temporalComparisons.simuladosComparison.current >= temporalComparisons.simuladosComparison.previous ? '+' : ''}${temporalComparisons.simuladosComparison.current - temporalComparisons.simuladosComparison.previous} vs mês`
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Insights da Semana */}
+            {(weeklyInsights.mostReviewedTopic || weeklyInsights.bestPerformanceSubject || weeklyInsights.mostStudiedSubject) && (
+              <div className="p-3 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                <h3 className="text-sm font-semibold text-purple-700 dark:text-purple-300 mb-2 flex items-center">
+                  💡 Insights da Semana
+                </h3>
+                <div className="space-y-2 text-xs">
+                  {weeklyInsights.mostReviewedTopic && (
+                    <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                      <span className="text-purple-600 dark:text-purple-400">📚</span>
+                      <span className="text-gray-800 dark:text-gray-200">
+                        <strong>Tópico mais revisado:</strong> {weeklyInsights.mostReviewedTopic.title} ({weeklyInsights.mostReviewedCount}x)
+                      </span>
+                    </div>
+                  )}
+                  {weeklyInsights.bestPerformanceSubject && (
+                    <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                      <span className="text-purple-600 dark:text-purple-400">🏆</span>
+                      <span className="text-gray-800 dark:text-gray-200">
+                        <strong>Melhor performance:</strong> {weeklyInsights.bestPerformanceSubject.subject.name} ({weeklyInsights.bestPerformanceSubject.avgScore.toFixed(1)}%)
+                      </span>
+                    </div>
+                  )}
+                  {weeklyInsights.worstPerformanceSubject && weeklyInsights.worstPerformanceSubject !== weeklyInsights.bestPerformanceSubject && (
+                    <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                      <span className="text-purple-600 dark:text-purple-400">⚠️</span>
+                      <span className="text-gray-800 dark:text-gray-200">
+                        <strong>Precisa de atenção:</strong> {weeklyInsights.worstPerformanceSubject.subject.name} ({weeklyInsights.worstPerformanceSubject.avgScore.toFixed(1)}%)
+                      </span>
+                    </div>
+                  )}
+                  {weeklyInsights.mostStudiedSubject && (
+                    <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                      <span className="text-purple-600 dark:text-purple-400">⏱️</span>
+                      <span className="text-gray-800 dark:text-gray-200">
+                        <strong>Mais estudada:</strong> {weeklyInsights.mostStudiedSubject.subject.name} ({formatStudyTime(weeklyInsights.mostStudiedSubject.time)})
+                      </span>
+                    </div>
+                  )}
+                  {weeklyInsights.thisWeekSimulados > 0 && (
+                    <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                      <span className="text-purple-600 dark:text-purple-400">📝</span>
+                      <span className="text-gray-800 dark:text-gray-200">
+                        <strong>Simulados:</strong> {weeklyInsights.thisWeekSimulados} feitos ({weeklyInsights.avgPerformance.toFixed(1)}% média)
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Seção resumida de Simulados */}
+            {simulados.length > 0 && (
+              <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-purple-700 dark:text-purple-300">📊 Resumo de Simulados</h3>
+                  <button
+                    onClick={() => {
+                      const event = new CustomEvent('navigate-to-simulados');
+                      window.dispatchEvent(event);
+                    }}
+                    className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-200 font-medium underline"
+                  >
+                    Ver análise →
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-purple-700 dark:text-purple-300">
+                      {simulados.length}
+                    </p>
+                    <p className="text-xs text-purple-600 dark:text-purple-400">Total</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-purple-700 dark:text-purple-300">
+                      {simulados.length > 0 
+                        ? (simulados.reduce((acc, s) => acc + (s.hits / s.questions), 0) / simulados.length * 100).toFixed(1)
+                        : 0}%
+                    </p>
+                    <p className="text-xs text-purple-600 dark:text-purple-400">Média Geral</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-purple-700 dark:text-purple-300">
+                      {simulados.filter(s => s.date.startsWith(format(new Date(), 'yyyy-MM'))).length}
+                    </p>
+                    <p className="text-xs text-purple-600 dark:text-purple-400">Este Mês</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* SEÇÃO 3: HISTÓRICO DE ATIVIDADES */}
+        <section aria-labelledby="history-title">
+          <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+            <h3 id="history-title" className="text-base font-medium mb-3 text-center dark:text-white">Histórico de Atividades</h3>
+            <div ref={heatmapScrollRef} className="w-full overflow-x-auto" 
+                 aria-label="Histórico de atividades de estudo" 
+                 role="figure" 
+                 aria-description="Mapa de calor mostrando a frequência de sessões de estudo durante os últimos 12 meses">
+              {(() => {
+                const heatmapData = (() => {
+                  if (!pomodoroSessions || pomodoroSessions.length === 0) return [];
+                  const dateDurationMap = new Map<string, number>();
+                  pomodoroSessions.forEach(session => {
+                    if (!session.date || session.duration == null) return;
+                    try {
+                      const dateStr = session.date.split('T')[0];
+                      const currentDuration = dateDurationMap.get(dateStr) || 0;
+                      dateDurationMap.set(dateStr, currentDuration + session.duration);
+                    } catch (error) { console.error("Erro ao processar data:", error); }
+                  });
+                  return Array.from(dateDurationMap.entries())
+                    .filter(([_, minutes]) => minutes > 0)
+                    .map(([date, minutes]) => ({
+                      date,
+                      count: minutes,
+                      content: `${date}: ${formatStudyTime(minutes)}`
+                    }));
+                })();
+                
+                const getColor = (count: number) => {
+                  if (!count || count === 0) return isDarkMode ? '#2d3748' : '#f3f4f6';
+                  const colorLevels = isDarkMode 
+                    ? ['#4f46e530', '#4f46e545', '#6366f160', '#7c3aed75', '#9333ea85', '#a855f790'] 
+                    : ['#dbeafe', '#bfdbfe', '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb'];
+                  if (count < heatmapThresholds.level1) return colorLevels[0];
+                  if (count < heatmapThresholds.level2) return colorLevels[1];
+                  if (count < heatmapThresholds.level3) return colorLevels[2];
+                  if (count < heatmapThresholds.level4) return colorLevels[3];
+                  if (count < heatmapThresholds.level5) return colorLevels[4];
+                  return colorLevels[5];
+                };
+                
+                const endDate = new Date();
+                const startDate = subYears(endDate, 1);
+                const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                
+                type DayCellData = { date: string; minutes: number; tooltip: string; isToday: boolean; };
+                const activityMap = new Map<string, number>(heatmapData.map(item => [item.date, item.count]));
+                const allDays: DayCellData[] = [];
+                const monthLabelsData: { label: string; columnIndex: number }[] = [];
+                
+                let currentDay = startOfDay(startDate);
+                while (currentDay.getDay() !== 0) { currentDay = subDays(currentDay, 1); }
+                
+                let weekIndex = 0;
+                let currentMonth = -1;
+                
+                while (currentDay <= endDate || currentDay.getDay() !== 0) {
+                  const dateKey = format(currentDay, 'yyyy-MM-dd');
+                  const minutes = activityMap.get(dateKey) || 0;
+                  const inRange = currentDay >= startDate && currentDay <= endDate;
+                  
+                  if (currentDay.getMonth() !== currentMonth && currentDay.getDay() === 0) {
+                    currentMonth = currentDay.getMonth();
+                    monthLabelsData.push({ label: format(currentDay, 'MMM', { locale: pt }), columnIndex: weekIndex });
+                  }
+
+                  if (inRange) {
+                    allDays.push({
+                      date: dateKey,
+                      minutes,
+                      tooltip: minutes > 0 
+                        ? `${format(currentDay, "dd 'de' MMMM, yyyy", { locale: pt })}: ${formatStudyTime(minutes)}`
+                        : `Sem estudo em ${format(currentDay, "dd 'de' MMMM, yyyy", { locale: pt })}`,
+                      isToday: isSameDay(currentDay, new Date())
+                    });
+                  }
+
+                  currentDay = addDays(currentDay, 1);
+                  if (currentDay.getDay() === 0) { weekIndex++; }
+                }
+                
+                const totalWeeks = weekIndex;
+                const cellSize = heatmapCellSize; 
+                const cellGap = heatmapCellGap; 
+                const cellUnit = cellSize + cellGap;
+                
+                return (
+                  <div className="github-style-heatmap centered-heatmap">
+                    <div className="heatmap-content-wrapper">
+                      <div className="month-labels">
+                        {monthLabelsData.map(({ label, columnIndex }) => (
+                          <div key={`month-${label}-${columnIndex}`} className="month-label" style={{ left: `${columnIndex * cellUnit}px` }}>
+                            {label}
                           </div>
                         ))}
                       </div>
-                      
-                      {/* Grid de células (dias) */}
-                      <div 
-                        className="days-grid"
-                        style={{
-                          gridTemplateRows: `repeat(7, ${cellSize}px)`,
-                          gridTemplateColumns: `repeat(${totalWeeks}, ${cellSize}px)`,
-                          gap: `${cellGap}px`,
-                          gridAutoFlow: 'column' // Fluxo de preenchimento por coluna, não por linha
-                        }}
-                      >
-                        {/* Primeiro geramos os dias da semana (linhas) */}
-                        {[0, 1, 2, 3, 4, 5, 6].map(dayOfWeek => (
-                          // Depois geramos as semanas (colunas) para cada dia
-                          Array.from({ length: totalWeeks }).map((_, weekIndex) => {
-                            // Primeiro domingo da grade
+                      <div className="days-and-grid-container">
+                        <div className="weekday-labels">
+                          {dayNames.map((day, index) => (
+                            <div key={`day-${index}`} className="weekday-label">{day}</div>
+                          ))}
+                        </div>
+                        <div className="days-grid" style={{ gridTemplateRows: `repeat(7, ${cellSize}px)`, gridTemplateColumns: `repeat(${totalWeeks}, ${cellSize}px)`, gap: `${cellGap}px` }}>
+                          {Array.from({ length: 7 * totalWeeks }).map((_, i) => {
+                            const dayOfWeek = i % 7;
+                            const weekIdx = Math.floor(i / 7);
                             const firstSunday = startOfWeek(startDate, { weekStartsOn: 0 });
-                            // Data atual baseada no dia da semana e índice da semana
-                            const dayDate = addDays(firstSunday, dayOfWeek + (weekIndex * 7));
+                            const dayDate = addDays(firstSunday, dayOfWeek + (weekIdx * 7));
                             const dateKey = format(dayDate, 'yyyy-MM-dd');
-                            const dayData = allDays.find(d => d.date === dateKey);
-                            const cellIndex = (dayOfWeek * totalWeeks) + weekIndex;
                             
-                            // Se este dia está fora do período, renderize célula vazia
-                            if (!dayData && (dayDate < startDate || dayDate > endDate)) {
-                              return (
-                                <div 
-                                  key={`empty-${cellIndex}`} 
-                                  className="day-cell outside-range"
-                                ></div>
-                              );
+                            if (dayDate < startDate || dayDate > endDate) {
+                              return <div key={`empty-${i}`} className="day-cell outside-range"></div>;
                             }
                             
+                            const dayData = allDays.find(d => d.date === dateKey);
                             const minutes = dayData?.minutes || 0;
                             const isToday = dayData?.isToday || false;
                             const tooltipText = dayData?.tooltip || '';
                             
                             return (
                               <div 
-                                key={`cell-${cellIndex}`}
+                                key={`cell-${i}`}
                                 className={`day-cell ${isToday ? 'today' : ''} ${minutes > 0 ? 'has-activity' : ''}`}
-                                style={{
-                                  backgroundColor: getColor(minutes),
-                                  gridRow: dayOfWeek + 1,
-                                  gridColumn: weekIndex + 1
-                                }}
+                                style={{ backgroundColor: getColor(minutes) }}
                                 aria-label={tooltipText}
                                 data-tooltip={tooltipText}
                                 onClick={() => handleCellClick(minutes > 0 ? dayDate : null)}
                                 onMouseEnter={(e: React.MouseEvent) => {
                                   const currentTooltipText = e.currentTarget.getAttribute('data-tooltip') || '';
-                                  setTooltip({
-                                    show: true,
-                                    text: currentTooltipText,
-                                    x: e.clientX,
-                                    y: e.clientY
-                                  });
+                                  setTooltip({ show: true, text: currentTooltipText, x: e.clientX, y: e.clientY });
                                 }}
                                 onMouseMove={(e: React.MouseEvent) => {
-                                  // Throttle tooltip updates para melhorar performance
                                   const now = Date.now();
                                   if (!lastTooltipUpdate || now - lastTooltipUpdate > 16) {
                                     lastTooltipUpdate = now;
-                                    setTooltip(prev => ({
-                                      ...prev,
-                                      x: e.clientX,
-                                      y: e.clientY
-                                    }));
+                                    setTooltip(prev => ({ ...prev, x: e.clientX, y: e.clientY }));
                                   }
                                 }}
-                                onMouseLeave={() => {
-                                  setTooltip(prev => ({
-                                    ...prev,
-                                    show: false
-                                  }));
-                                }}
+                                onMouseLeave={() => setTooltip(prev => ({ ...prev, show: false }))}
                               ></div>
                             );
-                          })
-                        )).flat()}
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })()}
-          </div>
-          
-          {/* Legenda de cores */}
-          <div className="color-scale-legend">
-            <span className="legend-text">Tempo de estudo:</span>
-            
-            {/* Array com informações dos níveis */}
-            {[
-              { level: 0, label: '0 min', range: 'Nenhum estudo' },
-              { level: 1, label: `1-${heatmapThresholds.level1-1} min`, range: `Menos de ${heatmapThresholds.level1} minutos` },
-              { level: 2, label: `${heatmapThresholds.level1}-${heatmapThresholds.level2-1} min`, range: `Entre ${heatmapThresholds.level1} e ${heatmapThresholds.level2} minutos` },
-              { level: 3, label: `${heatmapThresholds.level2}-${heatmapThresholds.level3-1} min`, range: `Entre ${heatmapThresholds.level2} e ${heatmapThresholds.level3} minutos` },
-              { level: 4, label: `${heatmapThresholds.level3}-${heatmapThresholds.level4-1} min`, range: `Entre ${heatmapThresholds.level3} e ${heatmapThresholds.level4} minutos` },
-              { level: 5, label: `${heatmapThresholds.level4}-${heatmapThresholds.level5-1} min`, range: `Entre ${heatmapThresholds.level4} e ${heatmapThresholds.level5} minutos` },
-              { level: 6, label: `${heatmapThresholds.level5}+ min`, range: `Mais de ${heatmapThresholds.level5} minutos` }
-            ].map((item) => (
-              <div 
-                key={item.level}
-                className="legend-item"
-                title={item.range}
-              >
-                <div 
-                  className="color-box"
-                style={{ 
-                    backgroundColor: item.level === 0 
-                      ? (isDarkMode ? '#2d3748' : '#f3f4f6') 
-                      : isDarkMode 
-                        ? [`#4f46e530`, `#4f46e545`, `#6366f160`, `#7c3aed75`, `#9333ea85`, `#a855f790`][item.level-1]
-                        : [`#dbeafe`, `#bfdbfe`, `#93c5fd`, `#60a5fa`, `#3b82f6`, `#2563eb`][item.level-1],
-                    border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
-                  }}
-                  aria-label={item.range}
-              />
-                <span className="level-label">{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Área de Detalhes das Atividades */}
-      {selectedDateDetails && (
-          <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg lg:col-span-2 overflow-x-auto">
-            <h3 className="text-base font-medium mb-3 dark:text-white">
-            Atividades de {format(selectedDateDetails, "dd 'de' MMMM, yyyy", { locale: pt })}
-          </h3>
-          {selectedActivities.length > 0 ? (
-            <ul className="space-y-2">
-              {selectedActivities.map((activity, index) => {
-                const isPomodoro = 'duration' in activity;
-                const topicId = (activity as PomodoroSession).topicId || (activity as Review).topicId;
-                const subjectId = findSubjectIdForTopic(topicId);
-                const subject = subjects.find(s => s.id === subjectId);
-                const topic = subject?.topics.find(t => t.id === topicId);
-
-                return (
-                  <li key={index} className="text-sm p-2 rounded bg-white dark:bg-gray-600 shadow-sm overflow-hidden">
-                    <div className="flex flex-col sm:flex-row sm:items-center">
-                      <span className={`font-semibold mr-2 ${isPomodoro ? 'text-blue-600 dark:text-blue-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
-                        {isPomodoro ? '[Foco]' : (activity as Review).completed ? '[Revisão ✓]' : '[Revisão]'}
-                    </span>
-                        <span className="mt-1 sm:mt-0 dark:text-gray-300 break-words text-xs">
-                        {subject?.name || 'N/A'} - {topic?.title || 'N/A'}
-                      {isPomodoro && ` (${formatStudyTime((activity as PomodoroSession).duration)})`}
-                    </span>
-                    </div>
-                  </li>
                 );
-              })}
-            </ul>
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Nenhuma atividade neste dia.</p>
-          )}
-        </div>
-      )}
-
-      {/* Tooltip global controlado por React */}
-      {tooltip.show && (
-        <div 
-          className="fixed z-[9999] px-3 py-2 rounded-md text-sm pointer-events-none"
-          style={{
-            left: `${tooltip.x}px`,
-            top: `${tooltip.y - 80}px`, // Aumentado para 60px acima do cursor
-            transform: 'translate(-50%, 0)', // Apenas centralizar horizontalmente
-            backgroundColor: isDarkMode ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-            color: isDarkMode ? '#e5e7eb' : '#1f2937',
-            border: `1px solid ${isDarkMode ? '#4b5563' : '#e5e7eb'}`,
-            boxShadow: `0 3px 10px ${isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.1)'}`,
-            maxWidth: '300px',
-            whiteSpace: 'normal'
-          }}
-        >
-          {tooltip.text}
-        </div>
-      )}
-
-      {/* Modal de confirmação */}
-      {showResetConfirm && (
-          <div className="fixed inset-0 z-50 bg-gray-700 bg-opacity-50 dark:bg-black dark:bg-opacity-60 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 max-w-sm mx-4">
-              <h3 className="text-lg font-semibold mb-3 dark:text-white">Reiniciar Estatísticas</h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">
-              Esta ação vai reiniciar todas as estatísticas de estudo. Esta ação não pode ser desfeita.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowResetConfirm(false)}
-                  className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleResetAllStats}
-                  className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
-              >
-                Reiniciar
-              </button>
+              })()}
+            </div>
+            {/* Legenda de cores */}
+            <div className="color-scale-legend">
+              <span className="legend-text">Tempo de estudo:</span>
+              {[
+                { level: 0, label: '0 min', range: 'Nenhum estudo' },
+                { level: 1, label: `1-${heatmapThresholds.level1-1} min`, range: `Menos de ${heatmapThresholds.level1} minutos` },
+                { level: 2, label: `${heatmapThresholds.level1}-${heatmapThresholds.level2-1} min`, range: `Entre ${heatmapThresholds.level1} e ${heatmapThresholds.level2} minutos` },
+                { level: 3, label: `${heatmapThresholds.level2}-${heatmapThresholds.level3-1} min`, range: `Entre ${heatmapThresholds.level2} e ${heatmapThresholds.level3} minutos` },
+                { level: 4, label: `${heatmapThresholds.level3}-${heatmapThresholds.level4-1} min`, range: `Entre ${heatmapThresholds.level3} e ${heatmapThresholds.level4} minutos` },
+                { level: 5, label: `${heatmapThresholds.level4}-${heatmapThresholds.level5-1} min`, range: `Entre ${heatmapThresholds.level4} e ${heatmapThresholds.level5} minutos` },
+                { level: 6, label: `${heatmapThresholds.level5}+ min`, range: `Mais de ${heatmapThresholds.level5} minutos` }
+              ].map((item) => (
+                <div key={item.level} className="legend-item" title={item.range}>
+                  <div 
+                    className="color-box"
+                    style={{ 
+                      backgroundColor: item.level === 0 
+                        ? (isDarkMode ? '#2d3748' : '#f3f4f6') 
+                        : isDarkMode 
+                          ? [`#4f46e530`, `#4f46e545`, `#6366f160`, `#7c3aed75`, `#9333ea85`, `#a855f790`][item.level-1]
+                          : [`#dbeafe`, `#bfdbfe`, `#93c5fd`, '#60a5fa', '#3b82f6', '#2563eb'][item.level-1],
+                      border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
+                    }}
+                    aria-label={item.range}
+                  />
+                  <span className="level-label">{item.label}</span>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-      )}
+        </section>
 
-      <style jsx>{`
-        .confetti-container {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-        }
-        
-        .confetti-piece {
-          position: absolute;
-          width: 10px;
-          height: 10px;
-          background: #ffd300;
-          animation: confetti-fall 3s linear forwards;
-        }
-        
-        @keyframes confetti-fall {
-          0% {
-            transform: translateY(0) rotate(0deg);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(1000px) rotate(720deg);
-            opacity: 0;
-          }
-        }
-        
-        /* Estilo para o calendário personalizado - NOVO ESTILO GITHUB */
-        .github-style-heatmap {
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-          margin-top: 10px;
-          gap: 8px;
-          /* Removido drop-shadow custoso no modo escuro para melhorar performance */
-        }
-        
-        .centered-heatmap {
-          margin: 0 auto;
-          width: 100%;
-          /* Removendo max-width fixo para melhor responsividade */
-        }
+        {/* Área de Detalhes das Atividades */}
+        {selectedDateDetails && (
+            <div className="p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg lg:col-span-2 overflow-x-auto">
+              <h3 className="text-base font-medium mb-3 dark:text-white">
+              Atividades de {format(selectedDateDetails, "dd 'de' MMMM, yyyy", { locale: pt })}
+            </h3>
+            {selectedActivities.length > 0 ? (
+              <ul className="space-y-2">
+                {selectedActivities.map((activity, index) => {
+                  const isPomodoro = 'duration' in activity;
+                  const topicId = (activity as PomodoroSession).topicId || (activity as Review).topicId;
+                  const subjectId = findSubjectIdForTopic(topicId);
+                  const subject = subjects.find(s => s.id === subjectId);
+                  const topic = subject?.topics.find(t => t.id === topicId);
 
-        .heatmap-content-wrapper {
-          position: relative;
-          padding-bottom: 10px;
-          padding-right: 5px;
-          min-width: min-content;
-          contain: layout paint;
-        }
+                  return (
+                    <li key={index} className="text-sm p-2 rounded bg-white dark:bg-gray-600 shadow-sm overflow-hidden">
+                      <div className="flex flex-col sm:flex-row sm:items-center">
+                        <span className={`font-semibold mr-2 ${isPomodoro ? 'text-blue-600 dark:text-blue-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                          {isPomodoro ? '[Foco]' : (activity as Review).completed ? '[Revisão ✓]' : '[Revisão]'}
+                      </span>
+                          <span className="mt-1 sm:mt-0 dark:text-gray-300 break-words text-xs">
+                          {subject?.name || 'N/A'} - {topic?.title || 'N/A'}
+                        {isPomodoro && ` (${formatStudyTime((activity as PomodoroSession).duration)})`}
+                      </span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Nenhuma atividade neste dia.</p>
+            )}
+          </div>
+        )}
 
-        /* Indicador de rolagem removido para evitar bug visual */
-
-        .month-labels {
-          position: relative;
-          height: 20px;
-          margin-left: 30px;
-          margin-bottom: 4px;
-          min-width: min-content;
-        }
-
-        .month-label {
-          position: absolute;
-          font-size: 10px;
-          color: ${isDarkMode ? '#a1a1aa' : '#6b7280'};
-          top: 0;
-          white-space: nowrap;
-          font-weight: ${isDarkMode ? '500' : 'normal'};
-        }
-
-        .days-and-grid-container {
-          display: flex;
-          align-items: flex-start;
-          min-width: min-content;
-        }
-
-        .weekday-labels {
-          position: sticky;
-          left: 0;
-          z-index: 10; 
-          background-color: ${isDarkMode ? '#374151' : '#f9fafb'};
-          display: flex;
-          flex-direction: column;
-          min-width: 30px;
-          width: 30px;
-          gap: ${heatmapCellGap}px;
-          padding-top: 0;
-          justify-content: space-between;
-          height: calc(7 * ${heatmapCellSize}px + 6 * ${heatmapCellGap}px);
-          padding-right: 5px;
-          contain: layout style;
-        }
-
-        .weekday-label {
-          height: ${heatmapCellSize}px;
-          font-size: 9px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: ${isDarkMode ? '#a1a1aa' : '#6b7280'};
-          white-space: nowrap;
-          font-weight: ${isDarkMode ? '500' : 'normal'};
-        }
-
-        .weekday-label.empty {
-          visibility: hidden;
-        }
-
-        .days-grid {
-          display: grid;
-          margin-left: 5px;
-          grid-auto-flow: column;
-          min-width: min-content;
-          contain: layout paint;
-          transform: translateZ(0);
-        }
-
-        .day-cell {
-          width: ${heatmapCellSize}px;
-          height: ${heatmapCellSize}px;
-          border-radius: 2px;
-          transition: transform 0.15s ease;
-          position: relative;
-          cursor: pointer;
-          will-change: transform;
-        }
-
-        .day-cell.outside-range {
-          visibility: hidden;
-        }
-
-        .day-cell:hover {
-          transform: scale(1.2);
-          z-index: 5;
-          box-shadow: 0 2px 4px ${isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)'};
-        }
-        
-        .day-cell.today {
-          border: 1px solid ${isDarkMode ? '#a855f7' : '#3b82f6'};
-          ${isDarkMode ? 'box-shadow: 0 0 5px rgba(168, 85, 247, 0.5);' : ''}
-          animation: pulse 2s infinite;
-          position: relative;
-        }
-        
-        .today-number {
-          position: absolute;
-          font-size: 8px;
-          font-weight: bold;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          color: ${isDarkMode ? '#ffffff' : '#000000'};
-          opacity: 0.7;
-          text-shadow: ${isDarkMode ? '0 0 2px rgba(0,0,0,0.8)' : '0 0 2px rgba(255,255,255,0.8)'};
-          pointer-events: none;
-          user-select: none;
-        }
-        
-        @keyframes pulse {
-          0% {
-            box-shadow: 0 0 0 0 ${isDarkMode ? 'rgba(168, 85, 247, 0.4)' : 'rgba(59, 130, 246, 0.4)'};
-          }
-          70% {
-            box-shadow: 0 0 0 4px ${isDarkMode ? 'rgba(168, 85, 247, 0)' : 'rgba(59, 130, 246, 0)'};
-          }
-          100% {
-            box-shadow: 0 0 0 0 ${isDarkMode ? 'rgba(168, 85, 247, 0)' : 'rgba(59, 130, 246, 0)'};
-          }
-        }
-        
-        /* Adicionar um estilo para tooltip global que será adicionado ao body */
-        #global-tooltip {
-          display: none; /* Escondemos o antigo */
-        }
-
-        /* Ajusta o tamanho das células em telas pequenas */
-        @media (max-width: 480px) {
-          .color-scale-legend {
-            flex-wrap: wrap;
-            justify-content: center;
-              gap: 3px;
-          }
-          
-          .legend-item {
-              margin: 0 1px;
-          }
-          
-          .level-label {
-              font-size: 7px;
-          }
-        }
-        
-        .color-scale-legend {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-            gap: 4px;
-          flex-wrap: wrap;
-            margin-top: 8px;
-          max-width: 100%;
-            padding: 0 8px;
-            ${isDarkMode ? 'background: rgba(31, 41, 55, 0.4); border-radius: 6px; padding: 6px 8px;' : ''}
-            overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-        }
-
-        .legend-text {
-            font-size: 9px;
-          font-weight: 500;
-          color: ${isDarkMode ? '#a1a1aa' : '#6b7280'};
-            margin-right: 3px;
-        }
-        
-        .legend-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 2px;
-          cursor: help;
-        }
-
-        .color-box {
-          width: 11px;
-          height: 11px;
-          border-radius: 2px;
-          ${isDarkMode ? 'box-shadow: 0 0 2px rgba(255, 255, 255, 0.1);' : ''}
-        }
-
-        .level-label {
-          font-size: 9px;
-          color: ${isDarkMode ? '#a1a1aa' : '#6b7280'};
-          white-space: nowrap;
-        }
-
-        .heatmap-content-wrapper::-webkit-scrollbar {
-          height: 8px;
-        }
-        
-        .heatmap-content-wrapper::-webkit-scrollbar-track {
-          background: ${isDarkMode ? '#1f2937' : '#f3f4f6'};
-          border-radius: 4px;
-        }
-        
-        .heatmap-content-wrapper::-webkit-scrollbar-thumb {
-          background-color: ${isDarkMode ? '#4b5563' : '#cbd5e1'};
-          border-radius: 4px;
-        }
-        
-        .heatmap-content-wrapper::-webkit-scrollbar-thumb:hover {
-          background-color: ${isDarkMode ? '#6b7280' : '#94a3b8'};
-        }
-
-        /* Adiciona um cursor pointer para células com atividade */
-        .day-cell.has-activity {
-          cursor: pointer;
-        }
-
-        .mobile-heatmap-rtl {
-          direction: rtl;
-        }
-
-        .mobile-heatmap-rtl > div {
-          direction: ltr; /* Garante que o conteúdo dos filhos não seja invertido */
-        }
-        
-        /* Especificidade para os rótulos de mês e dia dentro do RTL */
-        .mobile-heatmap-rtl .month-labels,
-        .mobile-heatmap-rtl .weekday-labels,
-        .mobile-heatmap-rtl .days-grid {
-          direction: ltr;
-        }
-
-        /* Se as células individuais do grid também precisarem de direção LTR explicitamente */
-        .mobile-heatmap-rtl .days-grid > div {
-            direction: ltr;
-        }
+        {/* MODALS AND GLOBAL STYLES */}
+        {tooltip.show && (
+          <div 
+            className="fixed z-[9999] px-3 py-2 rounded-md text-sm pointer-events-none"
+            style={{
+              left: `${tooltip.x}px`,
+              top: `${tooltip.y - 80}px`,
+              transform: 'translate(-50%, 0)',
+              backgroundColor: isDarkMode ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              color: isDarkMode ? '#e5e7eb' : '#1f2937',
+              border: `1px solid ${isDarkMode ? '#4b5563' : '#e5e7eb'}`,
+              boxShadow: `0 3px 10px ${isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.1)'}`,
+              maxWidth: '300px',
+              whiteSpace: 'normal'
+            }}
+          >
+            {tooltip.text}
+          </div>
+        )}
+        {showResetConfirm && (
+            <div className="fixed inset-0 z-50 bg-gray-700 bg-opacity-50 dark:bg-black dark:bg-opacity-60 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 max-w-sm mx-4">
+                <h3 className="text-lg font-semibold mb-3 dark:text-white">Reiniciar Estatísticas</h3>
+                <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">
+                Esta ação vai reiniciar todas as estatísticas de estudo. Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowResetConfirm(false)}
+                    className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleResetAllStats}
+                    className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+                >
+                  Reiniciar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        <style jsx>{`
+        .confetti-container { position: absolute; width: 100%; height: 100%; }
+        .confetti-piece { position: absolute; width: 10px; height: 10px; background: #ffd300; animation: confetti-fall 3s linear forwards; }
+        @keyframes confetti-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(1000px) rotate(720deg); opacity: 0; } }
+        .github-style-heatmap { display: flex; flex-direction: column; width: 100%; margin-top: 10px; gap: 8px; }
+        .centered-heatmap { margin: 0 auto; width: 100%; }
+        .heatmap-content-wrapper { position: relative; padding-bottom: 10px; padding-right: 5px; min-width: min-content; contain: layout paint; }
+        .month-labels { position: relative; height: 20px; margin-left: 30px; margin-bottom: 4px; min-width: min-content; }
+        .month-label { position: absolute; font-size: 10px; color: ${isDarkMode ? '#a1a1aa' : '#6b7280'}; top: 0; white-space: nowrap; font-weight: ${isDarkMode ? '500' : 'normal'}; }
+        .days-and-grid-container { display: flex; align-items: flex-start; min-width: min-content; }
+        .weekday-labels { position: sticky; left: 0; z-index: 10; background-color: ${isDarkMode ? '#374151' : '#f9fafb'}; display: flex; flex-direction: column; min-width: 30px; width: 30px; gap: ${heatmapCellGap}px; padding-top: 0; justify-content: space-between; height: calc(7 * ${heatmapCellSize}px + 6 * ${heatmapCellGap}px); padding-right: 5px; contain: layout style; }
+        .weekday-label { height: ${heatmapCellSize}px; font-size: 9px; display: flex; align-items: center; justify-content: center; color: ${isDarkMode ? '#a1a1aa' : '#6b7280'}; white-space: nowrap; font-weight: ${isDarkMode ? '500' : 'normal'}; }
+        .weekday-label.empty { visibility: hidden; }
+        .days-grid { display: grid; margin-left: 5px; grid-auto-flow: column; min-width: min-content; contain: layout paint; transform: translateZ(0); }
+        .day-cell { width: ${heatmapCellSize}px; height: ${heatmapCellSize}px; border-radius: 2px; transition: transform 0.15s ease; position: relative; cursor: pointer; will-change: transform; }
+        .day-cell.outside-range { visibility: hidden; }
+        .day-cell:hover { transform: scale(1.2); z-index: 5; box-shadow: 0 2px 4px ${isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)'}; }
+        .day-cell.today { border: 1px solid ${isDarkMode ? '#a855f7' : '#3b82f6'}; ${isDarkMode ? 'box-shadow: 0 0 5px rgba(168, 85, 247, 0.5);' : ''} animation: pulse 2s infinite; position: relative; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 ${isDarkMode ? 'rgba(168, 85, 247, 0.4)' : 'rgba(59, 130, 246, 0.4)'}; } 70% { box-shadow: 0 0 0 4px ${isDarkMode ? 'rgba(168, 85, 247, 0)' : 'rgba(59, 130, 246, 0)'}; } 100% { box-shadow: 0 0 0 0 ${isDarkMode ? 'rgba(168, 85, 247, 0)' : 'rgba(59, 130, 246, 0)'}; } }
+        .color-scale-legend { display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; margin-top: 8px; max-width: 100%; padding: 0 8px; ${isDarkMode ? 'background: rgba(31, 41, 55, 0.4); border-radius: 6px; padding: 6px 8px;' : ''} overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .legend-text { font-size: 9px; font-weight: 500; color: ${isDarkMode ? '#a1a1aa' : '#6b7280'}; margin-right: 3px; }
+        .legend-item { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: help; }
+        .color-box { width: 11px; height: 11px; border-radius: 2px; ${isDarkMode ? 'box-shadow: 0 0 2px rgba(255, 255, 255, 0.1);' : ''} }
+        .level-label { font-size: 9px; color: ${isDarkMode ? '#a1a1aa' : '#6b7280'}; white-space: nowrap; }
+        .heatmap-content-wrapper::-webkit-scrollbar { height: 8px; }
+        .heatmap-content-wrapper::-webkit-scrollbar-track { background: ${isDarkMode ? '#1f2937' : '#f3f4f6'}; border-radius: 4px; }
+        .heatmap-content-wrapper::-webkit-scrollbar-thumb { background-color: ${isDarkMode ? '#4b5563' : '#cbd5e1'}; border-radius: 4px; }
+        .heatmap-content-wrapper::-webkit-scrollbar-thumb:hover { background-color: ${isDarkMode ? '#6b7280' : '#94a3b8'}; }
+        .day-cell.has-activity { cursor: pointer; }
+        @media (max-width: 480px) { .color-scale-legend { flex-wrap: wrap; justify-content: center; gap: 3px; } .legend-item { margin: 0 1px; } .level-label { font-size: 7px; } }
       `}</style>
       </div>
-      
-      {/* Study Buddy Chat - Componente Flutuante */}
-      <StudyBuddyChat />
     </div>
   );
 } 

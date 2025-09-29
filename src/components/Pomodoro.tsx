@@ -110,7 +110,7 @@ export default function Pomodoro() {
     }
   };
 
-    // Calcula os minutos diretamente do estado elapsedSeconds
+  // Calcula os minutos diretamente do estado elapsedSeconds
   const displaySessionMinutes = Math.floor(elapsedSeconds / 60);
 
   // Função para calcular a porcentagem de progresso do timer
@@ -137,7 +137,7 @@ export default function Pomodoro() {
     const elapsed = totalTime - timeRemaining;
     return Math.min(Math.max(elapsed / totalTime, 0), 1);
   };
-
+  
   return (
     <div>
       <div className="flex justify-between items-center mb-3">
@@ -149,54 +149,54 @@ export default function Pomodoro() {
           {showSettings ? 'Fechar Configurações' : 'Configurações'}
         </button>
       </div>
-
+      
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-2.5">
-        {/* Seleção de tópico */}
+      {/* Seleção de tópico */}
         <div className="mb-2">
           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Tópico de Estudo
-          </label>
-          <select
-            value={currentTopicId || ''}
-            onChange={(e) => {
-              const newTopicId = e.target.value || null;
-              const state = usePomodoroStore.getState();
-              const previousTopicId = state.currentTopicId; // Guarda o ID anterior
-              
-              // Antes de mudar, INTERROMPE a sessão do TÓPICO ANTERIOR (se estava em foco)
-              if (state.currentState === 'focus' && previousTopicId && state.elapsedSeconds > 0) {
-                 // Chama a ação centralizada para atualizar a sessão anterior
-                 interruptFocusSession(previousTopicId, state.elapsedSeconds);
-                // Resetar elapsedSeconds ao trocar de tópico durante foco
-                usePomodoroStore.setState({ elapsedSeconds: 0, lastMinuteUpdate: 0 });
-              }
-              
-              // Atualiza o tópico atual no estado
-              usePomodoroStore.setState({ currentTopicId: newTopicId });
-              
-              // Lógica para mostrar botão "Começar" e resetar timer
-              if (newTopicId && !state.isRunning) {
-                setShowStartButton(true);
-                resetTimer(); 
-              } else {
-                setShowStartButton(false);
-              }
-            }}
+          Tópico de Estudo
+        </label>
+        <select
+          value={currentTopicId || ''}
+          onChange={(e) => {
+            const newTopicId = e.target.value || null;
+            const state = usePomodoroStore.getState();
+            const previousTopicId = state.currentTopicId; // Guarda o ID anterior
+            
+            // Antes de mudar, INTERROMPE a sessão do TÓPICO ANTERIOR (se estava em foco)
+            if (state.currentState === 'focus' && previousTopicId && state.elapsedSeconds > 0) {
+               // Chama a ação centralizada para atualizar a sessão anterior
+               interruptFocusSession(previousTopicId, state.elapsedSeconds);
+              // Resetar elapsedSeconds ao trocar de tópico durante foco
+              usePomodoroStore.setState({ elapsedSeconds: 0, lastMinuteUpdate: 0 });
+            }
+            
+            // Atualiza o tópico atual no estado
+            usePomodoroStore.setState({ currentTopicId: newTopicId });
+            
+            // Lógica para mostrar botão "Começar" e resetar timer
+            if (newTopicId && !state.isRunning) {
+              setShowStartButton(true);
+              resetTimer(); 
+            } else {
+              setShowStartButton(false);
+            }
+          }}
             className="w-full p-2 text-sm border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            disabled={isRunning}
-          >
-            <option value="">Selecione um tópico</option>
-            {/* Mapear sobre os tópicos de hoje */}
-            {todaysTopics.map((topic) => {
-              const subject = subjects.find((s) => s.id === topic.subjectId);
-              return (
-                <option key={topic.id} value={topic.id}>
-                  {subject?.name} - {topic.title}
-                </option>
-              );
-            })}
-          </select>
-        </div>
+          disabled={isRunning}
+        >
+          <option value="">Selecione um tópico</option>
+          {/* Mapear sobre os tópicos de hoje */}
+          {todaysTopics.map((topic) => {
+            const subject = subjects.find((s) => s.id === topic.subjectId);
+            return (
+              <option key={topic.id} value={topic.id}>
+                {subject?.name} - {topic.title}
+              </option>
+            );
+          })}
+        </select>
+      </div>
       
         {/* Exibição do Timer com Layout Compacto */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-2">
@@ -244,23 +244,23 @@ export default function Pomodoro() {
                 timeRemaining <= 10 && isRunning ? 'animate-pulse text-red-500 dark:text-red-400' : ''
               }`}
             >
-              {formatTime(timeRemaining)}
+        {formatTime(timeRemaining)}
             </div>
-          </div>
-          
+      </div>
+      
           {/* Informações do Timer - Ao Lado */}
           <div className="text-center sm:text-left space-y-1">
-            <p className="text-lg font-medium dark:text-white">{getStateTitle()}</p>
+        <p className="text-lg font-medium dark:text-white">{getStateTitle()}</p>
             <p className="text-xs text-gray-600 dark:text-gray-400">
               Pomodoros completados: <span className="font-semibold">{completedPomodoros}</span>
-            </p>
-            
+        </p>
+        
             {/* Mostra o tempo contabilizado na sessão atual */}
-            {currentState === 'focus' && currentTopicId && isRunning && (
+        {currentState === 'focus' && currentTopicId && isRunning && (
               <p className="text-xs text-green-600 dark:text-green-400">
                 ⏱️ Tempo atual: <span className="font-semibold">{displaySessionMinutes} min</span>
-              </p>
-            )}
+          </p>
+        )}
 
             {/* Informação do estado atual em mobile */}
             <div className="sm:hidden mt-2">
@@ -276,152 +276,152 @@ export default function Pomodoro() {
               </div>
             </div>
           </div>
-        </div>
-        
+      </div>
+      
         {/* Controles Compactos */}
         <div className="timer-controls mt-1">
-          {/* Botão Começar (aparece apenas quando showStartButton é true) */}
+        {/* Botão Começar (aparece apenas quando showStartButton é true) */}
           {showStartButton ? (
             <div className="flex justify-center">
-              <button
-                onClick={() => {
-                  if (currentTopicId) {
-                    startTimer(currentTopicId);
+          <button
+            onClick={() => {
+              if (currentTopicId) {
+                startTimer(currentTopicId);
                     setShowStartButton(false);
-                  }
-                }}
+              }
+            }}
                 className="px-6 py-2 text-sm font-medium bg-green-600 text-white hover:bg-green-700 rounded-md transition-colors"
                 disabled={!currentTopicId}
-              >
+          >
                 🎯 Começar
-              </button>
+          </button>
             </div>
           ) : (
             /* Layout organizado para 3 botões - Mais compacto */
             <div className="flex justify-center gap-2 max-w-sm mx-auto">
-              <button
-                onClick={() => {
-                  if (isRunning) {
+          <button
+            onClick={() => {
+              if (isRunning) {
                     pauseTimer();
                   } else {
-                    if (currentState === 'focus' || currentState === 'idle') {
-                      if(currentTopicId) {
-                        if (currentState === 'idle' || timeRemaining === settings.focusDuration * 60) {
-                            startTimer(currentTopicId); 
+                if (currentState === 'focus' || currentState === 'idle') {
+                  if(currentTopicId) {
+                    if (currentState === 'idle' || timeRemaining === settings.focusDuration * 60) {
+                        startTimer(currentTopicId); 
                         } else {
                            usePomodoroStore.setState({ isRunning: true });
                         }
                         setShowStartButton(false);
                       } 
                     } else {
-                      usePomodoroStore.setState({ isRunning: true });
+                       usePomodoroStore.setState({ isRunning: true });
                     }
                   }
                 }}
                 className={`flex-1 px-3 py-1.5 text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 rounded-md transition-colors ${
-                  (!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId)
-                   ? 'opacity-50 cursor-not-allowed' 
-                   : ''
-                }`}
-                disabled={!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId}
-              >
-                {isRunning 
+              (!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId)
+               ? 'opacity-50 cursor-not-allowed' 
+               : ''
+            }`}
+            disabled={!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId}
+          >
+            {isRunning 
                   ? '⏸️ Pausar' 
-                  : (currentState === 'focus' || currentState === 'idle') 
+              : (currentState === 'focus' || currentState === 'idle') 
                     ? '▶️ Iniciar' 
                     : '▶️ Retomar'}
-              </button>
-              
-              <button
-                onClick={resetTimer}
+          </button>
+        
+        <button
+          onClick={resetTimer}
                 className={`px-3 py-1.5 text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 rounded-md transition-colors ${
-                  currentState === 'idle' && !isRunning && elapsedSeconds === 0
-                    ? 'opacity-50 cursor-not-allowed' 
-                    : ''
-                }`}
-                disabled={currentState === 'idle' && !isRunning && elapsedSeconds === 0}
-              >
+            currentState === 'idle' && !isRunning && elapsedSeconds === 0
+              ? 'opacity-50 cursor-not-allowed' 
+              : ''
+          }`}
+          disabled={currentState === 'idle' && !isRunning && elapsedSeconds === 0}
+        >
                 🔄
-              </button>
-              
-              <button
+        </button>
+        
+        <button
                 onClick={skipToNext}
                 className="px-3 py-1.5 text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 rounded-md transition-colors"
-              >
+        >
                 ⏭️
-              </button>
+        </button>
             </div>
           )}
-        </div>
-        
+      </div>
+      
         {/* Configurações Compactas */}
-        {showSettings && (
+      {showSettings && (
           <div className="mt-2 p-2.5 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <h3 className="text-sm font-medium mb-1.5 dark:text-white">⚙️ Configurações</h3>
-            
+          
             <div className="grid grid-cols-2 gap-2">
-              <div>
+            <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">
                   Foco (min)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="60"
-                  value={settings.focusDuration}
-                  onChange={(e) => updateSettings({ focusDuration: Number(e.target.value) })}
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="60"
+                value={settings.focusDuration}
+                onChange={(e) => updateSettings({ focusDuration: Number(e.target.value) })}
                   className="w-full p-1.5 text-xs border rounded dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                  disabled={isRunning}
-                />
-              </div>
-              
-              <div>
+                disabled={isRunning}
+              />
+            </div>
+            
+            <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">
                   Pausa Curta (min)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="30"
-                  value={settings.shortBreakDuration}
-                  onChange={(e) => updateSettings({ shortBreakDuration: Number(e.target.value) })}
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="30"
+                value={settings.shortBreakDuration}
+                onChange={(e) => updateSettings({ shortBreakDuration: Number(e.target.value) })}
                   className="w-full p-1.5 text-xs border rounded dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                  disabled={isRunning}
-                />
-              </div>
-              
-              <div>
+                disabled={isRunning}
+              />
+            </div>
+            
+            <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">
                   Pausa Longa (min)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="60"
-                  value={settings.longBreakDuration}
-                  onChange={(e) => updateSettings({ longBreakDuration: Number(e.target.value) })}
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="60"
+                value={settings.longBreakDuration}
+                onChange={(e) => updateSettings({ longBreakDuration: Number(e.target.value) })}
                   className="w-full p-1.5 text-xs border rounded dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                  disabled={isRunning}
-                />
-              </div>
-              
-              <div>
+                disabled={isRunning}
+              />
+            </div>
+            
+            <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">
                   Intervalo P. Longa
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={settings.longBreakInterval}
-                  onChange={(e) => updateSettings({ longBreakInterval: Number(e.target.value) })}
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={settings.longBreakInterval}
+                onChange={(e) => updateSettings({ longBreakInterval: Number(e.target.value) })}
                   className="w-full p-1.5 text-xs border rounded dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                  disabled={isRunning}
-                />
-              </div>
+                disabled={isRunning}
+              />
             </div>
           </div>
-        )}
+        </div>
+      )}
       </div>
     </div>
   );
