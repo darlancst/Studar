@@ -61,7 +61,7 @@ export default function Home() {
         return <Pomodoro />;
       case 'calendar':
         return (
-          <div>
+            <div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-2 sm:gap-0">
               <h2 className="text-2xl font-bold dark:text-white">Calendário</h2>
               <div className="flex gap-2 w-full sm:w-auto">
@@ -78,8 +78,8 @@ export default function Home() {
                   ⚙️
                 </button>
               </div>
-            </div>
-            <Calendar />
+              </div>
+              <Calendar />
           </div>
         );
       case 'simulados':
@@ -120,7 +120,7 @@ export default function Home() {
       <div className="mt-3">
         {renderContent()}
       </div>
-
+      
       {showSubjectManager && (
         <SubjectTopicManager onClose={() => setShowSubjectManager(false)} />
       )}

@@ -1247,7 +1247,7 @@ export default function Stats() {
                 if (currentDay.getMonth() !== currentMonth && currentDay.getDay() === 0) {
                   currentMonth = currentDay.getMonth();
                     monthLabelsData.push({ label: format(currentDay, 'MMM', { locale: pt }), columnIndex: weekIndex });
-                  }
+                }
 
                 if (inRange) {
                   allDays.push({
@@ -1262,8 +1262,8 @@ export default function Stats() {
 
                 currentDay = addDays(currentDay, 1);
                   if (currentDay.getDay() === 0) { weekIndex++; }
-                }
-                
+              }
+              
               const totalWeeks = weekIndex;
               const cellSize = heatmapCellSize; 
               const cellGap = heatmapCellGap; 
