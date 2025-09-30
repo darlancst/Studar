@@ -11,6 +11,7 @@ import SettingsModal from '@/components/SettingsModal';
 import SimuladosPage from '@/app/simulados/page';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import PWADebug from '@/components/PWADebug';
+import SyncStatus from '@/components/SyncStatus';
 
 export type TabName = 'calendar' | 'pomodoro' | 'stats' | 'simulados';
 
@@ -132,6 +133,7 @@ export default function Home() {
 
       <PWAInstallPrompt />
       <PWADebug />
+      <SyncStatus />
     </div>
   );
 } 
