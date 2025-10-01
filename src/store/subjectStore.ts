@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { Subject, Topic } from '@/types';
 import { useTopicStore } from './topicStore';
@@ -15,6 +15,12 @@ interface SubjectState {
   resetSubjects: () => void;
 }
 
+// Objeto para garantir que o localStorage só seja acessado no cliente.
+// Isso é crucial para evitar erros de hidratação em Next.js.
+const storage = typeof window !== 'undefined' 
+  ? createJSONStorage(() => localStorage) 
+  : undefined;
+
 export const useSubjectStore = create<SubjectState>()(
   persist(
     (set, get) => ({
@@ -28,12 +34,10 @@ export const useSubjectStore = create<SubjectState>()(
           topics: [],
         };
         set((state) => {
-          const newState = [...state.subjects, newSubject];
-          // Sincronizar com Firebase
-          if (typeof window !== 'undefined') {
-            setTimeout(() => firebaseSync.syncToCloud(), 100);
-          }
-          return { subjects: newState };
+          const newState = { subjects: [...state.subjects, newSubject] };
+          // A sincronização agora acontece após a atualização do estado local.
+          setTimeout(() => firebaseSync.syncToCloud(), 0);
+          return newState;
         });
         return newSubject;
       },
@@ -75,6 +79,7 @@ export const useSubjectStore = create<SubjectState>()(
     }),
     {
       name: 'subjects',
+      storage: storage, // Usando o storage seguro que criamos.
     }
   )
 );

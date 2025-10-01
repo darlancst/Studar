@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import HydrationWrapper from '@/components/HydrationWrapper';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -71,9 +72,11 @@ export default function RootLayout({
         <meta property="og:image" content="https://studar.app/icons/apple-touch-icon.png" />
       </head>
       <body className={inter.className}>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 dark:text-gray-100">
-          {children}
-        </div>
+        <HydrationWrapper>
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 dark:text-gray-100">
+            {children}
+          </div>
+        </HydrationWrapper>
       </body>
     </html>
   );
