@@ -53,9 +53,13 @@ export default function SyncStatus() {
     };
   }, []);
 
-  const handleAuthAction = () => {
+  const handleAuthAction = async () => {
     if (isAuthenticated) {
-      logout();
+      // Limpar dados locais antes de fazer logout
+      localStorage.clear();
+      await logout();
+      // Forçar reload para limpar estados
+      window.location.reload();
     } else {
       setShowAuthModal(true);
     }

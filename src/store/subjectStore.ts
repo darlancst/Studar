@@ -15,6 +15,12 @@ interface SubjectState {
   resetSubjects: () => void;
 }
 
+// Objeto para garantir que o localStorage só seja acessado no cliente.
+// Isso é crucial para evitar erros de hidratação em Next.js.
+const storage = typeof window !== 'undefined' 
+  ? createJSONStorage(() => localStorage) 
+  : undefined;
+
 export const useSubjectStore = create<SubjectState>()(
   persist(
     (set, get) => ({
@@ -29,6 +35,7 @@ export const useSubjectStore = create<SubjectState>()(
         };
         set((state) => {
           const newState = { subjects: [...state.subjects, newSubject] };
+          // A sincronização agora acontece após a atualização do estado local.
           setTimeout(() => firebaseSync.syncToCloud(), 0);
           return newState;
         });
@@ -39,14 +46,20 @@ export const useSubjectStore = create<SubjectState>()(
           const newState = state.subjects.map((subject) =>
             subject.id === id ? { ...subject, ...data } : subject
           );
-          setTimeout(() => firebaseSync.syncToCloud(), 0);
+          // Sincronizar com Firebase
+          if (typeof window !== 'undefined') {
+            setTimeout(() => firebaseSync.syncToCloud(), 100);
+          }
           return { subjects: newState };
         });
       },
       deleteSubject: (id) => {
         set((state) => {
           const newState = state.subjects.filter((subject) => subject.id !== id);
-          setTimeout(() => firebaseSync.syncToCloud(), 0);
+          // Sincronizar com Firebase
+          if (typeof window !== 'undefined') {
+            setTimeout(() => firebaseSync.syncToCloud(), 100);
+          }
           return { subjects: newState };
         });
       },
@@ -66,10 +79,7 @@ export const useSubjectStore = create<SubjectState>()(
     }),
     {
       name: 'subjects',
-      storage: typeof window !== 'undefined' 
-        ? createJSONStorage(() => localStorage) 
-        : undefined as any,
-      skipHydration: true, // Evita hidratação automática durante SSR
+      storage: storage, // Usando o storage seguro que criamos.
     }
   )
 );

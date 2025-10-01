@@ -3,47 +3,47 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { firebaseSync } from '@/services/firebaseSync';
-import { useSubjectStore } from '@/store/subjectStore';
-import { useTopicStore } from '@/store/topicStore';
-import { useSessionStore } from '@/store/sessionStore';
+
+// Este componente garante que os dados do localStorage (e do Firebase)
+// sejam carregados ANTES de renderizar a aplicação principal.
+// Isso evita erros de hidratação do React (erros #425, #418, #423).
 
 export default function HydrationWrapper({ children }: { children: React.ReactNode }) {
-  const [isClient, setIsClient] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { user } = useAuth();
 
-  // Garantir que estamos no cliente
+  // Garantir que só renderiza no cliente
   useEffect(() => {
-    setIsClient(true);
+    setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    if (!isClient) return;
-
+    if (!isMounted) return;
+    
     const syncAndHydrate = async () => {
-      // Hidratar manualmente os stores do Zustand
-      if (typeof window !== 'undefined') {
-        await useSubjectStore.persist.rehydrate();
-        await useTopicStore.persist.rehydrate();
-        await useSessionStore.persist.rehydrate();
-      }
-
-      // Sincronizar com Firebase se usuário estiver logado
+      // Pequeno delay para garantir que stores foram inicializados
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Se o usuário estiver logado, tentamos buscar os dados mais recentes da nuvem primeiro.
       if (user) {
         firebaseSync.setUser(user);
         await firebaseSync.initialSync();
       }
       
+      // Marca como hidratado, permitindo que a UI renderize com os dados corretos.
       setIsHydrated(true);
+
+      // Dispara um evento para que os stores possam recarregar seus estados do localStorage atualizado.
       window.dispatchEvent(new Event('storage'));
       window.dispatchEvent(new Event('dataSync'));
     };
 
     syncAndHydrate();
-  }, [user, isClient]);
+  }, [user, isMounted]);
 
-  // Durante SSR e hidratação inicial, mostrar loader
-  if (!isClient || !isHydrated) {
+  // Não renderizar nada no servidor
+  if (!isMounted || !isHydrated) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
