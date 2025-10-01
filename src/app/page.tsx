@@ -12,7 +12,6 @@ import SimuladosPage from '@/app/simulados/page';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import PWADebug from '@/components/PWADebug';
 import SyncStatus from '@/components/SyncStatus';
-import ClientOnly from '@/components/ClientOnly';
 
 export type TabName = 'calendar' | 'pomodoro' | 'stats' | 'simulados';
 
@@ -132,11 +131,9 @@ export default function Home() {
         <SettingsModal onClose={() => setShowSettings(false)} />
       )}
 
-      <ClientOnly>
-        <PWAInstallPrompt />
-        <PWADebug />
-        <SyncStatus />
-      </ClientOnly>
+      <PWAInstallPrompt />
+      <PWADebug />
+      <SyncStatus />
     </div>
   );
-}
+} 
