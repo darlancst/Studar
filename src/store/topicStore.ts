@@ -83,6 +83,7 @@ export const useTopicStore = create<TopicState>()(
     }),
     {
       name: 'topic-storage',
+      skipHydration: true,
     }
   )
 );

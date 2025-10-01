@@ -45,6 +45,7 @@ export const useSessionStore = create<SessionState>()(
     }),
     {
       name: 'pomodoroSessions',
+      skipHydration: true,
     }
   )
 );
