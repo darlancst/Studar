@@ -7,7 +7,7 @@ import {
   enableNetwork, 
   disableNetwork 
 } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from '@/lib/firebase';
+import { getDbInstance, isFirebaseConfigured } from '@/lib/firebase';
 import { AuthUser } from '@/hooks/useAuth';
 
 // Interface para dados do usuário no Firebase
@@ -36,7 +36,7 @@ export class FirebaseSync {
 
   // Verificar se pode sincronizar
   private canSync(): boolean {
-    return !!(isFirebaseConfigured() && this.userId && db);
+    return !!(isFirebaseConfigured() && this.userId && getDbInstance());
   }
 
   // Sincronizar dados do localStorage para Firebase
@@ -44,6 +44,9 @@ export class FirebaseSync {
     if (!this.canSync()) return false;
 
     try {
+      const db = getDbInstance();
+      if (!db) return false;
+
       const userData: UserData = {
         subjects: JSON.parse(localStorage.getItem('subjects') || '[]'),
         topics: JSON.parse(localStorage.getItem('topics') || '[]'),
@@ -70,6 +73,9 @@ export class FirebaseSync {
     if (!this.canSync()) return false;
 
     try {
+      const db = getDbInstance();
+      if (!db) return false;
+
       const userDocRef = doc(db, 'users', this.userId!);
       const userDoc = await getDoc(userDocRef);
 
@@ -100,6 +106,9 @@ export class FirebaseSync {
   // Configurar sincronização em tempo real
   startRealtimeSync() {
     if (!this.canSync()) return;
+
+    const db = getDbInstance();
+    if (!db) return;
 
     const userDocRef = doc(db, 'users', this.userId!);
     
@@ -166,11 +175,14 @@ export class FirebaseSync {
 
   // Verificar status de conexão
   async checkConnection() {
-    if (!isFirebaseConfigured() || !db) {
+    if (!isFirebaseConfigured() || !getDbInstance()) {
       return false;
     }
 
     try {
+      const db = getDbInstance();
+      if (!db) return false;
+      
       await enableNetwork(db);
       return true;
     } catch {
@@ -180,4 +192,4 @@ export class FirebaseSync {
 }
 
 // Instância singleton
-export const firebaseSync = new FirebaseSync(); 
+export const firebaseSync = new FirebaseSync();

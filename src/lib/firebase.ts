@@ -17,17 +17,32 @@ let app: any = null;
 let auth: any = null;
 let db: any = null;
 
-if (typeof window !== 'undefined' && firebaseConfig.apiKey) {
-  // Verificar se Firebase já foi inicializado
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApp();
-  }
+// Função para inicializar Firebase de forma segura
+const initializeFirebase = () => {
+  if (typeof window === 'undefined') return;
+  if (app) return; // Já foi inicializado
   
-  // Inicializar Auth e Firestore
-  auth = getAuth(app);
-  db = getFirestore(app);
+  if (firebaseConfig.apiKey) {
+    try {
+      // Verificar se Firebase já foi inicializado
+      if (!getApps().length) {
+        app = initializeApp(firebaseConfig);
+      } else {
+        app = getApp();
+      }
+      
+      // Inicializar Auth e Firestore
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } catch (error) {
+      console.error('Erro ao inicializar Firebase:', error);
+    }
+  }
+};
+
+// Inicializar quando estiver no cliente
+if (typeof window !== 'undefined') {
+  initializeFirebase();
 }
 
 // Funções utilitárias para modo offline (só funcionam no cliente)
@@ -50,5 +65,18 @@ export const isFirebaseConfigured = () => {
   return !!(firebaseConfig.apiKey && app && auth && db);
 };
 
+// Getters seguros
+export const getAuthInstance = () => {
+  if (typeof window === 'undefined') return null;
+  if (!auth) initializeFirebase();
+  return auth;
+};
+
+export const getDbInstance = () => {
+  if (typeof window === 'undefined') return null;
+  if (!db) initializeFirebase();
+  return db;
+};
+
 export { auth, db };
-export default app; 
+export default app;

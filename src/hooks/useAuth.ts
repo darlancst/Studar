@@ -9,7 +9,7 @@ import {
   signInWithPopup,
   updateProfile
 } from 'firebase/auth';
-import { auth, isFirebaseConfigured } from '@/lib/firebase';
+import { getAuthInstance, isFirebaseConfigured } from '@/lib/firebase';
 
 export interface AuthUser {
   uid: string;
@@ -25,6 +25,12 @@ export function useAuth() {
 
   useEffect(() => {
     if (!isFirebaseConfigured()) {
+      setLoading(false);
+      return;
+    }
+
+    const auth = getAuthInstance();
+    if (!auth) {
       setLoading(false);
       return;
     }
@@ -51,6 +57,11 @@ export function useAuth() {
       throw new Error('Firebase não configurado');
     }
 
+    const auth = getAuthInstance();
+    if (!auth) {
+      throw new Error('Firebase não inicializado');
+    }
+
     try {
       setError(null);
       setLoading(true);
@@ -66,6 +77,11 @@ export function useAuth() {
   const signUp = async (email: string, password: string, displayName?: string) => {
     if (!isFirebaseConfigured()) {
       throw new Error('Firebase não configurado');
+    }
+
+    const auth = getAuthInstance();
+    if (!auth) {
+      throw new Error('Firebase não inicializado');
     }
 
     try {
@@ -89,6 +105,11 @@ export function useAuth() {
       throw new Error('Firebase não configurado');
     }
 
+    const auth = getAuthInstance();
+    if (!auth) {
+      throw new Error('Firebase não inicializado');
+    }
+
     try {
       setError(null);
       setLoading(true);
@@ -104,6 +125,11 @@ export function useAuth() {
 
   const logout = async () => {
     if (!isFirebaseConfigured()) {
+      return;
+    }
+
+    const auth = getAuthInstance();
+    if (!auth) {
       return;
     }
 
@@ -144,7 +170,13 @@ function getErrorMessage(errorCode: string): string {
       return 'Muitas tentativas. Tente novamente mais tarde';
     case 'auth/network-request-failed':
       return 'Erro de conexão. Verifique sua internet';
+    case 'auth/popup-closed-by-user':
+      return 'Login cancelado pelo usuário';
+    case 'auth/popup-blocked':
+      return 'Popup bloqueado. Permita popups para este site';
+    case 'auth/operation-not-allowed':
+      return 'Operação não permitida. Verifique configuração do Firebase';
     default:
       return 'Erro desconhecido. Tente novamente';
   }
-} 
+}

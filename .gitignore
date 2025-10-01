@@ -20,3 +20,4 @@ yarn-error.log*
 # Optional system files
 .DS_Store
 Thumbs.db 
+.vercel
