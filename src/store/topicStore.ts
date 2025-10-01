@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Topic } from '@/types';
 import { useReviewStore } from './reviewStore';
 import { useSettingsStore } from './settingsStore';
+import { firebaseSync } from '@/services/firebaseSync';
 
 interface TopicState {
   topics: Topic[];
@@ -27,17 +28,18 @@ export const useTopicStore = create<TopicState>()(
           description,
           createdAt: customDate || new Date(),
         };
-        set((state) => ({
-          topics: [...state.topics, newTopic],
-        }));
+        set((state) => {
+          const newState = [...state.topics, newTopic];
+          if (typeof window !== 'undefined') {
+            setTimeout(() => firebaseSync.syncToCloud(), 100);
+          }
+          return { topics: newState };
+        });
         
-        // Cria revisões usando os intervalos personalizados do usuário
         const reviewStore = useReviewStore.getState();
         const settingsStore = useSettingsStore.getState();
-        // Usa a data personalizada se fornecida, ou a data atual
         const today = customDate || new Date();
         
-        // Usa os intervalos definidos pelo usuário (ou os padrão)
         settingsStore.reviewIntervals.forEach(days => {
           const scheduledDate = new Date(today);
           scheduledDate.setDate(today.getDate() + days);
@@ -47,18 +49,25 @@ export const useTopicStore = create<TopicState>()(
         return newTopic;
       },
       updateTopic: (id, data) => {
-        set((state) => ({
-          topics: state.topics.map((topic) =>
+        set((state) => {
+          const newState = state.topics.map((topic) =>
             topic.id === id ? { ...topic, ...data } : topic
-          ),
-        }));
+          );
+          if (typeof window !== 'undefined') {
+            setTimeout(() => firebaseSync.syncToCloud(), 100);
+          }
+          return { topics: newState };
+        });
       },
       deleteTopic: (id) => {
-        set((state) => ({
-          topics: state.topics.filter((topic) => topic.id !== id),
-        }));
+        set((state) => {
+          const newState = state.topics.filter((topic) => topic.id !== id);
+          if (typeof window !== 'undefined') {
+            setTimeout(() => firebaseSync.syncToCloud(), 100);
+          }
+          return { topics: newState };
+        });
         
-        // Remove revisões associadas
         const reviewStore = useReviewStore.getState();
         reviewStore.deleteReviewsByTopicId(id);
       },
@@ -76,4 +85,4 @@ export const useTopicStore = create<TopicState>()(
       name: 'topic-storage',
     }
   )
-); 
+);

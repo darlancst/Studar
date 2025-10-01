@@ -1,58 +1,50 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
+import { firebaseSync } from '@/services/firebaseSync';
 
-// Interface para a sessão de estudo
-export interface StudySession {
+export interface PomodoroSession {
   id: string;
   topicId: string;
-  subjectId: string;
-  duration: number; // em minutos
-  date: string; // data ISO string
+  duration: number;
+  completedAt: Date;
 }
 
 interface SessionState {
-  sessions: StudySession[];
-  addSession: (topicId: string, subjectId: string, duration: number) => void;
-  removeSession: (sessionId: string) => void;
-  updateSession: (sessionId: string, data: Partial<StudySession>) => void;
+  sessions: PomodoroSession[];
+  addSession: (topicId: string, duration: number) => void;
+  getSessions: () => PomodoroSession[];
+  getSessionsByTopicId: (topicId: string) => PomodoroSession[];
+  getTotalStudyTime: () => number;
 }
 
 export const useSessionStore = create<SessionState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       sessions: [],
-      
-      addSession: (topicId, subjectId, duration) => {
-        const newSession: StudySession = {
+      addSession: (topicId, duration) => {
+        const newSession: PomodoroSession = {
           id: uuidv4(),
           topicId,
-          subjectId,
           duration,
-          date: new Date().toISOString(),
+          completedAt: new Date(),
         };
-        
-        set((state) => ({
-          sessions: [...state.sessions, newSession],
-        }));
+        set((state) => {
+          const newState = [...state.sessions, newSession];
+          if (typeof window !== 'undefined') {
+            setTimeout(() => firebaseSync.syncToCloud(), 100);
+          }
+          return { sessions: newState };
+        });
       },
-      
-      removeSession: (sessionId) => {
-        set((state) => ({
-          sessions: state.sessions.filter((session) => session.id !== sessionId),
-        }));
-      },
-      
-      updateSession: (sessionId, data) => {
-        set((state) => ({
-          sessions: state.sessions.map((session) =>
-            session.id === sessionId ? { ...session, ...data } : session
-          ),
-        }));
-      },
+      getSessions: () => get().sessions,
+      getSessionsByTopicId: (topicId) =>
+        get().sessions.filter((session) => session.topicId === topicId),
+      getTotalStudyTime: () =>
+        get().sessions.reduce((total, session) => total + session.duration, 0),
     }),
     {
-      name: 'study-sessions-storage',
+      name: 'pomodoroSessions',
     }
   )
-); 
+);
