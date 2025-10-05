@@ -3,12 +3,17 @@ import {
   setDoc, 
   getDoc, 
   onSnapshot, 
-  collection, 
   enableNetwork, 
   disableNetwork 
 } from 'firebase/firestore';
 import { getDbInstance, isFirebaseConfigured } from '@/lib/firebase';
 import { AuthUser } from '@/hooks/useAuth';
+import { useSubjectStore } from '@/store/subjectStore';
+import { useTopicStore } from '@/store/topicStore';
+import { useReviewStore } from '@/store/reviewStore';
+import { usePomodoroStore } from '@/store/pomodoroStore';
+import { useSimuladosStore } from '@/store/simuladosStore';
+import { useSettingsStore } from '@/store/settingsStore';
 
 // Interface para dados do usuário no Firebase
 export interface UserData {
@@ -47,20 +52,36 @@ export class FirebaseSync {
       const db = getDbInstance();
       if (!db) return false;
 
+      // Lê diretamente das stores para evitar problemas com chaves do localStorage
+      const subjects = useSubjectStore.getState().subjects;
+      const topics = useTopicStore.getState().topics;
+      const reviews = useReviewStore.getState().reviews;
+      const pomodoroSessions = usePomodoroStore.getState().sessions;
+      const simulados = useSimuladosStore.getState().simulados;
+      const settingsState = useSettingsStore.getState();
+      const settings = {
+        darkMode: settingsState.darkMode,
+        weeklyGoal: settingsState.weeklyGoal,
+        weeklyGoalEndDate: settingsState.weeklyGoalEndDate,
+        reviewIntervals: settingsState.reviewIntervals,
+        heatmapThresholds: settingsState.heatmapThresholds,
+      };
+
       const userData: UserData = {
-        subjects: JSON.parse(localStorage.getItem('subjects') || '[]'),
-        topics: JSON.parse(localStorage.getItem('topics') || '[]'),
-        reviews: JSON.parse(localStorage.getItem('reviews') || '[]'),
-        pomodoroSessions: JSON.parse(localStorage.getItem('pomodoroSessions') || '[]'),
-        simulados: JSON.parse(localStorage.getItem('simulados') || '[]'),
-        settings: JSON.parse(localStorage.getItem('settings') || '{}'),
-        lastSync: Date.now()
+        subjects,
+        topics,
+        reviews,
+        pomodoroSessions,
+        simulados,
+        settings,
+        lastSync: Date.now(),
       };
 
       const userDocRef = doc(db, 'users', this.userId!);
       await setDoc(userDocRef, userData, { merge: true });
       
       console.log('✅ Dados sincronizados com sucesso para a nuvem');
+      try { localStorage.setItem('lastSync', String(userData.lastSync)); } catch {}
       return true;
     } catch (error) {
       console.error('❌ Erro ao sincronizar para nuvem:', error);
@@ -81,17 +102,37 @@ export class FirebaseSync {
 
       if (userDoc.exists()) {
         const userData = userDoc.data() as UserData;
-        
-        // Atualizar localStorage com dados da nuvem
-        localStorage.setItem('subjects', JSON.stringify(userData.subjects || []));
-        localStorage.setItem('topics', JSON.stringify(userData.topics || []));
-        localStorage.setItem('reviews', JSON.stringify(userData.reviews || []));
-        localStorage.setItem('pomodoroSessions', JSON.stringify(userData.pomodoroSessions || []));
-        localStorage.setItem('simulados', JSON.stringify(userData.simulados || []));
-        localStorage.setItem('settings', JSON.stringify(userData.settings || {}));
+        // Atualizar stores com dados da nuvem (isso persiste no localStorage através do middleware)
+        useSubjectStore.setState({ subjects: userData.subjects || [] });
+        useTopicStore.setState({ topics: userData.topics || [] });
+        useReviewStore.setState({ reviews: userData.reviews || [] });
+        usePomodoroStore.setState({ sessions: userData.pomodoroSessions || [] });
+        useSimuladosStore.setState({ simulados: userData.simulados || [] });
 
-        console.log('✅ Dados baixados da nuvem com sucesso');
-        
+        if (userData.settings) {
+          const s = useSettingsStore.getState();
+          // Aplicar campos conhecidos, mantendo valores atuais se ausentes
+          if (typeof userData.settings.darkMode === 'boolean' && userData.settings.darkMode !== s.darkMode) {
+            useSettingsStore.setState({ darkMode: userData.settings.darkMode });
+          }
+          if (typeof userData.settings.weeklyGoal === 'number') {
+            useSettingsStore.setState({ weeklyGoal: userData.settings.weeklyGoal });
+          }
+          if (typeof userData.settings.weeklyGoalEndDate === 'string' || userData.settings.weeklyGoalEndDate === null) {
+            useSettingsStore.setState({ weeklyGoalEndDate: userData.settings.weeklyGoalEndDate || null });
+          }
+          if (Array.isArray(userData.settings.reviewIntervals)) {
+            useSettingsStore.setState({ reviewIntervals: userData.settings.reviewIntervals });
+          }
+          if (userData.settings.heatmapThresholds) {
+            useSettingsStore.setState({ heatmapThresholds: userData.settings.heatmapThresholds });
+          }
+        }
+
+        try { localStorage.setItem('lastSync', String(userData.lastSync || Date.now())); } catch {}
+
+        console.log('✅ Dados baixados da nuvem e stores reidratadas com sucesso');
+
         // Disparar evento para atualizar UI
         window.dispatchEvent(new CustomEvent('dataSync'));
         return true;
