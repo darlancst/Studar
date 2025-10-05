@@ -7,6 +7,7 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
   updateProfile
 } from 'firebase/auth';
 import { getAuthInstance, isFirebaseConfigured } from '@/lib/firebase';
@@ -24,32 +25,46 @@ export function useAuth() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isFirebaseConfigured()) {
-      setLoading(false);
-      return;
-    }
+    let isCancelled = false;
+    let unsubscribe: (() => void) | null = null;
 
-    const auth = getAuthInstance();
-    if (!auth) {
-      setLoading(false);
-      return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
-          photoURL: firebaseUser.photoURL,
-        });
-      } else {
-        setUser(null);
+    const setupAuthListener = async () => {
+      // Tenta obter a instância do auth repetidamente por curto período
+      let attempts = 0;
+      let auth = getAuthInstance();
+      while (!auth && attempts < 20) {
+        await new Promise((r) => setTimeout(r, 100));
+        auth = getAuthInstance();
+        attempts++;
       }
-      setLoading(false);
-    });
 
-    return unsubscribe;
+      if (!auth || isCancelled) {
+        setLoading(false);
+        return;
+      }
+
+      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        if (isCancelled) return;
+        if (firebaseUser) {
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            photoURL: firebaseUser.photoURL,
+          });
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      });
+    };
+
+    setupAuthListener();
+
+    return () => {
+      isCancelled = true;
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -101,14 +116,19 @@ export function useAuth() {
   };
 
   const signInWithGoogle = async () => {
-    if (!isFirebaseConfigured()) {
-      throw new Error('Firebase não configurado');
-    }
+    const ensureAuth = async () => {
+      let attempts = 0;
+      let auth = getAuthInstance();
+      while (!auth && attempts < 20) {
+        await new Promise((r) => setTimeout(r, 100));
+        auth = getAuthInstance();
+        attempts++;
+      }
+      return auth;
+    };
 
-    const auth = getAuthInstance();
-    if (!auth) {
-      throw new Error('Firebase não inicializado');
-    }
+    const auth = await ensureAuth();
+    if (!auth) throw new Error('Firebase não inicializado');
 
     try {
       setError(null);
@@ -116,6 +136,12 @@ export function useAuth() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (error: any) {
+      // Fallback para navegadores que bloqueiam popup (ex.: anônimo/Firefox)
+      if (error?.code === 'auth/popup-blocked' || error?.code === 'auth/cancelled-popup-request') {
+        const provider = new GoogleAuthProvider();
+        await signInWithRedirect(auth, provider);
+        return;
+      }
       setError(getErrorMessage(error.code));
       throw error;
     } finally {
