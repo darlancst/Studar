@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { firebaseSync } from '@/services/firebaseSync';
 
 // Este componente garante que os dados do localStorage (e do Firebase)
@@ -11,7 +10,6 @@ import { firebaseSync } from '@/services/firebaseSync';
 export default function HydrationWrapper({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const { user } = useAuth();
 
   // Garantir que só renderiza no cliente
   useEffect(() => {
@@ -24,12 +22,9 @@ export default function HydrationWrapper({ children }: { children: React.ReactNo
     const syncAndHydrate = async () => {
       // Pequeno delay para garantir que stores foram inicializados
       await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Se o usuário estiver logado, tentamos buscar os dados mais recentes da nuvem primeiro.
-      if (user) {
-        firebaseSync.setUser(user);
-        await firebaseSync.initialSync();
-      }
+      // Sync inicial (KV-only)
+      firebaseSync.setUser(null);
+      await firebaseSync.initialSync();
       
       // Marca como hidratado, permitindo que a UI renderize com os dados corretos.
       setIsHydrated(true);
@@ -40,7 +35,7 @@ export default function HydrationWrapper({ children }: { children: React.ReactNo
     };
 
     syncAndHydrate();
-  }, [user, isMounted]);
+  }, [isMounted]);
 
   // Não renderizar nada no servidor
   if (!isMounted || !isHydrated) {

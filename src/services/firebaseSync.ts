@@ -1,13 +1,4 @@
-import { 
-  doc, 
-  setDoc, 
-  getDoc, 
-  onSnapshot, 
-  enableNetwork, 
-  disableNetwork 
-} from 'firebase/firestore';
-import { getDbInstance, isFirebaseConfigured } from '@/lib/firebase';
-import { AuthUser } from '@/hooks/useAuth';
+// KV-only sync service (Vercel KV via API routes)
 import { useSubjectStore } from '@/store/subjectStore';
 import { useTopicStore } from '@/store/topicStore';
 import { useReviewStore } from '@/store/reviewStore';
@@ -80,21 +71,19 @@ export class FirebaseSync {
     }
   }
 
-  // Configurar usuário para sincronização
-  setUser(user: AuthUser | null) {
-    this.userId = user?.uid || null;
-    
-    // Limpar listeners anteriores
+  // Compat: não usamos auth; chave será deviceId
+  setUser(_user: any | null) {
+    this.userId = null;
     this.unsubscribes.forEach(unsub => unsub());
     this.unsubscribes = [];
   }
 
-  // Verificar se pode sincronizar
+  // Podemos sincronizar no client (via API route)
   private canSync(): boolean {
-    return !!(isFirebaseConfigured() && this.userId && getDbInstance());
+    return typeof window !== 'undefined';
   }
 
-  // Sincronizar dados das stores para a nuvem (Firebase quando disponível, senão KV)
+  // Sincronizar dados das stores para KV
   async syncToCloud() {
     try {
       // Lê diretamente das stores para evitar problemas com chaves do localStorage
@@ -122,19 +111,7 @@ export class FirebaseSync {
         lastSync: Date.now(),
       };
 
-      // Tenta Firebase se disponível
-      if (this.canSync()) {
-        const db = getDbInstance();
-        if (db) {
-          const userDocRef = doc(db, 'users', this.userId!);
-          await setDoc(userDocRef, userData, { merge: true });
-          console.log('✅ Dados sincronizados com sucesso para o Firebase');
-          try { localStorage.setItem('lastSync', String(userData.lastSync)); } catch {}
-          return true;
-        }
-      }
-
-      // Fallback para KV
+      // KV persistência
       const savedOnKv = await this.kvSave(userData);
       if (savedOnKv) {
         console.log('✅ Dados sincronizados com sucesso para o KV');
@@ -148,23 +125,10 @@ export class FirebaseSync {
     }
   }
 
-  // Sincronizar dados da nuvem para as stores (Firebase quando disponível, senão KV)
+  // Sincronizar dados do KV para as stores
   async syncFromCloud() {
     try {
-      let userData: UserData | null = null;
-
-      if (this.canSync()) {
-        const db = getDbInstance();
-        if (!db) return false;
-        const userDocRef = doc(db, 'users', this.userId!);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          userData = userDoc.data() as UserData;
-        }
-      } else {
-        // Fallback: buscar do KV
-        userData = await this.kvLoad();
-      }
+      const userData: UserData | null = await this.kvLoad();
 
       if (userData) {
         // Atualizar stores com dados da nuvem (isso persiste no localStorage através do middleware)
@@ -211,43 +175,19 @@ export class FirebaseSync {
 
   // Configurar sincronização em tempo real
   startRealtimeSync() {
-    if (!this.canSync()) return;
-
-    const db = getDbInstance();
-    if (!db) return;
-
-    const userDocRef = doc(db, 'users', this.userId!);
-    
-    const unsubscribe = onSnapshot(userDocRef, (doc) => {
-      if (doc.exists()) {
-        const userData = doc.data() as UserData;
-        const localLastSync = parseInt(localStorage.getItem('lastSync') || '0');
-        
-        // Só atualizar se os dados da nuvem são mais recentes
-        if (userData.lastSync > localLastSync) {
-          this.syncFromCloud();
-        }
-      }
-    }, (error) => {
-      console.error('❌ Erro na sincronização em tempo real:', error);
-    });
-
-    this.unsubscribes.push(unsubscribe);
+    // KV não possui realtime nativo; sem-op
   }
 
   // Sincronização inicial ao fazer login
   async initialSync() {
     try {
-      // Primeiro, tenta baixar dados da nuvem (Firebase ou KV)
+      // Primeiro, tenta baixar dados do KV
       const cloudSyncSuccess = await this.syncFromCloud();
       if (!cloudSyncSuccess) {
         // Se não há dados na nuvem, envia dados locais
         await this.syncToCloud();
       }
-      // Inicia sincronização em tempo real somente se Firebase disponível
-      if (this.canSync()) {
-        this.startRealtimeSync();
-      }
+      // Realtime removido no modo KV-only
       return true;
     } catch (error) {
       console.error('❌ Erro na sincronização inicial:', error);
@@ -285,19 +225,8 @@ export class FirebaseSync {
 
   // Verificar status de conexão
   async checkConnection() {
-    if (!isFirebaseConfigured() || !getDbInstance()) {
-      return false;
-    }
-
-    try {
-      const db = getDbInstance();
-      if (!db) return false;
-      
-      await enableNetwork(db);
-      return true;
-    } catch {
-      return false;
-    }
+    if (typeof navigator !== 'undefined') return navigator.onLine;
+    return true;
   }
 }
 

@@ -1,31 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { firebaseSync } from '@/services/firebaseSync';
 import { CloudArrowUpIcon, CloudArrowDownIcon, WifiIcon, UserIcon, ArrowRightOnRectangleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import AuthModal from './AuthModal';
 
 export default function SyncStatus() {
-  const { user, logout, isAuthenticated, isFirebaseAvailable } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error' | 'not-configured'>('offline');
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
   useEffect(() => {
-    if (!isFirebaseAvailable) {
-      setSyncStatus('not-configured');
-      return;
-    }
-
-    if (user) {
-      // Configurar sync para o usuário
-      firebaseSync.setUser(user);
-      firebaseSync.initialSync();
-    } else {
-      firebaseSync.setUser(null);
-    }
-  }, [user, isFirebaseAvailable]);
+    // KV-only: inicia sync uma vez
+    firebaseSync.setUser(null);
+    firebaseSync.initialSync();
+  }, []);
 
   useEffect(() => {
     // Escutar eventos de sync
@@ -54,15 +42,8 @@ export default function SyncStatus() {
   }, []);
 
   const handleAuthAction = async () => {
-    if (isAuthenticated) {
-      // Limpar dados locais antes de fazer logout
-      localStorage.clear();
-      await logout();
-      // Forçar reload para limpar estados
-      window.location.reload();
-    } else {
-      setShowAuthModal(true);
-    }
+    // Removido: auth não é usado com KV-only
+    setShowAuthModal(false);
   };
 
   const getStatusIcon = () => {
@@ -81,12 +62,7 @@ export default function SyncStatus() {
   };
 
   const getStatusText = () => {
-    if (syncStatus === 'not-configured') {
-      return 'Firebase não configurado';
-    }
-    
-    if (!isAuthenticated) return 'Dados apenas locais';
-    
+    // KV-only: sempre disponível
     switch (syncStatus) {
       case 'syncing':
         return 'Sincronizando...';
@@ -100,9 +76,7 @@ export default function SyncStatus() {
   };
 
   const getStatusColor = () => {
-    if (syncStatus === 'not-configured') return 'text-amber-500';
-    if (!isAuthenticated) return 'text-gray-500';
-    
+    // KV-only
     switch (syncStatus) {
       case 'syncing':
         return 'text-blue-500';
@@ -127,68 +101,21 @@ export default function SyncStatus() {
                 <span className={`text-xs font-medium ${getStatusColor()}`}>
                   {getStatusText()}
                 </span>
-                {user && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {user.displayName || user.email}
-                  </span>
-                )}
+                {/* KV-only: sem usuário */}
               </div>
             </div>
 
-            {/* Botão de Auth - só mostrar se Firebase estiver configurado */}
-            {isFirebaseAvailable && (
-              <button
-                onClick={handleAuthAction}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                  isAuthenticated
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40'
-                }`}
-              >
-                {isAuthenticated ? (
-                  <>
-                    <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                    <span className="hidden sm:inline">Sair</span>
-                  </>
-                ) : (
-                  <>
-                    <UserIcon className="w-4 h-4" />
-                    <span className="hidden sm:inline">Entrar</span>
-                  </>
-                )}
-              </button>
-            )}
+            {/* KV-only: sem auth */}
           </div>
 
-          {/* Indicador de Firebase não configurado */}
-          {syncStatus === 'not-configured' && (
-            <div className="mt-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded">
-              ⚠️ Configure Firebase para sincronizar dados (veja FIREBASE-SETUP.md)
-            </div>
-          )}
-
-          {/* Indicador de funcionamento offline */}
-          {!isAuthenticated && isFirebaseAvailable && (
-            <div className="mt-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded">
-              ⚠️ Faça login para sincronizar entre dispositivos
-            </div>
-          )}
-
           {/* Indicador de modo offline */}
-          {isAuthenticated && syncStatus === 'offline' && (
+          {syncStatus === 'offline' && (
             <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded">
               📱 Modo offline - dados serão sincronizados quando conectar
             </div>
           )}
         </div>
       </div>
-
-      {isFirebaseAvailable && (
-        <AuthModal 
-          isOpen={showAuthModal} 
-          onClose={() => setShowAuthModal(false)} 
-        />
-      )}
     </>
   );
 } 
