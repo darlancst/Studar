@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Review } from '@/types';
 import { useSettingsStore } from './settingsStore';
 import { addDays } from 'date-fns';
+import { firebaseSync } from '@/services/firebaseSync';
 
 interface ReviewState {
   reviews: Review[];
@@ -32,6 +33,9 @@ export const useReviewStore = create<ReviewState>()(
         set((state) => ({
           reviews: [...state.reviews, newReview],
         }));
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
       scheduleReviewsForTopic: (topicId) => {
         const { reviewIntervals } = useSettingsStore.getState();
@@ -58,16 +62,25 @@ export const useReviewStore = create<ReviewState>()(
             return review;
           }),
         }));
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
       deleteReview: (id) => {
         set((state) => ({
           reviews: state.reviews.filter((review) => review.id !== id),
         }));
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
       deleteReviewsByTopicId: (topicId) => {
         set((state) => ({
           reviews: state.reviews.filter((review) => review.topicId !== topicId),
         }));
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
       getReviewsByDate: (date) => {
         const startOfDay = new Date(date);
@@ -86,6 +99,9 @@ export const useReviewStore = create<ReviewState>()(
       },
       resetReviews: () => {
         set({ reviews: [] });
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
     }),
     {

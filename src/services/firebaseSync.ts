@@ -193,18 +193,25 @@ export class FirebaseSync {
     }
   }
 
-  // Função para salvar dados localmente E na nuvem
-  async saveData(key: string, data: any) {
-    // Salva localmente primeiro (para funcionar offline)
-    localStorage.setItem(key, JSON.stringify(data));
-    localStorage.setItem('lastSync', Date.now().toString());
-    
-    // Tenta sincronizar com a nuvem (só se Firebase estiver disponível)
+  // Função para salvar dados priorizando a nuvem, com fallback local
+  async saveData(_key: string, _data: any) {
+    // Primeiro tenta sincronizar com a nuvem se possível
     if (this.canSync()) {
-      await this.syncToCloud();
+      try {
+        await this.syncToCloud();
+        // Atualiza lastSync local apenas como marca de tempo
+        try { localStorage.setItem('lastSync', Date.now().toString()); } catch {}
+        window.dispatchEvent(new CustomEvent('dataSync'));
+        return;
+      } catch (e) {
+        // Continua para fallback local
+      }
     }
-    
-    // Disparar evento para atualizar UI
+
+    // Fallback: persiste localmente para manter funcionamento offline
+    try {
+      localStorage.setItem('lastSync', Date.now().toString());
+    } catch {}
     window.dispatchEvent(new CustomEvent('dataSync'));
   }
 

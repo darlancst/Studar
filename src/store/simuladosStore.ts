@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Simulado } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
+import { firebaseSync } from '@/services/firebaseSync';
 
 interface SimuladosState {
   simulados: Simulado[];
@@ -16,19 +17,31 @@ export const useSimuladosStore = create<SimuladosState>()(
     (set, get) => ({
       simulados: [],
       addSimulado: (simulado) =>
-        set((state) => ({
-          simulados: [...state.simulados, { ...simulado, id: uuidv4() }],
-        })),
+        set((state) => {
+          const newState = [...state.simulados, { ...simulado, id: uuidv4() }];
+          if (typeof window !== 'undefined') {
+            setTimeout(() => firebaseSync.syncToCloud(), 100);
+          }
+          return { simulados: newState };
+        }),
       updateSimulado: (updatedSimulado) =>
-        set((state) => ({
-          simulados: state.simulados.map((s) =>
+        set((state) => {
+          const newState = state.simulados.map((s) =>
             s.id === updatedSimulado.id ? updatedSimulado : s
-          ),
-        })),
+          );
+          if (typeof window !== 'undefined') {
+            setTimeout(() => firebaseSync.syncToCloud(), 100);
+          }
+          return { simulados: newState };
+        }),
       removeSimulado: (id) =>
-        set((state) => ({
-          simulados: state.simulados.filter((s) => s.id !== id),
-        })),
+        set((state) => {
+          const newState = state.simulados.filter((s) => s.id !== id);
+          if (typeof window !== 'undefined') {
+            setTimeout(() => firebaseSync.syncToCloud(), 100);
+          }
+          return { simulados: newState };
+        }),
       getSimuladosBySubject: (subjectId: string) => {
         return get().simulados.filter(s => s.subjectId === subjectId);
       }

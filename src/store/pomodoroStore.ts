@@ -3,6 +3,7 @@ import { persist, StorageValue } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { PomodoroSession, PomodoroSettings, PomodoroState } from '@/types';
 import { useDatesStore } from './datesStore';
+import { firebaseSync } from '@/services/firebaseSync';
 
 interface PomodoroStore {
   // Estado atual
@@ -203,6 +204,9 @@ export const usePomodoroStore = create<PomodoroStore>()(
         set((state) => ({
           sessions: [...state.sessions, newSession],
         }));
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
         
         useDatesStore.getState().addDate(new Date(newSession.date));
       },
@@ -241,6 +245,9 @@ export const usePomodoroStore = create<PomodoroStore>()(
               duration: durationToSet // Usa a duração calculada
             };
             set({ sessions: updatedSessions });
+            if (typeof window !== 'undefined') {
+              setTimeout(() => firebaseSync.syncToCloud(), 100);
+            }
           }
         } else {
           // Nenhuma sessão existe para hoje e este tópico. Adiciona se currentMinutes > 0.

@@ -6,6 +6,7 @@ import { addDays, formatISO } from 'date-fns'; // Importar funções de data
 import { useSubjectStore } from './subjectStore';
 import { useTopicStore } from './topicStore';
 import { useReviewStore } from './reviewStore';
+import { firebaseSync } from '@/services/firebaseSync';
 
 // Interface para os limiares de tempo do heatmap
 export interface HeatmapThresholds {
@@ -73,6 +74,9 @@ export const useSettingsStore = create<SettingsState>()(
         }
         
         set({ darkMode: newDarkMode });
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
       
       // Define a meta semanal de estudo E a data final
@@ -83,6 +87,9 @@ export const useSettingsStore = create<SettingsState>()(
           weeklyGoal: minutes, 
           weeklyGoalEndDate: newEndDateISO // Salva a nova data final
         });
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
       
       // Define os intervalos de revisão personalizados
@@ -90,11 +97,17 @@ export const useSettingsStore = create<SettingsState>()(
         // Garante que os intervalos estão em ordem crescente
         const sortedIntervals = [...intervals].sort((a, b) => a - b);
         set({ reviewIntervals: sortedIntervals });
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
       
       // Define os limiares de tempo para as cores do heatmap
       setHeatmapThresholds: (thresholds: HeatmapThresholds) => {
         set({ heatmapThresholds: thresholds });
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
       
       // Reset das estatísticas
@@ -104,6 +117,9 @@ export const useSettingsStore = create<SettingsState>()(
         if (datesStore && typeof datesStore.resetDates === 'function') {
           datesStore.resetDates();
         }
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
       
       // Reset dos pomodoros completados e sessões
@@ -112,6 +128,9 @@ export const useSettingsStore = create<SettingsState>()(
           completedPomodoros: 0,
           sessions: [], // Limpa sessões aqui
         });
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
       
       // Reset de todos os dados
@@ -139,6 +158,9 @@ export const useSettingsStore = create<SettingsState>()(
         }
 
         console.log("Todos os dados resetados (incluindo matérias, tópicos, revisões, sessões e datas).");
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
     }),
     {

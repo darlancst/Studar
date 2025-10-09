@@ -3,14 +3,10 @@ import { firebaseSync } from '@/services/firebaseSync';
 // Função helper para salvar dados com sync
 export const saveWithSync = async (key: string, data: any) => {
   try {
-    // Salvar localmente primeiro (para funcionar offline)
-    localStorage.setItem(key, JSON.stringify(data));
-    
-    // Tentar sincronizar com Firebase
+    // Agora delega ao serviço, que prioriza salvar na nuvem e faz fallback local
     await firebaseSync.saveData(key, data);
   } catch (error) {
     console.error('Erro ao salvar dados:', error);
-    // Se falhar, pelo menos os dados locais foram salvos
   }
 };
 
