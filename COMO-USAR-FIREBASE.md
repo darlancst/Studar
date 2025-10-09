@@ -98,6 +98,22 @@ npm run dev
 
 ---
 
+## ☁️ Fallback Vercel KV
+
+Caso o Firebase não esteja configurado ou disponível, o app utiliza Vercel KV como armazenamento de fallback via o endpoint `/api/user-data`.
+
+1. No projeto Vercel, ative o addon KV em Settings → Storage → KV.
+2. Configure as variáveis de ambiente exigidas pelo `@vercel/kv`:
+   - `KV_URL`
+   - `KV_REST_API_URL`
+   - `KV_REST_API_TOKEN`
+   - `KV_REST_API_READ_ONLY_TOKEN` (opcional)
+3. Faça deploy. Os dados do usuário serão gravados em `user:<userId|deviceId>` com `lastSync` incremental.
+
+Observação: quando Firebase estiver disponível novamente e o usuário autenticado, a sincronização volta a priorizar Firestore.
+
+---
+
 ## 📞 **Precisa de Ajuda?**
 
 ### **Problemas Comuns:**

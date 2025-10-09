@@ -30,6 +30,56 @@ export class FirebaseSync {
   private userId: string | null = null;
   private unsubscribes: (() => void)[] = [];
 
+  // Usa o userId quando disponível; caso contrário, um deviceId persistido localmente
+  private getStorageKey(): string | null {
+    if (this.userId) return this.userId;
+    if (typeof window === 'undefined') return null;
+    try {
+      let deviceId = localStorage.getItem('deviceId');
+      if (!deviceId) {
+        // Gera um id estável para o dispositivo (anônimo)
+        deviceId = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+          ? crypto.randomUUID()
+          : `dev_${Math.random().toString(36).slice(2)}`;
+        localStorage.setItem('deviceId', deviceId);
+      }
+      return deviceId;
+    } catch {
+      return null;
+    }
+  }
+
+  private async kvSave(userData: UserData): Promise<boolean> {
+    const key = this.getStorageKey();
+    if (!key) return false;
+    try {
+      const res = await fetch('/api/user-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: key, data: userData }),
+      });
+      return res.ok;
+    } catch (e) {
+      console.error('❌ Erro ao salvar no KV:', e);
+      return false;
+    }
+  }
+
+  private async kvLoad(): Promise<UserData | null> {
+    const key = this.getStorageKey();
+    if (!key) return null;
+    try {
+      const url = `/api/user-data?userId=${encodeURIComponent(key)}`;
+      const res = await fetch(url, { method: 'GET' });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return (json?.data as UserData) || null;
+    } catch (e) {
+      console.error('❌ Erro ao carregar do KV:', e);
+      return null;
+    }
+  }
+
   // Configurar usuário para sincronização
   setUser(user: AuthUser | null) {
     this.userId = user?.uid || null;
@@ -44,14 +94,9 @@ export class FirebaseSync {
     return !!(isFirebaseConfigured() && this.userId && getDbInstance());
   }
 
-  // Sincronizar dados do localStorage para Firebase
+  // Sincronizar dados das stores para a nuvem (Firebase quando disponível, senão KV)
   async syncToCloud() {
-    if (!this.canSync()) return false;
-
     try {
-      const db = getDbInstance();
-      if (!db) return false;
-
       // Lê diretamente das stores para evitar problemas com chaves do localStorage
       const subjects = useSubjectStore.getState().subjects;
       const topics = useTopicStore.getState().topics;
@@ -77,31 +122,51 @@ export class FirebaseSync {
         lastSync: Date.now(),
       };
 
-      const userDocRef = doc(db, 'users', this.userId!);
-      await setDoc(userDocRef, userData, { merge: true });
-      
-      console.log('✅ Dados sincronizados com sucesso para a nuvem');
-      try { localStorage.setItem('lastSync', String(userData.lastSync)); } catch {}
-      return true;
+      // Tenta Firebase se disponível
+      if (this.canSync()) {
+        const db = getDbInstance();
+        if (db) {
+          const userDocRef = doc(db, 'users', this.userId!);
+          await setDoc(userDocRef, userData, { merge: true });
+          console.log('✅ Dados sincronizados com sucesso para o Firebase');
+          try { localStorage.setItem('lastSync', String(userData.lastSync)); } catch {}
+          return true;
+        }
+      }
+
+      // Fallback para KV
+      const savedOnKv = await this.kvSave(userData);
+      if (savedOnKv) {
+        console.log('✅ Dados sincronizados com sucesso para o KV');
+        try { localStorage.setItem('lastSync', String(userData.lastSync)); } catch {}
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('❌ Erro ao sincronizar para nuvem:', error);
       return false;
     }
   }
 
-  // Sincronizar dados do Firebase para localStorage
+  // Sincronizar dados da nuvem para as stores (Firebase quando disponível, senão KV)
   async syncFromCloud() {
-    if (!this.canSync()) return false;
-
     try {
-      const db = getDbInstance();
-      if (!db) return false;
+      let userData: UserData | null = null;
 
-      const userDocRef = doc(db, 'users', this.userId!);
-      const userDoc = await getDoc(userDocRef);
+      if (this.canSync()) {
+        const db = getDbInstance();
+        if (!db) return false;
+        const userDocRef = doc(db, 'users', this.userId!);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          userData = userDoc.data() as UserData;
+        }
+      } else {
+        // Fallback: buscar do KV
+        userData = await this.kvLoad();
+      }
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data() as UserData;
+      if (userData) {
         // Atualizar stores com dados da nuvem (isso persiste no localStorage através do middleware)
         useSubjectStore.setState({ subjects: userData.subjects || [] });
         useTopicStore.setState({ topics: userData.topics || [] });
@@ -172,20 +237,17 @@ export class FirebaseSync {
 
   // Sincronização inicial ao fazer login
   async initialSync() {
-    if (!this.canSync()) return false;
-
     try {
-      // Primeiro, tenta baixar dados da nuvem
+      // Primeiro, tenta baixar dados da nuvem (Firebase ou KV)
       const cloudSyncSuccess = await this.syncFromCloud();
-      
       if (!cloudSyncSuccess) {
         // Se não há dados na nuvem, envia dados locais
         await this.syncToCloud();
       }
-
-      // Inicia sincronização em tempo real
-      this.startRealtimeSync();
-      
+      // Inicia sincronização em tempo real somente se Firebase disponível
+      if (this.canSync()) {
+        this.startRealtimeSync();
+      }
       return true;
     } catch (error) {
       console.error('❌ Erro na sincronização inicial:', error);
