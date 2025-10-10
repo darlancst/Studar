@@ -19,9 +19,12 @@ export async function GET(req: Request) {
   }
 
   try {
+    // @vercel/kv usa automaticamente REDIS_URL ou KV_REST_API_URL
     const data = await kv.get<UserData>(`user:${userId}`);
+    console.log(`✅ KV GET user:${userId}`, data ? 'encontrado' : 'não encontrado');
     return new Response(JSON.stringify({ data: data || null }), { status: 200 });
   } catch (error: any) {
+    console.error('❌ KV GET error:', error);
     return new Response(JSON.stringify({ error: error?.message || 'KV read error' }), { status: 500 });
   }
 }
@@ -37,8 +40,10 @@ export async function POST(req: Request) {
 
     const payload: UserData = { ...data, lastSync: Date.now() };
     await kv.set(`user:${userId}`, payload);
+    console.log(`✅ KV SET user:${userId} salvo com sucesso`);
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
   } catch (error: any) {
+    console.error('❌ KV SET error:', error);
     return new Response(JSON.stringify({ error: error?.message || 'KV write error' }), { status: 500 });
   }
 }
