@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { firebaseSync } from '@/services/firebaseSync';
+import { useAuthStore } from '@/store/authStore';
 
-// Este componente garante que os dados do localStorage (e do Firebase)
-// sejam carregados ANTES de renderizar a aplicação principal.
+// Este componente garante que os dados sejam carregados ANTES de renderizar a aplicação principal.
 // Isso evita erros de hidratação do React (erros #425, #418, #423).
 
 export default function HydrationWrapper({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const { user, verifyToken } = useAuthStore();
 
   // Garantir que só renderiza no cliente
   useEffect(() => {
@@ -22,8 +23,15 @@ export default function HydrationWrapper({ children }: { children: React.ReactNo
     const syncAndHydrate = async () => {
       // Pequeno delay para garantir que stores foram inicializados
       await new Promise(resolve => setTimeout(resolve, 100));
-      // Sync inicial (KV-only)
-      firebaseSync.setUser(null);
+      
+      // Verificar token do usuário (se tiver)
+      await verifyToken();
+      
+      // Obter user atualizado após verificação
+      const currentUser = useAuthStore.getState().user;
+      
+      // Sync inicial com userId (se autenticado) ou deviceId (se não)
+      firebaseSync.setUser(currentUser);
       await firebaseSync.initialSync();
       
       // Marca como hidratado, permitindo que a UI renderize com os dados corretos.
@@ -35,7 +43,7 @@ export default function HydrationWrapper({ children }: { children: React.ReactNo
     };
 
     syncAndHydrate();
-  }, [isMounted]);
+  }, [isMounted, verifyToken]);
 
   // Não renderizar nada no servidor
   if (!isMounted || !isHydrated) {

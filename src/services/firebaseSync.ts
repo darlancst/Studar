@@ -42,22 +42,13 @@ export class FirebaseSync {
 
   private async kvSave(userData: UserData): Promise<boolean> {
     const key = this.getStorageKey();
-    if (!key) {
-      console.error('❌ Sem chave de storage');
-      return false;
-    }
+    if (!key) return false;
     try {
-      console.log(`🔄 Salvando no KV: user:${key}`);
       const res = await fetch('/api/user-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: key, data: userData }),
       });
-      if (res.ok) {
-        console.log('✅ Salvo no KV com sucesso');
-      } else {
-        console.error('❌ KV retornou erro:', res.status, await res.text());
-      }
       return res.ok;
     } catch (e) {
       console.error('❌ Erro ao salvar no KV:', e);
@@ -67,31 +58,22 @@ export class FirebaseSync {
 
   private async kvLoad(): Promise<UserData | null> {
     const key = this.getStorageKey();
-    if (!key) {
-      console.error('❌ Sem chave de storage');
-      return null;
-    }
+    if (!key) return null;
     try {
-      console.log(`🔄 Carregando do KV: user:${key}`);
       const url = `/api/user-data?userId=${encodeURIComponent(key)}`;
       const res = await fetch(url, { method: 'GET' });
-      if (!res.ok) {
-        console.log('ℹ️ Nenhum dado encontrado no KV (primeira vez)');
-        return null;
-      }
+      if (!res.ok) return null;
       const json = await res.json();
-      const data = (json?.data as UserData) || null;
-      console.log('✅ Dados carregados do KV:', data ? 'encontrado' : 'vazio');
-      return data;
+      return (json?.data as UserData) || null;
     } catch (e) {
       console.error('❌ Erro ao carregar do KV:', e);
       return null;
     }
   }
 
-  // Compat: não usamos auth; chave será deviceId
-  setUser(_user: any | null) {
-    this.userId = null;
+  // Configurar userId do usuário autenticado
+  setUser(user: { id?: string } | null) {
+    this.userId = user?.id || null;
     this.unsubscribes.forEach(unsub => unsub());
     this.unsubscribes = [];
   }
