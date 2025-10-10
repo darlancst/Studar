@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 // Força a rota a ser dinâmica
 export const dynamic = 'force-dynamic';
@@ -23,13 +23,17 @@ export async function GET(req: Request) {
   }
 
   try {
-    // @vercel/kv usa automaticamente REDIS_URL ou KV_REST_API_URL
-    const data = await kv.get<UserData>(`user:${userId}`);
-    console.log(`✅ KV GET user:${userId}`, data ? 'encontrado' : 'não encontrado');
-    return new Response(JSON.stringify({ data: data || null }), { status: 200 });
+    const { data, error } = await supabaseAdmin
+      .from('user_data')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return new Response(JSON.stringify({ data: data ? data.payload : null }), { status: 200 });
   } catch (error: any) {
-    console.error('❌ KV GET error:', error);
-    return new Response(JSON.stringify({ error: error?.message || 'KV read error' }), { status: 500 });
+    console.error('❌ Supabase GET error:', error);
+    return new Response(JSON.stringify({ error: error?.message || 'DB read error' }), { status: 500 });
   }
 }
 
@@ -43,12 +47,14 @@ export async function POST(req: Request) {
     }
 
     const payload: UserData = { ...data, lastSync: Date.now() };
-    await kv.set(`user:${userId}`, payload);
-    console.log(`✅ KV SET user:${userId} salvo com sucesso`);
+    const { error } = await supabaseAdmin
+      .from('user_data')
+      .upsert({ user_id: userId, payload }, { onConflict: 'user_id' });
+    if (error) throw error;
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
   } catch (error: any) {
-    console.error('❌ KV SET error:', error);
-    return new Response(JSON.stringify({ error: error?.message || 'KV write error' }), { status: 500 });
+    console.error('❌ Supabase SET error:', error);
+    return new Response(JSON.stringify({ error: error?.message || 'DB write error' }), { status: 500 });
   }
 }
 

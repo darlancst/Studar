@@ -37,11 +37,14 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 JWT_SECRET=Xk8mP2nQ5vR9wY3zA6bC4dF7gH1jK0lM8nO6pR2sT5u
 ```
 
-### 2. REDIS_URL (Automático)
+### 2. Supabase
 
-Esta variável é criada automaticamente quando você conecta o Vercel KV ao projeto.
+No Vercel, adicione as seguintes variáveis (após criar um projeto Supabase):
 
-✅ Se você já conectou o KV, esta variável já existe.
+- SUPABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY (recomendado no server) OU SUPABASE_ANON_KEY (para testes)
+
+Após salvar, faça Redeploy.
 
 ---
 

@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -36,18 +36,13 @@ export async function POST(req: Request) {
 
     const emailLower = email.toLowerCase().trim();
 
-    // Buscar ID do usuário pelo email
-    const userId = await kv.get<string>(`user:email:${emailLower}`);
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: 'Email ou senha incorretos' }),
-        { status: 401 }
-      );
-    }
-
-    // Buscar dados do usuário
-    const user = await kv.get<any>(`user:${userId}`);
-    if (!user) {
+    // Buscar usuário no Supabase
+    const { data: user, error } = await supabaseAdmin
+      .from('app_users')
+      .select('*')
+      .eq('email', emailLower)
+      .maybeSingle();
+    if (error || !user) {
       return new Response(
         JSON.stringify({ error: 'Email ou senha incorretos' }),
         { status: 401 }
@@ -55,7 +50,7 @@ export async function POST(req: Request) {
     }
 
     // Verificar senha
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
       return new Response(
         JSON.stringify({ error: 'Email ou senha incorretos' }),

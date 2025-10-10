@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -54,8 +54,13 @@ export async function POST(req: Request) {
 
     const emailLower = email.toLowerCase().trim();
 
-    // Verificar se usuário já existe
-    const existingUser = await kv.get(`user:email:${emailLower}`);
+    // Verificar se usuário já existe no Supabase
+    const { data: existingUser, error: existingError } = await supabaseAdmin
+      .from('app_users')
+      .select('id')
+      .eq('email', emailLower)
+      .maybeSingle();
+    if (existingError) throw existingError;
     if (existingUser) {
       return new Response(
         JSON.stringify({ error: 'Email já está em uso' }),
@@ -69,18 +74,19 @@ export async function POST(req: Request) {
     // Gerar ID único para o usuário
     const userId = `usr_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
-    // Salvar usuário no KV
+    // Salvar usuário no Supabase
     const user = {
       id: userId,
       email: emailLower,
       name: name || emailLower.split('@')[0],
-      passwordHash: hashedPassword,
-      createdAt: Date.now(),
-    };
+      password_hash: hashedPassword,
+      created_at: new Date().toISOString(),
+    } as const;
 
-    // Salvar em duas chaves: por ID e por email
-    await kv.set(`user:${userId}`, user);
-    await kv.set(`user:email:${emailLower}`, userId);
+    const { error: insertError } = await supabaseAdmin
+      .from('app_users')
+      .insert(user);
+    if (insertError) throw insertError;
 
     // Gerar token JWT
     const token = jwt.sign(
