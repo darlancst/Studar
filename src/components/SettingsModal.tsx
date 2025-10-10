@@ -17,6 +17,7 @@ import {
   CheckIcon
 } from '@heroicons/react/24/outline';
 import { useSettingsStore, HeatmapThresholds } from '@/store/settingsStore';
+import SyncStatus from '@/components/SyncStatus';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -170,6 +171,19 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         </div>
 
         <div className="p-6 space-y-6">
+          {/* Seção de Sincronização (apenas aqui) */}
+          <div className="pb-4 border-b dark:border-gray-700">
+            <div className="flex items-center mb-4">
+              <ArrowPathIcon className="h-5 w-5 mr-2 text-blue-500" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Sincronização</h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+              Status e ações de sincronização da sua conta.
+            </p>
+            <div className="relative">
+              <SyncStatus />
+            </div>
+          </div>
           {/* Seção de Aparência */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">
