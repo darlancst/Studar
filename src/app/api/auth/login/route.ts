@@ -11,6 +11,15 @@ interface LoginRequest {
 
 export async function POST(req: Request) {
   try {
+    // Verificar variáveis de ambiente
+    if (!process.env.REDIS_URL && !process.env.KV_REST_API_URL) {
+      console.error('❌ REDIS_URL não configurada');
+      return new Response(
+        JSON.stringify({ error: 'Banco de dados não configurado' }),
+        { status: 500 }
+      );
+    }
+
     const body: LoginRequest = await req.json();
     const { email, password } = body;
 

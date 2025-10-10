@@ -12,6 +12,15 @@ interface SignupRequest {
 
 export async function POST(req: Request) {
   try {
+    // Verificar variáveis de ambiente
+    if (!process.env.REDIS_URL && !process.env.KV_REST_API_URL) {
+      console.error('❌ REDIS_URL não configurada');
+      return new Response(
+        JSON.stringify({ error: 'Banco de dados não configurado. Configure REDIS_URL no Vercel.' }),
+        { status: 500 }
+      );
+    }
+
     const body: SignupRequest = await req.json();
     const { email, password, name } = body;
 
@@ -91,8 +100,13 @@ export async function POST(req: Request) {
     );
   } catch (error: any) {
     console.error('❌ Erro no signup:', error);
+    const errorMessage = error?.message || 'Erro ao criar conta';
+    console.error('Detalhes:', errorMessage);
     return new Response(
-      JSON.stringify({ error: 'Erro ao criar conta' }),
+      JSON.stringify({ 
+        error: 'Erro ao criar conta', 
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined 
+      }),
       { status: 500 }
     );
   }
