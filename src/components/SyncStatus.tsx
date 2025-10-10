@@ -107,8 +107,8 @@ export default function SyncStatus() {
 
   return (
     <>
-      <div className="fixed top-4 right-4 z-40">
-        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3">
+      <div className="fixed right-3 bottom-20 sm:top-4 sm:bottom-auto sm:right-4 z-30">
+        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2.5 sm:p-3 max-w-[90vw] sm:max-w-xs">
           <div className="flex items-center space-x-3">
             {/* Status de Sync */}
             <div className="flex items-center space-x-2">
@@ -118,7 +118,7 @@ export default function SyncStatus() {
                   {getStatusText()}
                 </span>
                 {user && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">
                     {user.name || user.email}
                   </span>
                 )}
