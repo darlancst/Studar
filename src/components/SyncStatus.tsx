@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { firebaseSync } from '@/services/firebaseSync';
 import { useAuthStore } from '@/store/authStore';
+import { clearAllAppData } from '@/utils/clearAllData';
 import { CloudArrowUpIcon, CloudArrowDownIcon, WifiIcon, UserIcon, ArrowRightOnRectangleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import AuthModal from './AuthModal';
 
@@ -48,9 +49,10 @@ export default function SyncStatus() {
 
   const handleAuthAction = async () => {
     if (isAuthenticated) {
-      // Fazer logout
+      // Limpar dados locais e stores antes do logout
+      clearAllAppData();
       await logout();
-      // Recarregar para limpar dados
+      // Recarregar para garantir UI limpa
       window.location.reload();
     } else {
       // Abrir modal de login
