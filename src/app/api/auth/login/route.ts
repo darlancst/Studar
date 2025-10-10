@@ -15,9 +15,9 @@ interface LoginRequest {
 
 export async function POST(req: Request) {
   try {
-    // Verificar variáveis de ambiente
-    if (!process.env.REDIS_URL && !process.env.KV_REST_API_URL) {
-      console.error('❌ REDIS_URL não configurada');
+    // Verificar variáveis de ambiente (Supabase)
+    if (!process.env.SUPABASE_URL || !(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY)) {
+      console.error('❌ Supabase não configurado (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)');
       return new Response(
         JSON.stringify({ error: 'Banco de dados não configurado' }),
         { status: 500 }
