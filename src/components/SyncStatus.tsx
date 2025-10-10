@@ -11,8 +11,15 @@ export default function SyncStatus() {
 
   useEffect(() => {
     // KV-only: inicia sync uma vez
+    console.log('🔄 Iniciando sincronização KV...');
+    setSyncStatus('syncing');
     firebaseSync.setUser(null);
-    firebaseSync.initialSync();
+    firebaseSync.initialSync().then(() => {
+      console.log('✅ Sync inicial completa');
+    }).catch((err) => {
+      console.error('❌ Erro no sync inicial:', err);
+      setSyncStatus('error');
+    });
   }, []);
 
   useEffect(() => {

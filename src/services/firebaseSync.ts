@@ -42,13 +42,22 @@ export class FirebaseSync {
 
   private async kvSave(userData: UserData): Promise<boolean> {
     const key = this.getStorageKey();
-    if (!key) return false;
+    if (!key) {
+      console.error('❌ Sem chave de storage');
+      return false;
+    }
     try {
+      console.log(`🔄 Salvando no KV: user:${key}`);
       const res = await fetch('/api/user-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: key, data: userData }),
       });
+      if (res.ok) {
+        console.log('✅ Salvo no KV com sucesso');
+      } else {
+        console.error('❌ KV retornou erro:', res.status, await res.text());
+      }
       return res.ok;
     } catch (e) {
       console.error('❌ Erro ao salvar no KV:', e);
@@ -58,13 +67,22 @@ export class FirebaseSync {
 
   private async kvLoad(): Promise<UserData | null> {
     const key = this.getStorageKey();
-    if (!key) return null;
+    if (!key) {
+      console.error('❌ Sem chave de storage');
+      return null;
+    }
     try {
+      console.log(`🔄 Carregando do KV: user:${key}`);
       const url = `/api/user-data?userId=${encodeURIComponent(key)}`;
       const res = await fetch(url, { method: 'GET' });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        console.log('ℹ️ Nenhum dado encontrado no KV (primeira vez)');
+        return null;
+      }
       const json = await res.json();
-      return (json?.data as UserData) || null;
+      const data = (json?.data as UserData) || null;
+      console.log('✅ Dados carregados do KV:', data ? 'encontrado' : 'vazio');
+      return data;
     } catch (e) {
       console.error('❌ Erro ao carregar do KV:', e);
       return null;
