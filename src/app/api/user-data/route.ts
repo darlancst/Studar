@@ -1,5 +1,9 @@
 import { kv } from '@vercel/kv';
 
+// Força a rota a ser dinâmica
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Minimal interface to keep route independent from client code
 interface UserData {
   subjects: any[];

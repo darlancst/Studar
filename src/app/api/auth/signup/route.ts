@@ -4,6 +4,10 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
+// Força a rota a ser dinâmica
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 interface SignupRequest {
   email: string;
   password: string;
