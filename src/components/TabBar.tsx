@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarIcon, ClockIcon, ChartBarIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ClockIcon, ChartBarIcon, DocumentChartBarIcon, RectangleStackIcon } from '@heroicons/react/24/outline';
 import { TabName } from '@/types';
 
 interface TabBarProps {
@@ -10,40 +10,47 @@ interface TabBarProps {
 
 export default function TabBar({ activeTab, setActiveTab }: TabBarProps) {
   const tabs = [
+    { name: 'stats', label: 'Dashboard', shortLabel: 'Dash', icon: ChartBarIcon },
     { name: 'calendar', label: 'Calendário', shortLabel: 'Calendar', icon: CalendarIcon },
-    { name: 'pomodoro', label: 'Pomodoro', shortLabel: 'Pomodoro', icon: ClockIcon },
-    { name: 'stats', label: 'Dashboard', shortLabel: 'Dashboard', icon: ChartBarIcon },
-    { name: 'simulados', label: 'Simulados', shortLabel: 'Simulados', icon: DocumentChartBarIcon },
+    { name: 'pomodoro', label: 'Pomodoro', shortLabel: 'Focus', icon: ClockIcon },
+    { name: 'flashcards', label: 'Flashcards', shortLabel: 'Cards', icon: RectangleStackIcon },
+    { name: 'simulados', label: 'Simulados', shortLabel: 'Tests', icon: DocumentChartBarIcon },
   ] as const;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
-      <nav className="flex border-b dark:border-gray-700" aria-label="Tabs">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.name;
-          const Icon = tab.icon;
-          
-          return (
-            <button
-              key={tab.name}
-              onClick={() => setActiveTab(tab.name)}
-              className={`
-                flex-1 flex flex-col sm:flex-row items-center justify-center py-1.5 sm:py-2 px-1 text-center
-                border-b-2 transition-colors duration-150 ease-in-out focus:outline-none
-                ${
-                  isActive
-                    ? 'border-primary-600 text-primary-600 dark:text-primary-400 dark:border-primary-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                }
-              `}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              <Icon className={`h-5 w-5 mb-1 sm:mb-0 sm:mr-2 ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500'}`} aria-hidden="true" />
-              <span className="text-xs sm:text-sm whitespace-nowrap">{tab.label}</span>
-            </button>
-          );
-        })}
-      </nav>
+    <div className="fixed bottom-4 left-4 right-4 sm:static sm:mb-6 z-50">
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-1.5 mx-auto max-w-2xl">
+        <nav className="flex justify-between items-center gap-1" aria-label="Tabs">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.name;
+            const Icon = tab.icon;
+
+            return (
+              <button
+                key={tab.name}
+                onClick={() => setActiveTab(tab.name)}
+                className={`
+                  flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-200
+                  focus:outline-none focus:ring-2 focus:ring-primary-500/50
+                  ${isActive
+                    ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 shadow-sm scale-105'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100/50 dark:hover:bg-gray-700/30'
+                  }
+                `}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <Icon className={`h-6 w-6 mb-0.5 ${isActive ? 'stroke-2' : 'stroke-1.5'}`} aria-hidden="true" />
+                <span className="text-[10px] sm:text-xs font-medium truncate w-full text-center hidden sm:block">
+                  {tab.label}
+                </span>
+                <span className="text-[10px] font-medium truncate w-full text-center sm:hidden">
+                  {tab.shortLabel}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
-} 
+}

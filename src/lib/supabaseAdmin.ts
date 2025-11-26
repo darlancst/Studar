@@ -5,10 +5,11 @@ export const supabaseAdmin = (() => {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
   if (!url || !key) {
-    console.error('Supabase não configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no Vercel.');
+    console.warn('⚠️ Supabase não configurado. Sincronização na nuvem desativada.');
+    return null;
   }
 
-  return createClient(url || '', key || '');
+  return createClient(url, key);
 })();
 
 

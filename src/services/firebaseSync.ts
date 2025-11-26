@@ -5,6 +5,7 @@ import { useReviewStore } from '@/store/reviewStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useSimuladosStore } from '@/store/simuladosStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useFlashcardStore } from '@/store/flashcardStore';
 
 // Interface para dados do usuário no Firebase
 export interface UserData {
@@ -13,6 +14,8 @@ export interface UserData {
   reviews: any[];
   pomodoroSessions: any[];
   simulados: any[];
+  decks: any[];
+  cards: any[];
   settings: any;
   lastSync: number;
 }
@@ -92,6 +95,7 @@ export class FirebaseSync {
       const reviews = useReviewStore.getState().reviews;
       const pomodoroSessions = usePomodoroStore.getState().sessions;
       const simulados = useSimuladosStore.getState().simulados;
+      const flashcardStore = useFlashcardStore.getState();
       const settingsState = useSettingsStore.getState();
       const settings = {
         darkMode: settingsState.darkMode,
@@ -107,6 +111,8 @@ export class FirebaseSync {
         reviews,
         pomodoroSessions,
         simulados,
+        decks: flashcardStore.decks,
+        cards: flashcardStore.cards,
         settings,
         lastSync: Date.now(),
       };
@@ -115,7 +121,7 @@ export class FirebaseSync {
       const savedOnKv = await this.kvSave(userData);
       if (savedOnKv) {
         console.log('✅ Dados sincronizados com sucesso para o KV');
-        try { localStorage.setItem('lastSync', String(userData.lastSync)); } catch {}
+        try { localStorage.setItem('lastSync', String(userData.lastSync)); } catch { }
         return true;
       }
       return false;
@@ -137,6 +143,7 @@ export class FirebaseSync {
         useReviewStore.setState({ reviews: userData.reviews || [] });
         usePomodoroStore.setState({ sessions: userData.pomodoroSessions || [] });
         useSimuladosStore.setState({ simulados: userData.simulados || [] });
+        useFlashcardStore.setState({ decks: userData.decks || [], cards: userData.cards || [] });
 
         if (userData.settings) {
           const s = useSettingsStore.getState();
@@ -158,7 +165,7 @@ export class FirebaseSync {
           }
         }
 
-        try { localStorage.setItem('lastSync', String(userData.lastSync || Date.now())); } catch {}
+        try { localStorage.setItem('lastSync', String(userData.lastSync || Date.now())); } catch { }
 
         console.log('✅ Dados baixados da nuvem e stores reidratadas com sucesso');
 
@@ -202,7 +209,7 @@ export class FirebaseSync {
       try {
         await this.syncToCloud();
         // Atualiza lastSync local apenas como marca de tempo
-        try { localStorage.setItem('lastSync', Date.now().toString()); } catch {}
+        try { localStorage.setItem('lastSync', Date.now().toString()); } catch { }
         window.dispatchEvent(new CustomEvent('dataSync'));
         return;
       } catch (e) {
@@ -213,7 +220,7 @@ export class FirebaseSync {
     // Fallback: persiste localmente para manter funcionamento offline
     try {
       localStorage.setItem('lastSync', Date.now().toString());
-    } catch {}
+    } catch { }
     window.dispatchEvent(new CustomEvent('dataSync'));
   }
 

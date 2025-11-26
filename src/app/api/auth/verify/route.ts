@@ -17,6 +17,13 @@ export async function GET(req: Request) {
       );
     }
 
+    if (!supabaseAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Serviço de autenticação indisponível' }),
+        { status: 503 }
+      );
+    }
+
     const token = authHeader.substring(7);
 
     // Verificar token JWT
@@ -49,4 +56,3 @@ export async function GET(req: Request) {
     );
   }
 }
-

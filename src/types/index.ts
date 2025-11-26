@@ -34,6 +34,8 @@ export interface PomodoroSettings {
   shortBreakDuration: number; // em minutos
   longBreakDuration: number; // em minutos
   longBreakInterval: number; // número de ciclos de foco antes de uma pausa longa
+  soundEnabled?: boolean;
+  selectedSound?: string;
 }
 
 export type PomodoroState = 'focus' | 'shortBreak' | 'longBreak' | 'idle';
@@ -45,7 +47,7 @@ export interface StudyStats {
   studyTimeBySubject: Record<string, number>; // subjectId -> tempo em minutos
 }
 
-export type TabName = 'calendar' | 'pomodoro' | 'stats' | 'simulados';
+export type TabName = 'calendar' | 'pomodoro' | 'stats' | 'simulados' | 'flashcards';
 
 export interface Simulado {
   id: string;

@@ -22,6 +22,10 @@ export async function GET(req: Request) {
     return new Response(JSON.stringify({ error: 'Missing userId' }), { status: 400 });
   }
 
+  if (!supabaseAdmin) {
+    return new Response(JSON.stringify({ data: null, message: 'Sync disabled (no DB)' }), { status: 200 });
+  }
+
   try {
     const { data, error } = await supabaseAdmin
       .from('user_data')
@@ -44,6 +48,10 @@ export async function POST(req: Request) {
     const data: UserData | undefined = body?.data;
     if (!userId || !data) {
       return new Response(JSON.stringify({ error: 'Missing userId or data' }), { status: 400 });
+    }
+
+    if (!supabaseAdmin) {
+      return new Response(JSON.stringify({ ok: true, message: 'Sync skipped (no DB)' }), { status: 200 });
     }
 
     const payload: UserData = { ...data, lastSync: Date.now() };

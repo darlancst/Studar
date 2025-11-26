@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  XMarkIcon, 
-  SunIcon, 
-  MoonIcon, 
-  PlusIcon, 
+import {
+  XMarkIcon,
+  SunIcon,
+  MoonIcon,
+  PlusIcon,
   TrashIcon,
   ClockIcon,
   CalendarIcon,
@@ -17,6 +17,7 @@ import {
   CheckIcon
 } from '@heroicons/react/24/outline';
 import { useSettingsStore, HeatmapThresholds } from '@/store/settingsStore';
+import { usePomodoroStore } from '@/store/pomodoroStore';
 import SyncStatus from '@/components/SyncStatus';
 
 interface SettingsModalProps {
@@ -26,20 +27,22 @@ interface SettingsModalProps {
 export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetAction, setResetAction] = useState<'stats' | 'all'>('all');
-  const { 
-    darkMode, 
-    toggleDarkMode, 
-    resetStats, 
-    resetPomodoros, 
-    resetAllData, 
-    weeklyGoal, 
+  const {
+    darkMode,
+    toggleDarkMode,
+    resetStats,
+    resetPomodoros,
+    resetAllData,
+    weeklyGoal,
     setWeeklyGoal,
     reviewIntervals,
     setReviewIntervals,
     heatmapThresholds,
     setHeatmapThresholds
   } = useSettingsStore();
-  
+
+  const { settings: pomodoroSettings, updateSettings: updatePomodoroSettings } = usePomodoroStore();
+
   // Estado para gerenciar o valor da meta semanal no formulário
   const [goalHours, setGoalHours] = useState(Math.floor(weeklyGoal / 60));
   const [goalMinutes, setGoalMinutes] = useState(weeklyGoal % 60);
@@ -47,14 +50,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   // Estado para gerenciar os intervalos de revisão
   const [intervals, setIntervals] = useState<number[]>(reviewIntervals);
   const [newInterval, setNewInterval] = useState<number>(1);
-  
+
   // Estado para gerenciar os limiares de tempo do heatmap
-  const [thresholds, setThresholds] = useState<HeatmapThresholds>({...heatmapThresholds});
+  const [thresholds, setThresholds] = useState<HeatmapThresholds>({ ...heatmapThresholds });
 
   // Atualizar o estado local quando as configurações mudarem
   useEffect(() => {
     setIntervals(reviewIntervals);
-    setThresholds({...heatmapThresholds});
+    setThresholds({ ...heatmapThresholds });
   }, [reviewIntervals, heatmapThresholds]);
 
   // Função para atualizar a meta de tempo semanal
@@ -81,13 +84,13 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       setReviewIntervals(updatedIntervals);
     }
   };
-  
+
   // Função para atualizar um limiar específico
   const handleThresholdChange = (level: keyof HeatmapThresholds, value: number) => {
     const updatedThresholds = { ...thresholds, [level]: value };
     setThresholds(updatedThresholds);
   };
-  
+
   // Função para salvar os limiares atualizados
   const handleSaveThresholds = () => {
     // Ordenar os valores para garantir consistência (level1 < level2 < level3 < etc)
@@ -98,7 +101,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       level4: 0,
       level5: 0
     };
-    
+
     // Encontrar o próximo valor maior para cada nível
     const values = [thresholds.level1, thresholds.level2, thresholds.level3, thresholds.level4, thresholds.level5].sort((a, b) => a - b);
     orderedThresholds.level1 = values[0];
@@ -106,11 +109,11 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     orderedThresholds.level3 = values[2];
     orderedThresholds.level4 = values[3];
     orderedThresholds.level5 = values[4];
-    
+
     setThresholds(orderedThresholds);
     setHeatmapThresholds(orderedThresholds);
   };
-  
+
   // Função para resetar os limiares para os valores padrão
   const handleResetThresholds = () => {
     const defaultThresholds: HeatmapThresholds = {
@@ -162,8 +165,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             <Cog6ToothIcon className="h-6 w-6 mr-2 text-gray-700 dark:text-gray-300" />
             <h2 className="text-xl font-semibold dark:text-white">Configurações</h2>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
           >
             <XMarkIcon className="h-6 w-6" />
@@ -171,7 +174,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Seção de Sincronização (apenas aqui) */}
+          {/* Seção de Sincronização */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">
               <ArrowPathIcon className="h-5 w-5 mr-2 text-blue-500" />
@@ -184,6 +187,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <SyncStatus />
             </div>
           </div>
+
           {/* Seção de Aparência */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">
@@ -210,7 +214,105 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               </button>
             </div>
           </div>
-          
+
+          {/* Seção de Pomodoro */}
+          <div className="pb-4 border-b dark:border-gray-700">
+            <div className="flex items-center mb-4">
+              <ClockIcon className="h-5 w-5 mr-2 text-red-500" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Pomodoro</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Foco (min)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={pomodoroSettings.focusDuration}
+                  onChange={(e) => updatePomodoroSettings({ focusDuration: Number(e.target.value) })}
+                  className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Pausa Curta (min)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={pomodoroSettings.shortBreakDuration}
+                  onChange={(e) => updatePomodoroSettings({ shortBreakDuration: Number(e.target.value) })}
+                  className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Pausa Longa (min)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={pomodoroSettings.longBreakDuration}
+                  onChange={(e) => updatePomodoroSettings({ longBreakDuration: Number(e.target.value) })}
+                  className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Intervalo P. Longa
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={pomodoroSettings.longBreakInterval}
+                  onChange={(e) => updatePomodoroSettings({ longBreakInterval: Number(e.target.value) })}
+                  className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                />
+              </div>
+
+              {/* Configuração de Som */}
+              <div className="col-span-2 mt-2 pt-2 border-t dark:border-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Sons de Foco
+                  </label>
+                  <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input
+                      type="checkbox"
+                      name="toggle"
+                      id="sound-toggle"
+                      className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                      checked={pomodoroSettings.soundEnabled ?? false}
+                      onChange={(e) => updatePomodoroSettings({ soundEnabled: e.target.checked })}
+                      style={{ right: pomodoroSettings.soundEnabled ? '0' : 'auto', left: pomodoroSettings.soundEnabled ? 'auto' : '0', borderColor: pomodoroSettings.soundEnabled ? '#4F46E5' : '#D1D5DB' }}
+                    />
+                    <label
+                      htmlFor="sound-toggle"
+                      className={`toggle-label block overflow-hidden h-5 rounded-full cursor-pointer ${pomodoroSettings.soundEnabled ? 'bg-primary-600' : 'bg-gray-300'}`}
+                    ></label>
+                  </div>
+                </div>
+
+                {pomodoroSettings.soundEnabled && (
+                  <select
+                    value={pomodoroSettings.selectedSound || 'rain'}
+                    onChange={(e) => updatePomodoroSettings({ selectedSound: e.target.value })}
+                    className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
+                  >
+                    <option value="rain">Chuva</option>
+                    <option value="forest">Floresta</option>
+                    <option value="coffee">Cafeteria</option>
+                  </select>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Seção de Metas */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">
@@ -266,7 +368,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               </div>
             </div>
           </div>
-          
+
           {/* Seção de Revisões */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">
@@ -319,7 +421,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               </div>
             </div>
           </div>
-          
+
           {/* Seção de personalização das cores do Histórico de Atividades */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">
@@ -331,11 +433,11 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   Personalizar cores conforme o tempo de estudo:
                 </label>
-                
+
                 <div className="space-y-4">
                   {/* Level 1 - primeira cor (mais clara) */}
                   <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-sm mr-3" style={{ 
+                    <div className="w-6 h-6 rounded-sm mr-3" style={{
                       backgroundColor: darkMode ? '#1e40af20' : '#dbeafe',
                       border: '1px solid',
                       borderColor: darkMode ? '#1e40af40' : '#bfdbfe'
@@ -352,10 +454,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     />
                     <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
                   </div>
-                  
+
                   {/* Level 2 */}
                   <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-sm mr-3" style={{ 
+                    <div className="w-6 h-6 rounded-sm mr-3" style={{
                       backgroundColor: darkMode ? '#1e40af40' : '#bfdbfe',
                       border: '1px solid',
                       borderColor: darkMode ? '#1e40af60' : '#93c5fd'
@@ -372,10 +474,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     />
                     <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
                   </div>
-                  
+
                   {/* Level 3 */}
                   <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-sm mr-3" style={{ 
+                    <div className="w-6 h-6 rounded-sm mr-3" style={{
                       backgroundColor: darkMode ? '#1e40af60' : '#93c5fd',
                       border: '1px solid',
                       borderColor: darkMode ? '#1e40af80' : '#60a5fa'
@@ -392,10 +494,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     />
                     <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
                   </div>
-                  
+
                   {/* Level 4 */}
                   <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-sm mr-3" style={{ 
+                    <div className="w-6 h-6 rounded-sm mr-3" style={{
                       backgroundColor: darkMode ? '#1e40af80' : '#60a5fa',
                       border: '1px solid',
                       borderColor: darkMode ? '#1e40afA0' : '#3b82f6'
@@ -412,10 +514,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     />
                     <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
                   </div>
-                  
+
                   {/* Level 5 */}
                   <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-sm mr-3" style={{ 
+                    <div className="w-6 h-6 rounded-sm mr-3" style={{
                       backgroundColor: darkMode ? '#1e40afA0' : '#3b82f6',
                       border: '1px solid',
                       borderColor: darkMode ? '#1e40afC0' : '#2563eb'
@@ -432,10 +534,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     />
                     <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
                   </div>
-                  
+
                   {/* Level 6 (mais escura) */}
                   <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-sm mr-3" style={{ 
+                    <div className="w-6 h-6 rounded-sm mr-3" style={{
                       backgroundColor: darkMode ? '#1e40afC0' : '#2563eb',
                       border: '1px solid',
                       borderColor: darkMode ? '#1e40af' : '#1d4ed8'
@@ -443,7 +545,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     <span className="text-gray-700 dark:text-gray-300">Mais de {thresholds.level5} min</span>
                   </div>
                 </div>
-                
+
                 {/* Botões para salvar ou resetar */}
                 <div className="flex justify-end space-x-3 mt-4">
                   <button
@@ -464,7 +566,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               </div>
             </div>
           </div>
-          
+
           {/* Seção de Reset de Dados */}
           <div>
             <div className="flex items-center mb-4">
@@ -485,7 +587,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   Reiniciar contagem
                 </button>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <ChartBarIcon className="h-4 w-4 mr-2 text-gray-500" />
@@ -499,7 +601,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   Reiniciar estatísticas
                 </button>
               </div>
-              
+
               <div className="border-t dark:border-gray-700 pt-4 mt-4">
                 <button
                   onClick={() => handleShowResetConfirm('all')}
@@ -553,4 +655,4 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       )}
     </div>
   );
-} 
+}

@@ -16,15 +16,6 @@ interface SignupRequest {
 
 export async function POST(req: Request) {
   try {
-    // Verificar variáveis de ambiente (Supabase)
-    if (!process.env.SUPABASE_URL || !(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY)) {
-      console.error('❌ Supabase não configurado (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)');
-      return new Response(
-        JSON.stringify({ error: 'Banco de dados não configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no Vercel.' }),
-        { status: 500 }
-      );
-    }
-
     const body: SignupRequest = await req.json();
     const { email, password, name } = body;
 
@@ -40,6 +31,13 @@ export async function POST(req: Request) {
       return new Response(
         JSON.stringify({ error: 'Senha deve ter no mínimo 6 caracteres' }),
         { status: 400 }
+      );
+    }
+
+    if (!supabaseAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Serviço de autenticação indisponível (Banco de dados não configurado)' }),
+        { status: 503 }
       );
     }
 
@@ -113,12 +111,11 @@ export async function POST(req: Request) {
     const errorMessage = error?.message || 'Erro ao criar conta';
     console.error('Detalhes:', errorMessage);
     return new Response(
-      JSON.stringify({ 
-        error: 'Erro ao criar conta', 
-        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined 
+      JSON.stringify({
+        error: 'Erro ao criar conta',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
       }),
       { status: 500 }
     );
   }
 }
-

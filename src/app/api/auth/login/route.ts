@@ -15,15 +15,6 @@ interface LoginRequest {
 
 export async function POST(req: Request) {
   try {
-    // Verificar variáveis de ambiente (Supabase)
-    if (!process.env.SUPABASE_URL || !(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY)) {
-      console.error('❌ Supabase não configurado (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)');
-      return new Response(
-        JSON.stringify({ error: 'Banco de dados não configurado' }),
-        { status: 500 }
-      );
-    }
-
     const body: LoginRequest = await req.json();
     const { email, password } = body;
 
@@ -31,6 +22,13 @@ export async function POST(req: Request) {
       return new Response(
         JSON.stringify({ error: 'Email e senha são obrigatórios' }),
         { status: 400 }
+      );
+    }
+
+    if (!supabaseAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Serviço de autenticação indisponível (Banco de dados não configurado)' }),
+        { status: 503 }
       );
     }
 
@@ -86,4 +84,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
