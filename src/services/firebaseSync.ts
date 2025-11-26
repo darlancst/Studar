@@ -6,6 +6,7 @@ import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useSimuladosStore } from '@/store/simuladosStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useFlashcardStore } from '@/store/flashcardStore';
+import { useAuthStore } from '@/store/authStore';
 
 // Interface para dados do usuário no Firebase
 export interface UserData {
@@ -47,9 +48,15 @@ export class FirebaseSync {
     const key = this.getStorageKey();
     if (!key) return false;
     try {
+      const token = useAuthStore.getState().token;
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch('/api/user-data', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ userId: key, data: userData }),
       });
       return res.ok;
@@ -63,8 +70,14 @@ export class FirebaseSync {
     const key = this.getStorageKey();
     if (!key) return null;
     try {
+      const token = useAuthStore.getState().token;
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const url = `/api/user-data?userId=${encodeURIComponent(key)}`;
-      const res = await fetch(url, { method: 'GET' });
+      const res = await fetch(url, { method: 'GET', headers });
       if (!res.ok) return null;
       const json = await res.json();
       return (json?.data as UserData) || null;

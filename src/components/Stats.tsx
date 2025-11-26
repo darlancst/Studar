@@ -948,8 +948,8 @@ export default function Stats() {
           </div>
         </section>
 
-        {/* SEÇÃO 2: METAS E FLASHCARDS */}
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* SEÇÃO 2: METAS, FLASHCARDS E SIMULADOS */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {/* Sistema de Metas */}
           <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-4 uppercase tracking-wider flex items-center">
@@ -1033,13 +1033,58 @@ export default function Stats() {
               <FlashcardStats />
             </div>
           </div>
+
+
+          {/* Seção resumida de Simulados (Movida para cá) */}
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">📊 Resumo de Simulados</h3>
+              <button
+                onClick={() => {
+                  const event = new CustomEvent('navigate-to-simulados');
+                  window.dispatchEvent(event);
+                }}
+                className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 font-medium underline"
+              >
+                Ver análise →
+              </button>
+            </div>
+            {simulados.length > 0 ? (
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {simulados.length}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total</p>
+                </div>
+                <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {simulados.length > 0
+                      ? (simulados.reduce((acc, s) => acc + (s.hits / s.questions), 0) / simulados.length * 100).toFixed(1)
+                      : 0}%
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Média Geral</p>
+                </div>
+                <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {simulados.filter(s => s.date.startsWith(format(new Date(), 'yyyy-MM'))).length}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Este Mês</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 dark:text-gray-400 text-xs py-4">
+                Nenhum simulado realizado ainda.
+              </div>
+            )}
+          </div>
         </section>
 
         {/* SEÇÃO 3: ANÁLISE DETALHADA */}
         <section className="space-y-4">
           <h3 className="text-base font-semibold dark:text-white">Análise Detalhada</h3>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
             {/* Gráfico de Distribuição */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-80">
               <h3 className="text-base font-semibold mb-6 dark:text-white text-center">Distribuição por Matéria</h3>
@@ -1094,9 +1139,7 @@ export default function Stats() {
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Insights da Semana */}
             <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
               <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-4 uppercase tracking-wider flex items-center">
@@ -1148,50 +1191,6 @@ export default function Stats() {
               ) : (
                 <div className="text-center text-gray-500 dark:text-gray-400 text-xs py-4">
                   Estude mais esta semana para gerar insights!
-                </div>
-              )}
-            </div>
-
-            {/* Seção resumida de Simulados */}
-            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">📊 Resumo de Simulados</h3>
-                <button
-                  onClick={() => {
-                    const event = new CustomEvent('navigate-to-simulados');
-                    window.dispatchEvent(event);
-                  }}
-                  className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 font-medium underline"
-                >
-                  Ver análise →
-                </button>
-              </div>
-              {simulados.length > 0 ? (
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {simulados.length}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {simulados.length > 0
-                        ? (simulados.reduce((acc, s) => acc + (s.hits / s.questions), 0) / simulados.length * 100).toFixed(1)
-                        : 0}%
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Média Geral</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {simulados.filter(s => s.date.startsWith(format(new Date(), 'yyyy-MM'))).length}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Este Mês</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center text-gray-500 dark:text-gray-400 text-xs py-4">
-                  Nenhum simulado realizado ainda.
                 </div>
               )}
             </div>
@@ -1381,84 +1380,90 @@ export default function Stats() {
         </section>
 
         {/* Área de Detalhes das Atividades */}
-        {selectedDateDetails && (
-          <div className="p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg lg:col-span-2 overflow-x-auto">
-            <h3 className="text-base font-medium mb-3 dark:text-white">
-              Atividades de {format(selectedDateDetails, "dd 'de' MMMM, yyyy", { locale: pt })}
-            </h3>
-            {selectedActivities.length > 0 ? (
-              <ul className="space-y-2">
-                {selectedActivities.map((activity, index) => {
-                  const isPomodoro = 'duration' in activity;
-                  const topicId = (activity as PomodoroSession).topicId || (activity as Review).topicId;
-                  const subjectId = findSubjectIdForTopic(topicId);
-                  const subject = subjects.find(s => s.id === subjectId);
-                  const topic = subject?.topics.find(t => t.id === topicId);
+        {
+          selectedDateDetails && (
+            <div className="p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg lg:col-span-2 overflow-x-auto">
+              <h3 className="text-base font-medium mb-3 dark:text-white">
+                Atividades de {format(selectedDateDetails, "dd 'de' MMMM, yyyy", { locale: pt })}
+              </h3>
+              {selectedActivities.length > 0 ? (
+                <ul className="space-y-2">
+                  {selectedActivities.map((activity, index) => {
+                    const isPomodoro = 'duration' in activity;
+                    const topicId = (activity as PomodoroSession).topicId || (activity as Review).topicId;
+                    const subjectId = findSubjectIdForTopic(topicId);
+                    const subject = subjects.find(s => s.id === subjectId);
+                    const topic = subject?.topics.find(t => t.id === topicId);
 
-                  return (
-                    <li key={index} className="text-sm p-2 rounded bg-white dark:bg-gray-600 shadow-sm overflow-hidden">
-                      <div className="flex flex-col sm:flex-row sm:items-center">
-                        <span className={`font-semibold mr-2 ${isPomodoro ? 'text-blue-600 dark:text-blue-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
-                          {isPomodoro ? '[Foco]' : (activity as Review).completed ? '[Revisão ✓]' : '[Revisão]'}
-                        </span>
-                        <span className="mt-1 sm:mt-0 dark:text-gray-300 break-words text-xs">
-                          {subject?.name || 'N/A'} - {topic?.title || 'N/A'}
-                          {isPomodoro && ` (${formatStudyTime((activity as PomodoroSession).duration)})`}
-                        </span>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Nenhuma atividade neste dia.</p>
-            )}
-          </div>
-        )}
+                    return (
+                      <li key={index} className="text-sm p-2 rounded bg-white dark:bg-gray-600 shadow-sm overflow-hidden">
+                        <div className="flex flex-col sm:flex-row sm:items-center">
+                          <span className={`font-semibold mr-2 ${isPomodoro ? 'text-blue-600 dark:text-blue-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                            {isPomodoro ? '[Foco]' : (activity as Review).completed ? '[Revisão ✓]' : '[Revisão]'}
+                          </span>
+                          <span className="mt-1 sm:mt-0 dark:text-gray-300 break-words text-xs">
+                            {subject?.name || 'N/A'} - {topic?.title || 'N/A'}
+                            {isPomodoro && ` (${formatStudyTime((activity as PomodoroSession).duration)})`}
+                          </span>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Nenhuma atividade neste dia.</p>
+              )}
+            </div>
+          )
+        }
 
         {/* MODALS AND GLOBAL STYLES */}
-        {tooltip.show && (
-          <div
-            className="fixed z-[9999] px-3 py-2 rounded-md text-sm pointer-events-none"
-            style={{
-              left: `${tooltip.x}px`,
-              top: `${tooltip.y - 80}px`,
-              transform: 'translate(-50%, 0)',
-              backgroundColor: isDarkMode ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              color: isDarkMode ? '#e5e7eb' : '#1f2937',
-              border: `1px solid ${isDarkMode ? '#4b5563' : '#e5e7eb'}`,
-              boxShadow: `0 3px 10px ${isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.1)'}`,
-              maxWidth: '300px',
-              whiteSpace: 'normal'
-            }}
-          >
-            {tooltip.text}
-          </div>
-        )}
-        {showResetConfirm && (
-          <div className="fixed inset-0 z-50 bg-gray-700 bg-opacity-50 dark:bg-black dark:bg-opacity-60 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 max-w-sm mx-4">
-              <h3 className="text-lg font-semibold mb-3 dark:text-white">Reiniciar Estatísticas</h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">
-                Esta ação vai reiniciar todas as estatísticas de estudo. Esta ação não pode ser desfeita.
-              </p>
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowResetConfirm(false)}
-                  className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleResetAllStats}
-                  className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
-                >
-                  Reiniciar
-                </button>
+        {
+          tooltip.show && (
+            <div
+              className="fixed z-[9999] px-3 py-2 rounded-md text-sm pointer-events-none"
+              style={{
+                left: `${tooltip.x}px`,
+                top: `${tooltip.y - 80}px`,
+                transform: 'translate(-50%, 0)',
+                backgroundColor: isDarkMode ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                color: isDarkMode ? '#e5e7eb' : '#1f2937',
+                border: `1px solid ${isDarkMode ? '#4b5563' : '#e5e7eb'}`,
+                boxShadow: `0 3px 10px ${isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.1)'}`,
+                maxWidth: '300px',
+                whiteSpace: 'normal'
+              }}
+            >
+              {tooltip.text}
+            </div>
+          )
+        }
+        {
+          showResetConfirm && (
+            <div className="fixed inset-0 z-50 bg-gray-700 bg-opacity-50 dark:bg-black dark:bg-opacity-60 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 max-w-sm mx-4">
+                <h3 className="text-lg font-semibold mb-3 dark:text-white">Reiniciar Estatísticas</h3>
+                <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">
+                  Esta ação vai reiniciar todas as estatísticas de estudo. Esta ação não pode ser desfeita.
+                </p>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowResetConfirm(false)}
+                    className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleResetAllStats}
+                    className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+                  >
+                    Reiniciar
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )
+        }
         <style jsx>{`
         .confetti-container { position: absolute; width: 100%; height: 100%; }
         .confetti-piece { position: absolute; width: 10px; height: 10px; background: #ffd300; animation: confetti-fall 3s linear forwards; }
@@ -1490,7 +1495,7 @@ export default function Stats() {
         .day-cell.has-activity { cursor: pointer; }
         @media (max-width: 480px) { .color-scale-legend { flex-wrap: wrap; justify-content: center; gap: 3px; } .legend-item { margin: 0 1px; } .level-label { font-size: 7px; } }
       `}</style>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 } 
