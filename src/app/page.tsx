@@ -17,11 +17,36 @@ import StreakCounter from '@/components/StreakCounter';
 import Flashcards from '@/components/Flashcards';
 import { TabName } from '@/types';
 
+import useSwipe from '@/hooks/useSwipe';
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabName>('stats');
   const [showSubjectManager, setShowSubjectManager] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const isDarkMode = useSettingsStore((state) => state.darkMode);
+
+  // Ordem das abas para navegação via swipe
+  const tabsOrder: TabName[] = ['stats', 'calendar', 'pomodoro', 'flashcards', 'simulados'];
+
+  const handleSwipeLeft = () => {
+    const currentIndex = tabsOrder.indexOf(activeTab);
+    if (currentIndex < tabsOrder.length - 1) {
+      setActiveTab(tabsOrder[currentIndex + 1]);
+    }
+  };
+
+  const handleSwipeRight = () => {
+    const currentIndex = tabsOrder.indexOf(activeTab);
+    if (currentIndex > 0) {
+      setActiveTab(tabsOrder[currentIndex - 1]);
+    }
+  };
+
+  const swipeHandlers = useSwipe({
+    onSwipeLeft: handleSwipeLeft,
+    onSwipeRight: handleSwipeRight,
+    threshold: 50
+  });
 
   // Aplicar classe dark no body baseado no estado do Zustand
   useEffect(() => {
@@ -90,7 +115,10 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen pb-24 sm:pb-4">
+    <div
+      className="min-h-screen pb-24 sm:pb-4"
+      {...swipeHandlers}
+    >
       <div className="max-w-6xl mx-auto p-2 sm:p-6 pt-2 sm:pt-6">
         <header className="flex justify-between items-center mb-2 sm:mb-8">
           <div className="flex items-center gap-3">
