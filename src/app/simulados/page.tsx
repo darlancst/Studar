@@ -32,7 +32,7 @@ const SimuladosPage = () => {
 
       if (start) start.setUTCHours(0, 0, 0, 0);
       if (end) end.setUTCHours(23, 59, 59, 999);
-      
+
       const dateMatch = (!start || simuladoDate >= start) && (!end || simuladoDate <= end);
       if (!dateMatch) return false;
 
@@ -103,11 +103,11 @@ const SimuladosPage = () => {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
         <h1 className="text-2xl font-bold">Meus Simulados</h1>
         <button
           onClick={handleAddNew}
-          className="w-full sm:w-auto bg-primary-600 text-white px-3 py-1.5 rounded-md hover:bg-primary-700 transition-colors text-sm"
+          className="w-full sm:w-auto bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm"
         >
           Adicionar Simulado
         </button>
@@ -138,7 +138,7 @@ const SimuladosPage = () => {
               </span>
             </div>
             <SimuladosList simulados={paginatedSimulados} onEdit={handleEdit} onRemove={handleRemove} />
-            <Pagination 
+            <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
@@ -159,4 +159,4 @@ const SimuladosPage = () => {
   );
 };
 
-export default SimuladosPage; 
+export default SimuladosPage;

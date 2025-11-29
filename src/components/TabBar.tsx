@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarIcon, ClockIcon, ChartBarIcon, DocumentChartBarIcon, RectangleStackIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ClockIcon, ChartBarIcon, ClipboardDocumentListIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline';
 import { TabName } from '@/types';
 
 interface TabBarProps {
@@ -10,11 +10,11 @@ interface TabBarProps {
 
 export default function TabBar({ activeTab, setActiveTab }: TabBarProps) {
   const tabs = [
-    { name: 'stats', label: 'Dashboard', shortLabel: 'Dash', icon: ChartBarIcon },
-    { name: 'calendar', label: 'Calendário', shortLabel: 'Calendar', icon: CalendarIcon },
-    { name: 'pomodoro', label: 'Pomodoro', shortLabel: 'Focus', icon: ClockIcon },
-    { name: 'flashcards', label: 'Flashcards', shortLabel: 'Cards', icon: RectangleStackIcon },
-    { name: 'simulados', label: 'Simulados', shortLabel: 'Tests', icon: DocumentChartBarIcon },
+    { name: 'stats', label: 'Dashboard', shortLabel: 'Início', icon: ChartBarIcon },
+    { name: 'calendar', label: 'Calendário', shortLabel: 'Agenda', icon: CalendarIcon },
+    { name: 'schedule', label: 'Cronograma', shortLabel: 'Cronog.', icon: ClipboardDocumentListIcon },
+    { name: 'pomodoro', label: 'Pomodoro', shortLabel: 'Foco', icon: ClockIcon },
+    { name: 'simulados', label: 'Simulados', shortLabel: 'Simul.', icon: DocumentChartBarIcon },
   ] as const;
 
   return (

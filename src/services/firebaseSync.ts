@@ -4,8 +4,8 @@ import { useTopicStore } from '@/store/topicStore';
 import { useReviewStore } from '@/store/reviewStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useSimuladosStore } from '@/store/simuladosStore';
+import { useScheduleStore } from '@/store/scheduleStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { useFlashcardStore } from '@/store/flashcardStore';
 import { useAuthStore } from '@/store/authStore';
 
 // Interface para dados do usuário no Firebase
@@ -15,8 +15,6 @@ export interface UserData {
   reviews: any[];
   pomodoroSessions: any[];
   simulados: any[];
-  decks: any[];
-  cards: any[];
   settings: any;
   lastSync: number;
 }
@@ -108,7 +106,6 @@ export class FirebaseSync {
       const reviews = useReviewStore.getState().reviews;
       const pomodoroSessions = usePomodoroStore.getState().sessions;
       const simulados = useSimuladosStore.getState().simulados;
-      const flashcardStore = useFlashcardStore.getState();
       const settingsState = useSettingsStore.getState();
       const settings = {
         darkMode: settingsState.darkMode,
@@ -124,8 +121,6 @@ export class FirebaseSync {
         reviews,
         pomodoroSessions,
         simulados,
-        decks: flashcardStore.decks,
-        cards: flashcardStore.cards,
         settings,
         lastSync: Date.now(),
       };
@@ -156,7 +151,6 @@ export class FirebaseSync {
         useReviewStore.setState({ reviews: userData.reviews || [] });
         usePomodoroStore.setState({ sessions: userData.pomodoroSessions || [] });
         useSimuladosStore.setState({ simulados: userData.simulados || [] });
-        useFlashcardStore.setState({ decks: userData.decks || [], cards: userData.cards || [] });
 
         if (userData.settings) {
           const s = useSettingsStore.getState();

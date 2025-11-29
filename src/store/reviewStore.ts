@@ -10,7 +10,10 @@ interface ReviewState {
   reviews: Review[];
   addReview: (topicId: string, scheduledDate: Date) => void;
   scheduleReviewsForTopic: (topicId: string) => void;
+  generateReviewsForTopic: (topicId: string) => void;
+  completeReview: (reviewId: string) => void;
   toggleReviewCompletion: (id: string) => void;
+  updateReview: (id: string, updates: Partial<Review>) => void;
   deleteReview: (id: string) => void;
   deleteReviewsByTopicId: (topicId: string) => void;
   getReviewsByDate: (date: Date) => Review[];
@@ -40,13 +43,40 @@ export const useReviewStore = create<ReviewState>()(
       scheduleReviewsForTopic: (topicId) => {
         const { reviewIntervals } = useSettingsStore.getState();
         const today = new Date();
-        
+
         reviewIntervals.forEach(days => {
           const scheduledDate = addDays(today, days);
           get().addReview(topicId, scheduledDate);
         });
 
         console.log(`Scheduled ${reviewIntervals.length} reviews for topic ${topicId}`);
+        console.log(`Scheduled ${reviewIntervals.length} reviews for topic ${topicId}`);
+      },
+      generateReviewsForTopic: (topicId) => {
+        const { reviewIntervals } = useSettingsStore.getState();
+        const today = new Date();
+
+        reviewIntervals.forEach(days => {
+          const scheduledDate = addDays(today, days);
+          get().addReview(topicId, scheduledDate);
+        });
+      },
+      completeReview: (reviewId) => {
+        set((state) => ({
+          reviews: state.reviews.map((review) => {
+            if (review.id === reviewId) {
+              return {
+                ...review,
+                completed: true,
+                date: new Date()
+              };
+            }
+            return review;
+          }),
+        }));
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
       toggleReviewCompletion: (id) => {
         set((state) => ({
@@ -56,11 +86,21 @@ export const useReviewStore = create<ReviewState>()(
               return {
                 ...review,
                 completed: isNowCompleted,
-                date: isNowCompleted ? new Date() : review.scheduledDate 
+                date: isNowCompleted ? new Date() : review.scheduledDate
               };
             }
             return review;
           }),
+        }));
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
+      },
+      updateReview: (id, updates) => {
+        set((state) => ({
+          reviews: state.reviews.map((review) =>
+            review.id === id ? { ...review, ...updates } : review
+          ),
         }));
         if (typeof window !== 'undefined') {
           setTimeout(() => firebaseSync.syncToCloud(), 100);
@@ -85,10 +125,10 @@ export const useReviewStore = create<ReviewState>()(
       getReviewsByDate: (date) => {
         const startOfDay = new Date(date);
         startOfDay.setHours(0, 0, 0, 0);
-        
+
         const endOfDay = new Date(date);
         endOfDay.setHours(23, 59, 59, 999);
-        
+
         return get().reviews.filter((review) => {
           const reviewDate = new Date(review.scheduledDate);
           return reviewDate >= startOfDay && reviewDate <= endOfDay;

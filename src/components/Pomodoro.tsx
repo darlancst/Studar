@@ -1,385 +1,368 @@
-'use client';
-
 import { useState, useEffect, useRef } from 'react';
-import { usePomodoroStore } from '@/store/pomodoroStore';
-import { useTopicStore } from '@/store/topicStore';
 import { useSubjectStore } from '@/store/subjectStore';
-import { PomodoroSettings } from '@/types';
-import { isSameDay } from 'date-fns';
+import { useTopicStore } from '@/store/topicStore';
+import { usePomodoroStore } from '@/store/pomodoroStore';
+import { useScheduleStore } from '@/store/scheduleStore';
+import { useReviewStore } from '@/store/reviewStore';
+import { PlayIcon, PauseIcon, StopIcon, ForwardIcon, CheckCircleIcon, SparklesIcon } from '@heroicons/react/24/solid';
+import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } from 'date-fns';
+import confetti from 'canvas-confetti';
 
 export default function Pomodoro() {
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const [showStartButton, setShowStartButton] = useState(false);
-
+  const { subjects } = useSubjectStore();
+  const { topics } = useTopicStore();
   const {
+    activeSubjectId,
+    activeTopicId,
     currentState,
     isRunning,
     timeRemaining,
-    currentTopicId,
     completedPomodoros,
-    elapsedSeconds,
-    settings,
     startTimer,
     pauseTimer,
     resetTimer,
     skipToNext,
-
-    incrementElapsedTime,
-    completeFocusSession,
-    interruptFocusSession,
+    incrementElapsedTime
   } = usePomodoroStore();
 
-  const { topics } = useTopicStore();
-  const { subjects } = useSubjectStore();
+  const { generateReviewsForTopic } = useReviewStore();
 
-  // Filtrar tópicos para mostrar apenas os de hoje
-  const today = new Date();
-  const todaysTopics = topics.filter(topic => {
-    try {
-      const topicDate = new Date(topic.createdAt);
-      return isSameDay(topicDate, today);
-    } catch (e) {
-      console.error("Erro ao parsear data do tópico:", topic.createdAt, e);
-      return false;
+  const { schedules, weeklyItems, blockItems, completedScheduleItems, toggleScheduleItemCompletion } = useScheduleStore();
+
+  const [selectedItemId, setSelectedItemId] = useState<string>('');
+
+  // Sync with active session from store (Context API)
+  useEffect(() => {
+    // Tenta encontrar o item planejado correspondente ao tópico ativo para destacar na lista
+    if (activeTopicId) {
+      const plannedItem = getTodayPlannedItems().find(p => p.item.topicId === activeTopicId);
+      if (plannedItem) {
+        setSelectedItemId(plannedItem.item.id);
+      }
     }
-  });
+  }, [activeTopicId]);
 
-  // Formatação do tempo
-  const formatTime = (seconds: number): string => {
+  // Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRunning) {
+      interval = setInterval(() => {
+        const { timeRemaining } = usePomodoroStore.getState();
+
+        if (timeRemaining <= 1) {
+          // Timer finished (check <= 1 because we are about to decrement)
+          usePomodoroStore.setState({ timeRemaining: 0 });
+
+          // Play sound
+          const audio = new Audio('/notification.mp3');
+          audio.play().catch(e => console.log('Audio play failed', e));
+
+          if (currentState === 'focus') {
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
+          }
+
+          skipToNext();
+        } else {
+          incrementElapsedTime(1);
+          usePomodoroStore.setState(state => ({ timeRemaining: state.timeRemaining - 1 }));
+        }
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRunning, currentState, skipToNext, incrementElapsedTime]);
+
+  // Obter itens planejados para hoje
+  const getTodayPlannedItems = () => {
+    const today = new Date();
+    const activeSchedules = schedules.filter(s => s.isActive);
+    let plannedItems: any[] = [];
+
+    activeSchedules.forEach(schedule => {
+      const scheduleStart = parseISO(schedule.startDate);
+      const scheduleEnd = parseISO(schedule.endDate);
+
+      if (!isWithinInterval(startOfDay(today), { start: startOfDay(scheduleStart), end: startOfDay(scheduleEnd) })) {
+        return;
+      }
+
+      if (schedule.mode === 'weekly') {
+        const dayOfWeek = getDay(today);
+        const items = weeklyItems.filter(item => item.scheduleId === schedule.id && item.dayOfWeek === dayOfWeek);
+        plannedItems = [...plannedItems, ...items];
+      } else {
+        const items = blockItems.filter(item => {
+          if (item.scheduleId !== schedule.id) return false;
+          const start = parseISO(item.startDate);
+          const end = parseISO(item.endDate);
+          const inRange = isWithinInterval(startOfDay(today), { start: startOfDay(start), end: startOfDay(end) });
+          const isRestDay = item.restDays?.includes(getDay(today));
+          return inRange && !isRestDay;
+        });
+        plannedItems = [...plannedItems, ...items];
+      }
+    });
+
+    return plannedItems.map(item => {
+      const isCompleted = completedScheduleItems.includes(item.id);
+      return { item, status: isCompleted ? 'completed' : 'pending' };
+    }).sort((a, b) => {
+      // 1. Sort by status (pending first)
+      if (a.status !== b.status) {
+        return a.status === 'pending' ? -1 : 1;
+      }
+
+      // 2. Sort by start time
+      const timeA = a.item.startTime || '';
+      const timeB = b.item.startTime || '';
+
+      // Items with time come first
+      if (timeA && !timeB) return -1;
+      if (!timeA && timeB) return 1;
+
+      // If both have time, sort ascending
+      if (timeA && timeB) {
+        return timeA.localeCompare(timeB);
+      }
+
+      return 0;
+    });
+  };
+
+  const todayPlannedItems = getTodayPlannedItems();
+
+  const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Referência para o áudio
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const handleStart = () => {
+    let subjectIdToStart = '';
 
-  // Sons disponíveis
-  const sounds = {
-    rain: { name: 'Chuva', url: 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg' },
-    forest: { name: 'Floresta', url: 'https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg' },
-    coffee: { name: 'Cafeteria', url: 'https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg' },
-  };
-
-  // Efeito para tocar/pausar o som
-  useEffect(() => {
-    if (settings.soundEnabled && isRunning && currentState === 'focus') {
-      if (!audioRef.current) {
-        audioRef.current = new Audio(sounds[settings.selectedSound as keyof typeof sounds]?.url);
-        audioRef.current.loop = true;
-      } else if (audioRef.current.src !== sounds[settings.selectedSound as keyof typeof sounds]?.url) {
-        audioRef.current.src = sounds[settings.selectedSound as keyof typeof sounds]?.url;
-      }
-
-      audioRef.current.play().catch(e => console.error("Erro ao tocar áudio:", e));
-    } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
+    if (selectedItemId) {
+      const selectedPlan = todayPlannedItems.find(p => p.item.id === selectedItemId);
+      if (selectedPlan) {
+        subjectIdToStart = selectedPlan.item.topicId || selectedPlan.item.subjectId;
       }
     }
 
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-    };
-  }, [isRunning, settings.soundEnabled, settings.selectedSound, currentState]);
-
-  // Atualiza o timer a cada segundo
-  useEffect(() => {
-    if (isRunning) {
-      intervalRef.current = setInterval(() => {
-        const state = usePomodoroStore.getState();
-
-        if (state.timeRemaining <= 1) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-
-          // Se estava em foco, APENAS incrementa o último segundo para contagem precisa
-          // A sessão será salva pelo skipToNext
-          if (state.currentState === 'focus') {
-            state.incrementElapsedTime(1);
-            // state.updateCurrentSession(true); // REMOVIDO - skipToNext fará o addSession
-          }
-
-          // Define isRunning como false ANTES de chamar skipToNext se for pausa
-          // skipToNext cuidará de isRunning para o próximo estado.
-          usePomodoroStore.setState({ isRunning: false, timeRemaining: 0 });
-
-          // Avança para o próximo estado (pausa ou foco) - Isso chamará addSession se aplicável
-          state.skipToNext();
-
-        } else {
-          // Decrementa o tempo restante sempre
-          usePomodoroStore.setState({ timeRemaining: state.timeRemaining - 1 });
-
-          // Incrementa elapsedSeconds APENAS se estiver em foco
-          if (state.currentState === 'focus') {
-            state.incrementElapsedTime(1);
-          }
-        }
-      }, 1000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [isRunning]); // A dependência é apenas isRunning
-
-  // Título com base no estado atual
-  const getStateTitle = (): string => {
-    switch (currentState) {
-      case 'focus':
-        return 'Foco';
-      case 'shortBreak':
-        return 'Pausa Curta';
-      case 'longBreak':
-        return 'Pausa Longa';
-      default:
-        return 'Pomodoro';
+    if (subjectIdToStart) {
+      startTimer(subjectIdToStart);
     }
   };
 
-  // Calcula os minutos diretamente do estado elapsedSeconds
-  const displaySessionMinutes = Math.floor(elapsedSeconds / 60);
+  const handleFinishContent = (itemId?: string) => {
+    // 1. Se houver um item planejado selecionado, marca como concluído
+    const targetId = itemId || selectedItemId;
+    const isAlreadyCompleted = targetId && completedScheduleItems.includes(targetId);
 
-  // Função para calcular a porcentagem de progresso do timer
-  const getProgressPercentage = (): number => {
-    let totalTime: number;
-
-    switch (currentState) {
-      case 'focus':
-        totalTime = settings.focusDuration * 60;
-        break;
-      case 'shortBreak':
-        totalTime = settings.shortBreakDuration * 60;
-        break;
-      case 'longBreak':
-        totalTime = settings.longBreakDuration * 60;
-        break;
-      default:
-        totalTime = settings.focusDuration * 60;
-        break;
+    if (targetId) {
+      toggleScheduleItemCompletion(targetId);
     }
 
-    if (totalTime === 0) return 0;
+    // 2. Se houver um tópico ativo, gera revisões (First Study)
+    if (activeTopicId) {
+      // Gera as revisões (1, 7, 30 dias)
+      generateReviewsForTopic(activeTopicId);
+    }
 
-    const elapsed = totalTime - timeRemaining;
-    return Math.min(Math.max(elapsed / totalTime, 0), 1);
+    // Feedback visual - Apenas se estiver marcando como concluído (não estava concluído antes)
+    if (!isAlreadyCompleted) {
+      confetti({
+        particleCount: 150,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: ['#FFD700', '#FFA500', '#FF4500']
+      });
+    }
+
+    // Reseta o timer/sessão se estiver rodando o item concluído
+    if (targetId === selectedItemId) {
+      resetTimer();
+      usePomodoroStore.setState({ activeTopicId: null, activeSubjectId: null });
+      setSelectedItemId('');
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (currentState) {
+      case 'focus': return 'text-primary-600 dark:text-primary-400';
+      case 'shortBreak': return 'text-green-600 dark:text-green-400';
+      case 'longBreak': return 'text-blue-600 dark:text-blue-400';
+      default: return 'text-gray-600 dark:text-gray-400';
+    }
+  };
+
+  const getStatusText = () => {
+    switch (currentState) {
+      case 'focus': return 'Foco Total';
+      case 'shortBreak': return 'Pausa Curta';
+      case 'longBreak': return 'Pausa Longa';
+      default: return 'Pronto para Focar?';
+    }
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-3">
-        <h2 className="text-2xl font-bold">Timer Pomodoro</h2>
-
+    <div className="max-w-md mx-auto space-y-8 pb-24">
+      {/* Header Minimalista */}
+      <div className="flex items-center justify-between px-2">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Foco</h2>
+        <div className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${currentState === 'focus'
+          ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
+          : 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+          }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${currentState === 'focus' ? 'bg-primary-500' : 'bg-green-500'
+            }`}></span>
+          {getStatusText()}
+        </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-2.5">
-        {/* Seleção de tópico */}
-        <div className="mb-2">
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Tópico de Estudo
-          </label>
-          <select
-            value={currentTopicId || ''}
-            onChange={(e) => {
-              const newTopicId = e.target.value || null;
-              const state = usePomodoroStore.getState();
-              const previousTopicId = state.currentTopicId; // Guarda o ID anterior
+      {/* Timer Principal */}
+      <div className="flex flex-col items-center justify-center py-4">
+        <div className="relative">
+          <div className="text-8xl font-light tracking-tighter text-gray-900 dark:text-white font-mono tabular-nums select-none">
+            {formatTime(timeRemaining)}
+          </div>
+        </div>
 
-              // Antes de mudar, INTERROMPE a sessão do TÓPICO ANTERIOR (se estava em foco)
-              if (state.currentState === 'focus' && previousTopicId && state.elapsedSeconds > 0) {
-                // Chama a ação centralizada para atualizar a sessão anterior
-                interruptFocusSession(previousTopicId, state.elapsedSeconds);
-                // Resetar elapsedSeconds ao trocar de tópico durante foco
-                usePomodoroStore.setState({ elapsedSeconds: 0, lastMinuteUpdate: 0 });
-              }
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-4 font-medium">
+          {currentState === 'focus' && !isRunning ? 'Selecione uma tarefa para começar' :
+            currentState === 'focus' ? 'Mantenha o foco' : 'Hora de relaxar'}
+        </p>
+      </div>
 
-              // Atualiza o tópico atual no estado
-              usePomodoroStore.setState({ currentTopicId: newTopicId });
+      {/* Controles Minimalistas */}
+      <div className="flex items-center justify-center gap-8">
+        <button
+          onClick={resetTimer}
+          className="group p-4 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          title="Reiniciar"
+        >
+          <StopIcon className="h-6 w-6 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+        </button>
 
-              // Lógica para mostrar botão "Começar" e resetar timer
-              if (newTopicId && !state.isRunning) {
-                setShowStartButton(true);
-                resetTimer();
-              } else {
-                setShowStartButton(false);
-              }
-            }}
-            className="w-full p-2 text-sm border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            disabled={isRunning}
+        {!isRunning ? (
+          <button
+            onClick={handleStart}
+            disabled={currentState === 'focus' && !selectedItemId}
+            className="bg-primary-600 hover:bg-primary-700 text-white rounded-2xl p-6 shadow-xl shadow-primary-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95"
           >
-            <option value="">Selecione um tópico</option>
-            {/* Mapear sobre os tópicos de hoje */}
-            {todaysTopics.map((topic) => {
-              const subject = subjects.find((s) => s.id === topic.subjectId);
+            <PlayIcon className="h-10 w-10 pl-1" />
+          </button>
+        ) : (
+          <button
+            onClick={pauseTimer}
+            className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-2xl p-6 shadow-xl transition-all transform hover:scale-105 active:scale-95"
+          >
+            <PauseIcon className="h-10 w-10" />
+          </button>
+        )}
+
+        <button
+          onClick={skipToNext}
+          className="group p-4 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          title="Pular"
+        >
+          <ForwardIcon className="h-6 w-6 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+        </button>
+      </div>
+
+      {/* Seção de Itens Planejados para Hoje */}
+      {todayPlannedItems.length > 0 && (
+        <div className="space-y-4 animate-fade-in px-2">
+          <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center">
+            Planejado para Hoje
+          </h3>
+          <div className="space-y-3">
+            {todayPlannedItems.map((plannedItem, index) => {
+              const { item, status } = plannedItem;
+              const subject = subjects.find(s => s.id === item.subjectId);
+              if (!subject) return null;
+
+              const isCompleted = status === 'completed';
+              const isSelected = selectedItemId === item.id;
+              const linkedTopic = topics.find(t => t.linkedScheduleItemId === item.id);
+
               return (
-                <option key={topic.id} value={topic.id}>
-                  {subject?.name} - {topic.title}
-                </option>
+                <div
+                  key={index}
+                  onClick={() => {
+                    if (!isCompleted) setSelectedItemId(item.id);
+                  }}
+                  className={`group flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer
+                    ${isCompleted
+                      ? 'bg-gray-50 border-transparent dark:bg-gray-800/30 opacity-60'
+                      : isSelected
+                        ? 'bg-white dark:bg-gray-800 border-primary-500 ring-1 ring-primary-500 shadow-md'
+                        : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 shadow-sm hover:shadow-md'
+                    }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-1.5 h-12 rounded-full transition-all ${isSelected ? 'scale-y-110' : 'scale-y-90 opacity-70'}`}
+                      style={{ backgroundColor: subject.color, filter: isCompleted ? 'grayscale(100%)' : 'none' }}
+                    />
+                    <div>
+                      <p className={`font-semibold text-base ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-900 dark:text-white'}`}>
+                        {linkedTopic ? linkedTopic.title : subject.name}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {linkedTopic && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                            {subject.name}
+                          </span>
+                        )}
+                        {!linkedTopic && item.topicId && (
+                          <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                            {topics.find(t => t.id === item.topicId)?.title}
+                          </span>
+                        )}
+                        {item.startTime && (
+                          <>
+                            <span className="text-gray-300 dark:text-gray-600">•</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">
+                              {item.startTime} - {item.endTime}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {isSelected && !isCompleted && (
+                      <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-1 rounded-md animate-pulse">
+                        Selecionado
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFinishContent(item.id);
+                      }}
+                      className={`p-2 rounded-full transition-all ${isCompleted
+                        ? 'text-green-500 bg-green-50 dark:bg-green-900/20'
+                        : 'text-gray-300 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
+                        }`}
+                    >
+                      <CheckCircleIcon className="h-6 w-6" />
+                    </button>
+                  </div>
+                </div>
               );
             })}
-          </select>
-        </div>
-
-        {/* Exibição do Timer com Layout Compacto */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-2">
-          {/* SVG Circle Progress - Menor */}
-          <div className="relative w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0">
-            <svg
-              className="transform -rotate-90 w-full h-full"
-              viewBox="0 0 240 240"
-            >
-              {/* Background circle */}
-              <circle
-                cx="120"
-                cy="120"
-                r="100"
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="none"
-                className="text-gray-200 dark:text-gray-700"
-              />
-              {/* Progress circle */}
-              <circle
-                cx="120"
-                cy="120"
-                r="100"
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="none"
-                strokeLinecap="round"
-                className={`transition-all duration-1000 ease-linear ${currentState === 'focus' ? 'text-primary-500' :
-                  currentState === 'shortBreak' ? 'text-green-500' :
-                    currentState === 'longBreak' ? 'text-blue-500' :
-                      'text-gray-400'
-                  } ${timeRemaining <= 60 && isRunning ? 'animate-pulse' : ''}`}
-                style={{
-                  strokeDasharray: `${2 * Math.PI * 100}`,
-                  strokeDashoffset: `${2 * Math.PI * 100 * (1 - getProgressPercentage())}`,
-                  filter: timeRemaining <= 10 && isRunning ? 'drop-shadow(0 0 8px currentColor)' : 'none',
-                }}
-              />
-            </svg>
-            {/* Timer Text */}
-            <div
-              className={`absolute inset-0 flex items-center justify-center dark:text-white text-xl sm:text-2xl font-bold transition-all duration-300 ${timeRemaining <= 10 && isRunning ? 'animate-pulse text-red-500 dark:text-red-400' : ''
-                }`}
-            >
-              {formatTime(timeRemaining)}
-            </div>
-          </div>
-
-          {/* Informações do Timer - Ao Lado */}
-          <div className="text-center sm:text-left space-y-1">
-            <p className="text-lg font-medium dark:text-white">{getStateTitle()}</p>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              Pomodoros completados: <span className="font-semibold">{completedPomodoros}</span>
-            </p>
-
-            {/* Mostra o tempo contabilizado na sessão atual */}
-            {currentState === 'focus' && currentTopicId && isRunning && (
-              <p className="text-xs text-green-600 dark:text-green-400">
-                ⏱️ Tempo atual: <span className="font-semibold">{displaySessionMinutes} min</span>
-              </p>
-            )}
-
-            {/* Informação do estado atual em mobile */}
-            <div className="sm:hidden mt-2">
-              <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${currentState === 'focus' ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400' :
-                currentState === 'shortBreak' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                  currentState === 'longBreak' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                    'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-                }`}>
-                {currentState === 'focus' ? '🎯 Foco' :
-                  currentState === 'shortBreak' ? '☕ Pausa Curta' :
-                    currentState === 'longBreak' ? '🛋️ Pausa Longa' : '⏸️ Pausado'}
-              </div>
-            </div>
           </div>
         </div>
+      )}
 
-        {/* Controles Compactos */}
-        <div className="timer-controls mt-1">
-          {/* Botão Começar (aparece apenas quando showStartButton é true) */}
-          {showStartButton ? (
-            <div className="flex justify-center">
-              <button
-                onClick={() => {
-                  if (currentTopicId) {
-                    startTimer(currentTopicId);
-                    setShowStartButton(false);
-                  }
-                }}
-                className="px-6 py-2 text-sm font-medium bg-green-600 text-white hover:bg-green-700 rounded-md transition-colors"
-                disabled={!currentTopicId}
-              >
-                🎯 Começar
-              </button>
-            </div>
-          ) : (
-            /* Layout organizado para 3 botões - Mais compacto */
-            <div className="flex justify-center gap-2 max-w-sm mx-auto">
-              <button
-                onClick={() => {
-                  if (isRunning) {
-                    pauseTimer();
-                  } else {
-                    if (currentState === 'focus' || currentState === 'idle') {
-                      if (currentTopicId) {
-                        if (currentState === 'idle' || timeRemaining === settings.focusDuration * 60) {
-                          startTimer(currentTopicId);
-                        } else {
-                          usePomodoroStore.setState({ isRunning: true });
-                        }
-                        setShowStartButton(false);
-                      }
-                    } else {
-                      usePomodoroStore.setState({ isRunning: true });
-                    }
-                  }
-                }}
-                className={`flex-1 px-3 py-1.5 text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 rounded-md transition-colors ${(!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId)
-                  ? 'opacity-50 cursor-not-allowed'
-                  : ''
-                  }`}
-                disabled={!isRunning && (currentState === 'focus' || currentState === 'idle') && !currentTopicId}
-              >
-                {isRunning
-                  ? '⏸️ Pausar'
-                  : (currentState === 'focus' || currentState === 'idle')
-                    ? '▶️ Iniciar'
-                    : '▶️ Retomar'}
-              </button>
-
-              <button
-                onClick={resetTimer}
-                className={`px-3 py-1.5 text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 rounded-md transition-colors ${currentState === 'idle' && !isRunning && elapsedSeconds === 0
-                  ? 'opacity-50 cursor-not-allowed'
-                  : ''
-                  }`}
-                disabled={currentState === 'idle' && !isRunning && elapsedSeconds === 0}
-              >
-                🔄
-              </button>
-
-              <button
-                onClick={skipToNext}
-                className="px-3 py-1.5 text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 rounded-md transition-colors"
-              >
-                ⏭️
-              </button>
-            </div>
-          )}
-        </div>
-
-
+      <div className="flex items-center justify-center gap-2 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-8">
+        <span>{completedPomodoros}</span>
+        <span>sessões hoje</span>
       </div>
     </div>
   );
-} 
+}

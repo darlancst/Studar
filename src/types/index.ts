@@ -12,6 +12,7 @@ export interface Topic {
   description?: string;
   subjectId: string;
   createdAt: Date;
+  linkedScheduleItemId?: string;
 }
 
 export interface Review {
@@ -47,7 +48,7 @@ export interface StudyStats {
   studyTimeBySubject: Record<string, number>; // subjectId -> tempo em minutos
 }
 
-export type TabName = 'calendar' | 'pomodoro' | 'stats' | 'simulados' | 'flashcards';
+export type TabName = 'pomodoro' | 'calendar' | 'subjects' | 'stats' | 'simulados' | 'schedule';
 
 export interface Simulado {
   id: string;

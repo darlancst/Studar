@@ -10,6 +10,8 @@ interface PomodoroStore {
   currentState: PomodoroState;
   isRunning: boolean;
   currentTopicId: string | null;
+  activeSubjectId: string | null; // Contexto de navegação
+  activeTopicId: string | null;   // Contexto de navegação
   timeRemaining: number; // em segundos
   completedPomodoros: number;
   elapsedSeconds: number; // segundos decorridos na sessão atual
@@ -23,6 +25,7 @@ interface PomodoroStore {
 
   // Ações
   startTimer: (topicId: string) => void;
+  startSession: (subjectId: string, topicId?: string) => void; // Ação centralizada para iniciar sessão
   pauseTimer: () => void;
   resetTimer: () => void;
   skipToNext: () => void;
@@ -57,6 +60,8 @@ export const usePomodoroStore = create<PomodoroStore>()(
       currentState: 'idle',
       isRunning: false,
       currentTopicId: null,
+      activeSubjectId: null,
+      activeTopicId: null,
       timeRemaining: DEFAULT_SETTINGS.focusDuration * 60, // em segundos
       completedPomodoros: 0,
       elapsedSeconds: 0,
@@ -66,15 +71,57 @@ export const usePomodoroStore = create<PomodoroStore>()(
       settings: DEFAULT_SETTINGS,
 
       startTimer: (topicId) => {
-        // startTimer agora SEMPRE inicia um novo ciclo de foco
+        const { currentTopicId, currentState, timeRemaining, isRunning } = get();
+
+        // Se já estiver rodando com o mesmo tópico, não faz nada
+        if (isRunning && currentTopicId === topicId) return;
+
+        // Se estiver pausado (não rodando), com o mesmo tópico, e ainda tiver tempo
+        // Então APENAS retoma (set isRunning = true) sem resetar o tempo
+        if (!isRunning && currentTopicId === topicId && timeRemaining > 0 && currentState === 'focus') {
+          set({
+            isRunning: true,
+            lastMinuteUpdate: Date.now(),
+          });
+          return;
+        }
+
+        // Caso contrário (novo tópico, ou tempo acabou, ou não é foco), inicia novo ciclo
+        const duration = Math.max(1, get().settings.focusDuration || 25);
         set({
           isRunning: true,
           currentTopicId: topicId,
           currentState: 'focus',
-          timeRemaining: get().settings.focusDuration * 60, // Garante que o tempo é resetado
-          elapsedSeconds: 0, // Sempre reseta ao iniciar novo ciclo
+          timeRemaining: duration * 60, // Reseta o tempo
+          elapsedSeconds: 0,
           lastMinuteUpdate: Date.now(),
         });
+      },
+
+      startSession: (subjectId, topicId) => {
+        // Define o contexto ativo
+        set({
+          activeSubjectId: subjectId,
+          activeTopicId: topicId || null,
+        });
+
+        // Se houver um tópico específico, inicia o timer diretamente
+        if (topicId) {
+          get().startTimer(topicId);
+        } else {
+          // Se for apenas a matéria, prepara o estado mas não inicia o timer automaticamente
+          // O usuário deve selecionar o tópico ou iniciar manualmente se a lógica permitir
+          // Mas para manter o fluxo fluido, se já tivermos o ID, iniciamos.
+          // Se não tivermos topicId, apenas resetamos o timer para o estado inicial de foco
+          const duration = Math.max(1, get().settings.focusDuration || 25);
+          set({
+            isRunning: false,
+            currentTopicId: null, // Limpa o tópico atual pois não temos um específico
+            currentState: 'focus',
+            timeRemaining: duration * 60,
+            elapsedSeconds: 0,
+          });
+        }
       },
 
       pauseTimer: () => {
@@ -99,16 +146,16 @@ export const usePomodoroStore = create<PomodoroStore>()(
 
         switch (currentState) {
           case 'focus':
-            timeRemaining = settings.focusDuration * 60;
+            timeRemaining = Math.max(1, settings.focusDuration || 25) * 60;
             break;
           case 'shortBreak':
-            timeRemaining = settings.shortBreakDuration * 60;
+            timeRemaining = Math.max(1, settings.shortBreakDuration || 5) * 60;
             break;
           case 'longBreak':
-            timeRemaining = settings.longBreakDuration * 60;
+            timeRemaining = Math.max(1, settings.longBreakDuration || 15) * 60;
             break;
           default:
-            timeRemaining = settings.focusDuration * 60;
+            timeRemaining = Math.max(1, settings.focusDuration || 25) * 60;
         }
 
         if (currentState === 'focus') {
@@ -144,16 +191,16 @@ export const usePomodoroStore = create<PomodoroStore>()(
 
           if (newCompletedPomodoros % settings.longBreakInterval === 0) {
             nextState = 'longBreak';
-            timeRemaining = settings.longBreakDuration * 60;
+            timeRemaining = Math.max(1, settings.longBreakDuration || 15) * 60;
             shouldBeRunning = true; // Iniciar timer da pausa longa automaticamente
           } else {
             nextState = 'shortBreak';
-            timeRemaining = settings.shortBreakDuration * 60;
+            timeRemaining = Math.max(1, settings.shortBreakDuration || 5) * 60;
             shouldBeRunning = true; // Iniciar timer da pausa curta automaticamente
           }
         } else { // Vindo de uma pausa
           nextState = 'focus';
-          timeRemaining = settings.focusDuration * 60;
+          timeRemaining = Math.max(1, settings.focusDuration || 25) * 60;
           shouldBeRunning = false; // Foco começa parado, esperando o usuário iniciar
         }
 
@@ -168,6 +215,12 @@ export const usePomodoroStore = create<PomodoroStore>()(
       },
 
       updateSettings: (newSettings) => {
+        // Validate settings to prevent 0 or negative values
+        if (newSettings.focusDuration !== undefined && newSettings.focusDuration < 1) newSettings.focusDuration = 1;
+        if (newSettings.shortBreakDuration !== undefined && newSettings.shortBreakDuration < 1) newSettings.shortBreakDuration = 1;
+        if (newSettings.longBreakDuration !== undefined && newSettings.longBreakDuration < 1) newSettings.longBreakDuration = 1;
+        if (newSettings.longBreakInterval !== undefined && newSettings.longBreakInterval < 1) newSettings.longBreakInterval = 1;
+
         set((state) => ({
           settings: {
             ...state.settings,
@@ -178,7 +231,7 @@ export const usePomodoroStore = create<PomodoroStore>()(
         const { currentState } = get();
         if (currentState === 'idle' || !get().isRunning) {
           set({
-            timeRemaining: get().settings.focusDuration * 60,
+            timeRemaining: Math.max(1, (newSettings.focusDuration || get().settings.focusDuration || 25)) * 60,
             elapsedSeconds: 0,
           });
         }

@@ -17,7 +17,7 @@ export default function Header({ onSettingsClick }: HeaderProps) {
   return (
     <header className="bg-white dark:bg-gray-900 shadow-sm relative z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-14">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center gap-2">
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -37,7 +37,7 @@ export default function Header({ onSettingsClick }: HeaderProps) {
             >
               <SparklesIcon className="h-5 w-5" aria-hidden="true" />
             </button>
-            
+
             <button
               type="button"
               onClick={onSettingsClick}
@@ -48,7 +48,7 @@ export default function Header({ onSettingsClick }: HeaderProps) {
             </button>
           </div>
           <div className="-mr-2 flex items-center gap-1 sm:hidden">
-             <button
+            <button
               type="button"
               onClick={() => setShowFeaturesModal(true)}
               className="p-1 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 dark:focus:ring-offset-gray-900 transition-colors duration-150"
@@ -77,19 +77,19 @@ export default function Header({ onSettingsClick }: HeaderProps) {
                 <SparklesIcon className="h-5 w-5 text-yellow-500 mr-2" />
                 Bem-vindo ao Studar!
               </h3>
-              <button 
+              <button
                 onClick={() => setShowFeaturesModal(false)}
                 className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto space-y-4 text-gray-700 dark:text-gray-300">
               <p>
                 O Studar é sua plataforma completa para organizar, monitorar e otimizar seus estudos com ferramentas avançadas de análise e acompanhamento. Explore as principais funcionalidades:
               </p>
-              
+
               <div className="space-y-3">
                 <div>
                   <h4 className="font-semibold dark:text-white">🗓️ Calendário</h4>
@@ -133,19 +133,19 @@ export default function Header({ onSettingsClick }: HeaderProps) {
                   <li>Personalize os níveis de cor do <strong>Heatmap</strong> de atividades.</li>
                 </ul>
               </div>
-              
+
               <p className="text-sm pt-2">
                 Explore as <strong>Configurações</strong> (⚙️) para personalizar tudo ao seu gosto. O Studar se adapta ao seu método de estudo!
               </p>
             </div>
-            
+
             <div className="p-4 border-t dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800 z-10 flex justify-end">
-            <button
+              <button
                 onClick={() => setShowFeaturesModal(false)}
                 className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm"
-            >
+              >
                 Entendi!
-            </button>
+              </button>
             </div>
           </div>
         </div>

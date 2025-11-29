@@ -231,7 +231,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   min="1"
                   max="60"
                   value={pomodoroSettings.focusDuration}
-                  onChange={(e) => updatePomodoroSettings({ focusDuration: Number(e.target.value) })}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val > 0) updatePomodoroSettings({ focusDuration: val });
+                  }}
                   className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
                 />
               </div>
@@ -244,7 +247,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   min="1"
                   max="30"
                   value={pomodoroSettings.shortBreakDuration}
-                  onChange={(e) => updatePomodoroSettings({ shortBreakDuration: Number(e.target.value) })}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val > 0) updatePomodoroSettings({ shortBreakDuration: val });
+                  }}
                   className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
                 />
               </div>
@@ -257,7 +263,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   min="1"
                   max="60"
                   value={pomodoroSettings.longBreakDuration}
-                  onChange={(e) => updatePomodoroSettings({ longBreakDuration: Number(e.target.value) })}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val > 0) updatePomodoroSettings({ longBreakDuration: val });
+                  }}
                   className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
                 />
               </div>
@@ -270,7 +279,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   min="1"
                   max="10"
                   value={pomodoroSettings.longBreakInterval}
-                  onChange={(e) => updatePomodoroSettings({ longBreakInterval: Number(e.target.value) })}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val > 0) updatePomodoroSettings({ longBreakInterval: val });
+                  }}
                   className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
                 />
               </div>
@@ -422,156 +434,11 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          {/* Seção de personalização das cores do Histórico de Atividades */}
-          <div className="pb-4 border-b dark:border-gray-700">
+          {/* Seção de Reiniciar Dados */}
+          <div className="pb-4">
             <div className="flex items-center mb-4">
-              <PaintBrushIcon className="h-5 w-5 mr-2 text-purple-500" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Histórico de Atividades</h3>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  Personalizar cores conforme o tempo de estudo:
-                </label>
-
-                <div className="space-y-4">
-                  {/* Level 1 - primeira cor (mais clara) */}
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-sm mr-3" style={{
-                      backgroundColor: darkMode ? '#1e40af20' : '#dbeafe',
-                      border: '1px solid',
-                      borderColor: darkMode ? '#1e40af40' : '#bfdbfe'
-                    }}></div>
-                    <span className="text-gray-700 dark:text-gray-300 mr-2">Até</span>
-                    <input
-                      type="number"
-                      min="1"
-                      max="999"
-                      value={thresholds.level1}
-                      onChange={(e) => handleThresholdChange('level1', parseInt(e.target.value) || 1)}
-                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-6"
-                      style={{ appearance: 'textfield' }}
-                    />
-                    <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
-                  </div>
-
-                  {/* Level 2 */}
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-sm mr-3" style={{
-                      backgroundColor: darkMode ? '#1e40af40' : '#bfdbfe',
-                      border: '1px solid',
-                      borderColor: darkMode ? '#1e40af60' : '#93c5fd'
-                    }}></div>
-                    <span className="text-gray-700 dark:text-gray-300 mr-2">Até</span>
-                    <input
-                      type="number"
-                      min="1"
-                      max="999"
-                      value={thresholds.level2}
-                      onChange={(e) => handleThresholdChange('level2', parseInt(e.target.value) || 1)}
-                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-6"
-                      style={{ appearance: 'textfield' }}
-                    />
-                    <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
-                  </div>
-
-                  {/* Level 3 */}
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-sm mr-3" style={{
-                      backgroundColor: darkMode ? '#1e40af60' : '#93c5fd',
-                      border: '1px solid',
-                      borderColor: darkMode ? '#1e40af80' : '#60a5fa'
-                    }}></div>
-                    <span className="text-gray-700 dark:text-gray-300 mr-2">Até</span>
-                    <input
-                      type="number"
-                      min="1"
-                      max="999"
-                      value={thresholds.level3}
-                      onChange={(e) => handleThresholdChange('level3', parseInt(e.target.value) || 1)}
-                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-6"
-                      style={{ appearance: 'textfield' }}
-                    />
-                    <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
-                  </div>
-
-                  {/* Level 4 */}
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-sm mr-3" style={{
-                      backgroundColor: darkMode ? '#1e40af80' : '#60a5fa',
-                      border: '1px solid',
-                      borderColor: darkMode ? '#1e40afA0' : '#3b82f6'
-                    }}></div>
-                    <span className="text-gray-700 dark:text-gray-300 mr-2">Até</span>
-                    <input
-                      type="number"
-                      min="1"
-                      max="999"
-                      value={thresholds.level4}
-                      onChange={(e) => handleThresholdChange('level4', parseInt(e.target.value) || 1)}
-                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-6"
-                      style={{ appearance: 'textfield' }}
-                    />
-                    <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
-                  </div>
-
-                  {/* Level 5 */}
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-sm mr-3" style={{
-                      backgroundColor: darkMode ? '#1e40afA0' : '#3b82f6',
-                      border: '1px solid',
-                      borderColor: darkMode ? '#1e40afC0' : '#2563eb'
-                    }}></div>
-                    <span className="text-gray-700 dark:text-gray-300 mr-2">Até</span>
-                    <input
-                      type="number"
-                      min="1"
-                      max="999"
-                      value={thresholds.level5}
-                      onChange={(e) => handleThresholdChange('level5', parseInt(e.target.value) || 1)}
-                      className="w-20 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2 pr-6"
-                      style={{ appearance: 'textfield' }}
-                    />
-                    <span className="ml-2 text-gray-700 dark:text-gray-300">min</span>
-                  </div>
-
-                  {/* Level 6 (mais escura) */}
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-sm mr-3" style={{
-                      backgroundColor: darkMode ? '#1e40afC0' : '#2563eb',
-                      border: '1px solid',
-                      borderColor: darkMode ? '#1e40af' : '#1d4ed8'
-                    }}></div>
-                    <span className="text-gray-700 dark:text-gray-300">Mais de {thresholds.level5} min</span>
-                  </div>
-                </div>
-
-                {/* Botões para salvar ou resetar */}
-                <div className="flex justify-end space-x-3 mt-4">
-                  <button
-                    onClick={handleResetThresholds}
-                    className="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm flex items-center"
-                  >
-                    <ArrowPathIcon className="h-4 w-4 mr-1" />
-                    Resetar
-                  </button>
-                  <button
-                    onClick={handleSaveThresholds}
-                    className="px-3 py-1 rounded-md bg-primary-600 text-white hover:bg-primary-700 text-sm flex items-center"
-                  >
-                    <CheckIcon className="h-4 w-4 mr-1" />
-                    Salvar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Seção de Reset de Dados */}
-          <div>
-            <div className="flex items-center mb-4">
-              <ArrowPathIcon className="h-5 w-5 mr-2 text-red-500" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Dados e Estatísticas</h3>
+              <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-red-500" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Reiniciar Dados</h3>
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">

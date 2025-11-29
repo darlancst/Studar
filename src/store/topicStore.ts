@@ -8,7 +8,7 @@ import { firebaseSync } from '@/services/firebaseSync';
 
 interface TopicState {
   topics: Topic[];
-  addTopic: (title: string, subjectId: string, description?: string, customDate?: Date) => Topic;
+  addTopic: (title: string, subjectId: string, description?: string, customDate?: Date, linkedScheduleItemId?: string) => Topic;
   updateTopic: (id: string, data: Partial<Topic>) => void;
   deleteTopic: (id: string) => void;
   getTopicsBySubjectId: (subjectId: string) => Topic[];
@@ -20,13 +20,14 @@ export const useTopicStore = create<TopicState>()(
   persist(
     (set, get) => ({
       topics: [],
-      addTopic: (title, subjectId, description, customDate) => {
+      addTopic: (title, subjectId, description, customDate, linkedScheduleItemId) => {
         const newTopic: Topic = {
           id: uuidv4(),
           title,
           subjectId,
           description,
           createdAt: customDate || new Date(),
+          linkedScheduleItemId,
         };
         set((state) => {
           const newState = [...state.topics, newTopic];
@@ -35,17 +36,9 @@ export const useTopicStore = create<TopicState>()(
           }
           return { topics: newState };
         });
-        
-        const reviewStore = useReviewStore.getState();
-        const settingsStore = useSettingsStore.getState();
-        const today = customDate || new Date();
-        
-        settingsStore.reviewIntervals.forEach(days => {
-          const scheduledDate = new Date(today);
-          scheduledDate.setDate(today.getDate() + days);
-          reviewStore.addReview(newTopic.id, scheduledDate);
-        });
-        
+
+        // Review scheduling removed from here. Now triggered manually or by "First Study" completion.
+
         return newTopic;
       },
       updateTopic: (id, data) => {
@@ -67,7 +60,7 @@ export const useTopicStore = create<TopicState>()(
           }
           return { topics: newState };
         });
-        
+
         const reviewStore = useReviewStore.getState();
         reviewStore.deleteReviewsByTopicId(id);
       },

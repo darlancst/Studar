@@ -14,8 +14,6 @@ interface UserData {
   reviews: any[];
   pomodoroSessions: any[];
   simulados: any[];
-  decks: any[];
-  cards: any[];
   settings: any;
   lastSync: number;
 }
