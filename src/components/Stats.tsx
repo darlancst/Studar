@@ -56,7 +56,8 @@ import {
   CheckCircleIcon,
   TrophyIcon,
   PlayIcon,
-  CalendarIcon
+  CalendarIcon,
+  ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
 
 // Registrando os componentes necessários
@@ -220,6 +221,60 @@ export default function Stats() {
   // Estatísticas Gerais
   const totalStudyTime = filteredSessions.reduce((acc, session) => acc + session.duration, 0);
   const totalSessions = filteredSessions.length;
+
+  // Calcular Revisões Feitas
+  const totalReviews = useMemo(() => {
+    const now = new Date();
+    let start = startOfDay(now);
+    let end = endOfDay(now);
+
+    switch (period) {
+      case 'today':
+        start = startOfToday();
+        end = endOfToday();
+        break;
+      case 'week':
+        start = subDays(now, 7);
+        break;
+      case 'month':
+        start = subDays(now, 30);
+        break;
+      case 'annual':
+        start = subYears(now, 1);
+        break;
+      case 'custom':
+        start = parseISO(customStartDate);
+        end = endOfDay(parseISO(customEndDate));
+        break;
+    }
+
+    return reviews.filter(r => {
+      if (!r.completed || !r.date) return false;
+      const reviewDate = new Date(r.date);
+      return reviewDate >= start && reviewDate <= end;
+    }).length;
+  }, [reviews, period, customStartDate, customEndDate]);
+
+  // Calcular Progresso da Meta Semanal
+  const weeklyProgress = useMemo(() => {
+    const now = new Date();
+    const start = startOfWeek(now, { weekStartsOn: 1 }); // Semana começa na segunda
+    const end = endOfWeek(now, { weekStartsOn: 1 });
+
+    const weekSessions = sessions.filter(s => {
+      const date = parseISO(s.date);
+      return date >= start && date <= end;
+    });
+
+    const currentWeekMinutes = weekSessions.reduce((acc, s) => acc + s.duration, 0);
+    const percentage = Math.min(100, (currentWeekMinutes / weeklyGoal) * 100);
+
+    return {
+      current: currentWeekMinutes,
+      target: weeklyGoal,
+      percentage
+    };
+  }, [sessions, weeklyGoal]);
 
   // Matéria mais estudada
   const subjectStudyTime = filteredSessions.reduce((acc, session) => {
@@ -423,43 +478,124 @@ export default function Stats() {
         </div>
       )}
 
-      {/* Widget "Agora" - Command Center */}
-      {nextSubject && (
-        <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <PlayIcon className="w-32 h-32 text-white" />
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+        {/* Widget "Agora" - Command Center */}
+        <div className="xl:col-span-2">
+          {nextSubject ? (
+            <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden h-full flex flex-col justify-center">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <PlayIcon className="w-32 h-32 text-white" />
+              </div>
+
+              <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2 text-primary-100">
+                    <CalendarIcon className="w-5 h-5" />
+                    <span className="text-sm font-medium uppercase tracking-wider">Planejado para Hoje</span>
+                  </div>
+                  <h2 className="text-3xl font-bold mb-1">{nextSubject.name}</h2>
+                  {nextTopic && (
+                    <p className="text-primary-100 text-lg flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+                      {nextTopic.title}
+                    </p>
+                  )}
+                  {nextItem?.startTime && (
+                    <p className="text-primary-200 text-sm mt-2">
+                      Horário: {nextItem.startTime} - {nextItem.endTime}
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleStartSession}
+                  className="bg-white text-primary-700 hover:bg-primary-50 px-6 py-3 rounded-xl font-bold shadow-md transition-all transform hover:scale-105 flex items-center gap-2"
+                >
+                  <PlayIcon className="w-5 h-5" />
+                  Estudar Agora
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 h-full flex flex-col items-center justify-center text-center gap-2 min-h-[200px]">
+              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-full">
+                <CalendarIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Nada planejado para agora</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Aproveite para descansar ou adiantar uma tarefa!</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Cards de Resumo */}
+        <div className="xl:col-span-1 grid grid-cols-2 gap-3">
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Tempo Total</span>
+            </div>
+            <div className="mt-1">
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                {Math.floor(totalStudyTime / 60)}h {totalStudyTime % 60}m
+              </span>
+            </div>
           </div>
 
-          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2 text-primary-100">
-                <CalendarIcon className="w-5 h-5" />
-                <span className="text-sm font-medium uppercase tracking-wider">Planejado para Hoje</span>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <CheckCircleIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
-              <h2 className="text-3xl font-bold mb-1">{nextSubject.name}</h2>
-              {nextTopic && (
-                <p className="text-primary-100 text-lg flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-                  {nextTopic.title}
-                </p>
-              )}
-              {nextItem?.startTime && (
-                <p className="text-primary-200 text-sm mt-2">
-                  Horário: {nextItem.startTime} - {nextItem.endTime}
-                </p>
-              )}
+              <span className="text-sm text-gray-500 dark:text-gray-400">Sessões</span>
             </div>
+            <div className="mt-1">
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                {totalSessions}
+              </span>
+            </div>
+          </div>
 
-            <button
-              onClick={handleStartSession}
-              className="bg-white text-primary-700 hover:bg-primary-50 px-6 py-3 rounded-xl font-bold shadow-md transition-all transform hover:scale-105 flex items-center gap-2"
-            >
-              <PlayIcon className="w-5 h-5" />
-              Estudar Agora
-            </button>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <ClipboardDocumentCheckIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Revisões</span>
+            </div>
+            <div className="mt-1">
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                {totalReviews}
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                <TrophyIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              </div>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Meta</span>
+            </div>
+            <div className="mt-1">
+              <div className="flex items-end gap-1 mb-1">
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {Math.floor(weeklyProgress.percentage)}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                <div
+                  className="bg-orange-500 h-1.5 rounded-full transition-all duration-500"
+                  style={{ width: `${weeklyProgress.percentage}%` }}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Heatmap Section */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
@@ -468,37 +604,6 @@ export default function Stats() {
           Consistência de Estudos
         </h3>
         <Heatmap />
-      </div>
-
-      {/* Cards de Resumo */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <span className="text-sm text-gray-500 dark:text-gray-400">Tempo Total</span>
-          </div>
-          <div className="mt-1">
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
-              {Math.floor(totalStudyTime / 60)}h {totalStudyTime % 60}m
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-              <CheckCircleIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <span className="text-sm text-gray-500 dark:text-gray-400">Sessões</span>
-          </div>
-          <div className="mt-1">
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
-              {totalSessions}
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Gráficos Principais */}
