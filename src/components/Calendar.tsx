@@ -114,6 +114,7 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                 setShowTopicForm(!showTopicForm);
               }}
               className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-medium"
+              id="tour-calendar-planned"
             >
               {showTopicForm ? 'Cancelar' : '+ Avulso'}
             </button>

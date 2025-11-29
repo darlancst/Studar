@@ -480,7 +480,7 @@ export default function Stats() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
         {/* Widget "Agora" - Command Center */}
-        <div className="xl:col-span-2">
+        <div className="xl:col-span-2" id="tour-pomodoro-widget">
           {nextSubject ? (
             <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden h-full flex flex-col justify-center">
               <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -530,7 +530,7 @@ export default function Stats() {
         </div>
 
         {/* Cards de Resumo */}
-        <div className="xl:col-span-1 grid grid-cols-2 gap-3">
+        <div className="xl:col-span-1 grid grid-cols-2 gap-3" id="tour-stats-kpi">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-1">
               <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -598,7 +598,7 @@ export default function Stats() {
       </div>
 
       {/* Heatmap Section */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700" id="tour-heatmap">
         <h3 className="text-lg font-semibold mb-1 dark:text-white flex items-center gap-2">
           <FireIcon className="w-5 h-5 text-orange-500" />
           Consistência de Estudos

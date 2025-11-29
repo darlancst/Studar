@@ -48,6 +48,7 @@ export default function ScheduleManager() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <h2 className="text-2xl font-bold dark:text-white">Cronogramas de Estudo</h2>
                 <button
+                    id="tour-schedule-btn"
                     onClick={() => setShowCreateForm(true)}
                     className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 flex items-center gap-2 text-sm font-medium shadow-sm transition-colors"
                 >
@@ -214,8 +215,6 @@ export default function ScheduleManager() {
             {/* Editor do Cronograma Ativo */}
             {activeSchedule ? (
                 <div className="animate-fade-in">
-
-
                     {activeSchedule.mode === 'weekly' ? <WeeklyScheduleEditor /> : <BlockScheduleEditor />}
                 </div>
             ) : (
