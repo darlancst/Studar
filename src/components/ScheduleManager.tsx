@@ -39,7 +39,9 @@ export default function ScheduleManager() {
     const handleDeleteSchedule = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         if (confirm('Tem certeza que deseja excluir este cronograma?')) {
-            deleteSchedule(id);
+            if (confirm('Esta ação é irreversível e excluirá todo o histórico e planejamento deste cronograma. Deseja realmente continuar?')) {
+                deleteSchedule(id);
+            }
         }
     };
 
@@ -60,7 +62,7 @@ export default function ScheduleManager() {
             {/* Lista de Cronogramas (Tabs) */}
             {schedules.length > 0 && (
                 <div
-                    className="flex overflow-x-auto pb-2 gap-2 scrollbar-hide"
+                    className="flex overflow-x-auto p-1 pb-2 gap-2 scrollbar-hide"
                     onTouchStart={(e) => e.stopPropagation()}
                     onTouchMove={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => e.stopPropagation()}

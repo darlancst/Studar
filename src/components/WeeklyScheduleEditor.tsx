@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useSubjectStore } from '@/store/subjectStore';
 import { useTopicStore } from '@/store/topicStore';
-import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, XMarkIcon, ClockIcon } from '@heroicons/react/24/outline';
 
 export default function WeeklyScheduleEditor() {
     const { weeklyItems, addWeeklyItem, removeWeeklyItem, activeScheduleId } = useScheduleStore();
@@ -13,11 +14,25 @@ export default function WeeklyScheduleEditor() {
     const [selectedSubjectId, setSelectedSubjectId] = useState('');
     const [startTime, setStartTime] = useState('08:00');
     const [endTime, setEndTime] = useState('09:00');
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const weekDays = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
-    const handleAddItem = () => {
+    // Auto-update end time when start time changes (default 1 hour duration)
+    useEffect(() => {
+        if (startTime) {
+            const [hours, minutes] = startTime.split(':').map(Number);
+            const endDate = new Date();
+            endDate.setHours(hours + 1);
+            endDate.setMinutes(minutes);
+            const endHours = String(endDate.getHours()).padStart(2, '0');
+            const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+            setEndTime(`${endHours}:${endMinutes}`);
+        }
+    }, [startTime]);
+
+    const handleAddItem = (e: React.FormEvent) => {
+        e.preventDefault();
         if (!selectedSubjectId || !activeScheduleId) return;
 
         addWeeklyItem({
@@ -28,8 +43,20 @@ export default function WeeklyScheduleEditor() {
             endTime,
         });
 
-        // Reset selection but keep day/time for easier batch entry
+        // Reset selection and close modal
         setSelectedSubjectId('');
+        setIsModalOpen(false);
+    };
+
+    const handleDayClick = (dayIndex: number) => {
+        setSelectedDay(dayIndex);
+        setIsModalOpen(true);
+    };
+
+    const openModal = () => {
+        const today = new Date().getDay();
+        setSelectedDay(today);
+        setIsModalOpen(true);
     };
 
     // Filtrar itens apenas do cronograma ativo
@@ -43,123 +70,69 @@ export default function WeeklyScheduleEditor() {
     if (!activeScheduleId) return null;
 
     return (
-        <div className="space-y-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="space-y-4">
+            {/* Header with Add Button */}
+            <div className="flex justify-end">
                 <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="w-full flex items-center justify-between p-2 text-left bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={openModal}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 dark:text-primary-400 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 rounded-lg transition-colors"
                 >
-                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-                        <PlusIcon className="h-3.5 w-3.5" />
-                        Adicionar Item
-                    </span>
-                    <span className="text-[10px] text-gray-500 transform transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                        ▼
-                    </span>
+                    <PlusIcon className="h-4 w-4" />
+                    Adicionar Item
                 </button>
-
-                {isExpanded && (
-                    <div className="p-2 border-t border-gray-200 dark:border-gray-700 animate-fade-in-down">
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 items-end">
-                            <div className="col-span-2 md:col-span-1">
-                                <label className="block text-[10px] font-medium text-gray-600 dark:text-gray-400 mb-0.5">Dia</label>
-                                <select
-                                    value={selectedDay}
-                                    onChange={(e) => setSelectedDay(Number(e.target.value))}
-                                    className="w-full p-1 text-xs border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                >
-                                    {weekDays.map((day, index) => (
-                                        <option key={index} value={index}>{day}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="col-span-2 md:col-span-1">
-                                <label className="block text-[10px] font-medium text-gray-600 dark:text-gray-400 mb-0.5">Matéria</label>
-                                <select
-                                    value={selectedSubjectId}
-                                    onChange={(e) => setSelectedSubjectId(e.target.value)}
-                                    className="w-full p-1 text-xs border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                >
-                                    <option value="">Selecione...</option>
-                                    {subjects.map((subject) => (
-                                        <option key={subject.id} value={subject.id}>{subject.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-
-
-                            <div>
-                                <label className="block text-[10px] font-medium text-gray-600 dark:text-gray-400 mb-0.5">Início</label>
-                                <input
-                                    type="time"
-                                    value={startTime}
-                                    onChange={(e) => setStartTime(e.target.value)}
-                                    className="w-full p-1 text-xs border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-[10px] font-medium text-gray-600 dark:text-gray-400 mb-0.5">Fim</label>
-                                <input
-                                    type="time"
-                                    value={endTime}
-                                    onChange={(e) => setEndTime(e.target.value)}
-                                    className="w-full p-1 text-xs border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                />
-                            </div>
-
-                            <button
-                                onClick={handleAddItem}
-                                disabled={!selectedSubjectId}
-                                className="col-span-2 md:col-span-1 bg-primary-600 text-white p-1 rounded hover:bg-primary-700 disabled:opacity-50 flex items-center justify-center gap-1.5 text-xs h-[26px]"
-                            >
-                                <PlusIcon className="h-3.5 w-3.5" />
-                                <span>Adicionar</span>
-                            </button>
-                        </div>
-                    </div>
-                )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-1.5">
+            {/* Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-2">
                 {weekDays.map((day, dayIndex) => {
                     const dayItems = sortedItems.filter(item => item.dayOfWeek === dayIndex);
+                    const isToday = new Date().getDay() === dayIndex;
 
                     return (
-                        <div key={day} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-1.5 min-h-[100px] shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col">
-                            <h4 className="text-xs font-bold text-center mb-1 text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 pb-1">
+                        <div
+                            key={day}
+                            onClick={() => handleDayClick(dayIndex)}
+                            className={`
+                                rounded-xl p-2 min-h-[120px] flex flex-col cursor-pointer transition-all border
+                                ${isToday
+                                    ? 'bg-white dark:bg-gray-800 border-primary-200 dark:border-primary-800 ring-1 ring-primary-500/30'
+                                    : 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 hover:border-primary-200 dark:hover:border-primary-700'
+                                }
+                            `}
+                        >
+                            <h4 className={`
+                                text-xs font-bold text-center mb-2 uppercase tracking-wider pb-1 border-b
+                                ${isToday ? 'text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-800' : 'text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700'}
+                            `}>
                                 {day.slice(0, 3)}
                             </h4>
 
-                            <div className="space-y-1 flex-1">
+                            <div className="space-y-1.5 flex-1">
                                 {dayItems.map((item) => {
                                     const subject = subjects.find(s => s.id === item.subjectId);
                                     return (
                                         <div
                                             key={item.id}
-                                            className="px-1 py-0.5 rounded-[4px] text-[10px] relative group border dark:border-gray-700 leading-tight"
+                                            className="px-2 py-1 rounded-md text-[10px] relative group border dark:border-gray-700 leading-tight shadow-sm"
                                             style={{
                                                 backgroundColor: subject ? `${subject.color}15` : undefined,
-                                                borderLeft: subject ? `2px solid ${subject.color}` : undefined
+                                                borderLeft: subject ? `3px solid ${subject.color}` : undefined
                                             }}
                                         >
-                                            <div className="font-semibold dark:text-white truncate pr-3">
+                                            <div className="font-semibold dark:text-white truncate pr-4">
                                                 {subject?.name || 'Removida'}
-                                                {item.topicId && (
-                                                    <span className="font-normal text-gray-600 dark:text-gray-300 ml-1">
-                                                        - {topics.find(t => t.id === item.topicId)?.title}
-                                                    </span>
-                                                )}
                                             </div>
-                                            <div className="text-gray-500 dark:text-gray-400 text-[9px]">
-                                                {item.startTime}-{item.endTime}
+                                            <div className="text-gray-500 dark:text-gray-400 text-[9px] flex items-center gap-1 mt-0.5">
+                                                <ClockIcon className="h-2.5 w-2.5" />
+                                                {item.startTime} - {item.endTime}
                                             </div>
 
                                             <button
-                                                onClick={() => removeWeeklyItem(item.id)}
-                                                className="absolute top-0.5 right-0.5 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-red-50 rounded"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    removeWeeklyItem(item.id);
+                                                }}
+                                                className="absolute top-1 right-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30"
                                                 title="Remover"
                                             >
                                                 <TrashIcon className="h-3 w-3" />
@@ -168,8 +141,8 @@ export default function WeeklyScheduleEditor() {
                                     );
                                 })}
                                 {dayItems.length === 0 && (
-                                    <div className="flex-1 flex items-center justify-center text-gray-300 dark:text-gray-700 text-[10px] italic">
-                                        -
+                                    <div className="flex-1 flex flex-col items-center justify-center text-gray-300 dark:text-gray-600 gap-1 group-hover:text-primary-400 transition-colors">
+                                        <PlusIcon className="h-4 w-4" />
                                     </div>
                                 )}
                             </div>
@@ -177,6 +150,98 @@ export default function WeeklyScheduleEditor() {
                     );
                 })}
             </div>
-        </div >
+
+            {/* Modal */}
+            {isModalOpen && typeof document !== 'undefined' && createPortal(
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-scale-up">
+                        <div className="flex items-center justify-between p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                Adicionar à {weekDays[selectedDay]}
+                            </h3>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                <XMarkIcon className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleAddItem} className="p-5 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Matéria
+                                </label>
+                                <select
+                                    value={selectedSubjectId}
+                                    onChange={(e) => setSelectedSubjectId(e.target.value)}
+                                    className="w-full p-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                                    required
+                                >
+                                    <option value="">Selecione uma matéria...</option>
+                                    {subjects.map((subject) => (
+                                        <option key={subject.id} value={subject.id}>{subject.name}</option>
+                                    ))}
+                                </select>
+                                <div className="mt-1 text-right">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            window.dispatchEvent(new CustomEvent('open-subject-manager'));
+                                        }}
+                                        className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-medium"
+                                    >
+                                        + Nova Matéria
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                        Início
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="time"
+                                            value={startTime}
+                                            onChange={(e) => setStartTime(e.target.value)}
+                                            className="w-full p-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                        Fim
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="time"
+                                            value={endTime}
+                                            onChange={(e) => setEndTime(e.target.value)}
+                                            className="w-full p-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={!selectedSubjectId}
+                                    className="w-full py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 focus:ring-4 focus:ring-primary-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary-500/20"
+                                >
+                                    Adicionar ao Cronograma
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>,
+                document.body
+            )}
+        </div>
     );
 }

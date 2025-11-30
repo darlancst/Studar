@@ -17,8 +17,8 @@ interface SubjectState {
 
 // Objeto para garantir que o localStorage só seja acessado no cliente.
 // Isso é crucial para evitar erros de hidratação em Next.js.
-const storage = typeof window !== 'undefined' 
-  ? createJSONStorage(() => localStorage) 
+const storage = typeof window !== 'undefined'
+  ? createJSONStorage(() => localStorage)
   : undefined;
 
 export const useSubjectStore = create<SubjectState>()(

@@ -1,0 +1,29 @@
+src/components/SubjectTopicManager.tsx(123,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/components/SubjectTopicManager.tsx(124,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/components/SubjectTopicManager.tsx(162,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/components/SubjectTopicManager.tsx(163,51): error TS17014: JSX fragment has no corresponding closing tag.
+src/components/SubjectTopicManager.tsx(226,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/components/SubjectTopicManager.tsx(268,5): error TS1005: ')' expected.
+src/components/SubjectTopicManager.tsx(268,55): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SubjectTopicManager.tsx(269,55): error TS1005: '}' expected.
+src/components/SubjectTopicManager.tsx(272,123): error TS1005: '}' expected.
+src/components/SubjectTopicManager.tsx(274,9): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/SubjectTopicManager.tsx(277,113): error TS1005: '}' expected.
+src/components/SubjectTopicManager.tsx(279,9): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/SubjectTopicManager.tsx(280,74): error TS1005: '}' expected.
+src/components/SubjectTopicManager.tsx(281,9): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/SubjectTopicManager.tsx(286,106): error TS1005: '}' expected.
+src/components/SubjectTopicManager.tsx(286,121): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/SubjectTopicManager.tsx(287,27): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SubjectTopicManager.tsx(290,59): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SubjectTopicManager.tsx(294,5): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/SubjectTopicManager.tsx(296,53): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SubjectTopicManager.tsx(297,55): error TS1005: '}' expected.
+src/components/SubjectTopicManager.tsx(303,39): error TS1005: '}' expected.
+src/components/SubjectTopicManager.tsx(305,9): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/SubjectTopicManager.tsx(306,91): error TS1005: '}' expected.
+src/components/SubjectTopicManager.tsx(307,9): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/SubjectTopicManager.tsx(311,5): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/SubjectTopicManager.tsx(314,58): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SubjectTopicManager.tsx(675,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/SubjectTopicManager.tsx(675,2): error TS1005: '</' expected.

@@ -84,7 +84,7 @@ export default function Stats() {
   const { studyDates: dates } = useDatesStore();
   const { weeklyGoal } = useSettingsStore();
   const { simulados } = useSimuladosStore();
-  const { schedules, weeklyItems, blockItems } = useScheduleStore();
+  const { schedules, weeklyItems, blockItems, completedScheduleItems } = useScheduleStore();
   const isDarkMode = useDarkMode();
 
   const [period, setPeriod] = useState<StatsPeriod>('week');
@@ -152,6 +152,9 @@ export default function Stats() {
         plannedItems = [...plannedItems, ...items];
       }
     });
+
+    // Filter out completed items
+    plannedItems = plannedItems.filter(item => !completedScheduleItems.includes(item.id));
 
     // Ordenar por horário
     plannedItems.sort((a, b) => {
@@ -411,6 +414,7 @@ export default function Stats() {
     },
     scales: {
       y: {
+        beginAtZero: true,
         ticks: { color: isDarkMode ? '#9ca3af' : '#6b7280' },
         grid: { color: isDarkMode ? '#374151' : '#e5e7eb' }
       },
@@ -431,8 +435,75 @@ export default function Stats() {
 
   return (
     <div className="space-y-3 pb-20 animate-fade-in">
-      {/* Cabeçalho e Filtros */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+      {/* 1. Widget "Agora" - Command Center */}
+      <div className="w-full" id="tour-pomodoro-widget">
+        {nextSubject ? (
+          <div className="relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md group">
+            {/* Subtle Gradient Background */}
+            <div
+              className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-br from-transparent to-current opacity-[0.03] dark:opacity-[0.08] rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"
+              style={{ color: nextSubject.color }}
+            />
+
+            <div className="relative z-10 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+              <div className="flex-1 min-w-0 w-full">
+                <div className="flex items-center justify-between sm:justify-start gap-3 mb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                    Próxima Sessão
+                  </span>
+                  {nextItem?.startTime && (
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700">
+                      <ClockIcon className="w-3 h-3 text-gray-400" />
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300 tabular-nums">
+                        {nextItem.startTime} - {nextItem.endTime}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div
+                    className="mt-1.5 w-1 h-8 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: nextSubject.color }}
+                  />
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white leading-tight truncate">
+                      {nextSubject.name}
+                    </h2>
+                    {nextTopic && (
+                      <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base mt-0.5 line-clamp-1">
+                        {nextTopic.title}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleStartSession}
+                className="w-full sm:w-auto group/btn relative overflow-hidden bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-xl font-medium text-sm shadow-sm hover:shadow transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                <div className="absolute inset-0 bg-white/10 dark:bg-black/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+                <PlayIcon className="w-4 h-4 relative z-10" />
+                <span className="relative z-10">Iniciar Foco</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center justify-center text-center gap-2 min-h-[160px]">
+            <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-full">
+              <CalendarIcon className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+            </div>
+            <div>
+              <h3 className="text-base font-medium text-gray-900 dark:text-white">Sem planos agora</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Tudo em dia! Bom descanso.</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Cabeçalho e Filtros */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
         <h2 className="text-2xl font-bold dark:text-white">Estatísticas</h2>
 
         <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto max-w-full">
@@ -478,120 +549,68 @@ export default function Stats() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
-        {/* Widget "Agora" - Command Center */}
-        <div className="xl:col-span-2" id="tour-pomodoro-widget">
-          {nextSubject ? (
-            <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden h-full flex flex-col justify-center">
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <PlayIcon className="w-32 h-32 text-white" />
-              </div>
-
-              <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-2 text-primary-100">
-                    <CalendarIcon className="w-5 h-5" />
-                    <span className="text-sm font-medium uppercase tracking-wider">Planejado para Hoje</span>
-                  </div>
-                  <h2 className="text-3xl font-bold mb-1">{nextSubject.name}</h2>
-                  {nextTopic && (
-                    <p className="text-primary-100 text-lg flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-                      {nextTopic.title}
-                    </p>
-                  )}
-                  {nextItem?.startTime && (
-                    <p className="text-primary-200 text-sm mt-2">
-                      Horário: {nextItem.startTime} - {nextItem.endTime}
-                    </p>
-                  )}
-                </div>
-
-                <button
-                  onClick={handleStartSession}
-                  className="bg-white text-primary-700 hover:bg-primary-50 px-6 py-3 rounded-xl font-bold shadow-md transition-all transform hover:scale-105 flex items-center gap-2"
-                >
-                  <PlayIcon className="w-5 h-5" />
-                  Estudar Agora
-                </button>
-              </div>
+      {/* 3. Cards de Resumo (KPIs) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3" id="tour-stats-kpi">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
-          ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 h-full flex flex-col items-center justify-center text-center gap-2 min-h-[200px]">
-              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-full">
-                <CalendarIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
-              </div>
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Nada planejado para agora</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Aproveite para descansar ou adiantar uma tarefa!</p>
-              </div>
-            </div>
-          )}
+            <span className="text-sm text-gray-500 dark:text-gray-400">Tempo Total</span>
+          </div>
+          <div className="mt-1">
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+              {Math.floor(totalStudyTime / 60)}h {totalStudyTime % 60}m
+            </span>
+          </div>
         </div>
 
-        {/* Cards de Resumo */}
-        <div className="xl:col-span-1 grid grid-cols-2 gap-3" id="tour-stats-kpi">
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">Tempo Total</span>
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <CheckCircleIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
-            <div className="mt-1">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Sessões</span>
+          </div>
+          <div className="mt-1">
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+              {totalSessions}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <ClipboardDocumentCheckIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+            </div>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Revisões</span>
+          </div>
+          <div className="mt-1">
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+              {totalReviews}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+              <TrophyIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            </div>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Meta</span>
+          </div>
+          <div className="mt-1">
+            <div className="flex items-end gap-1 mb-1">
               <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                {Math.floor(totalStudyTime / 60)}h {totalStudyTime % 60}m
+                {Math.floor(weeklyProgress.percentage)}%
               </span>
             </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <CheckCircleIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              </div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">Sessões</span>
-            </div>
-            <div className="mt-1">
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                {totalSessions}
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <ClipboardDocumentCheckIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
-              </div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">Revisões</span>
-            </div>
-            <div className="mt-1">
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                {totalReviews}
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                <TrophyIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-              </div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">Meta</span>
-            </div>
-            <div className="mt-1">
-              <div className="flex items-end gap-1 mb-1">
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {Math.floor(weeklyProgress.percentage)}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                <div
-                  className="bg-orange-500 h-1.5 rounded-full transition-all duration-500"
-                  style={{ width: `${weeklyProgress.percentage}%` }}
-                />
-              </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+              <div
+                className="bg-orange-500 h-1.5 rounded-full transition-all duration-500"
+                style={{ width: `${weeklyProgress.percentage}%` }}
+              />
             </div>
           </div>
         </div>

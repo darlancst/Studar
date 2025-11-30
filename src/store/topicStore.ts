@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { Topic } from '@/types';
 import { useReviewStore } from './reviewStore';
@@ -15,6 +15,11 @@ interface TopicState {
   getTopicById: (id: string) => Topic | undefined;
   resetTopics: () => void;
 }
+
+// Objeto para garantir que o localStorage só seja acessado no cliente.
+const storage = typeof window !== 'undefined'
+  ? createJSONStorage(() => localStorage)
+  : undefined;
 
 export const useTopicStore = create<TopicState>()(
   persist(
@@ -76,7 +81,7 @@ export const useTopicStore = create<TopicState>()(
     }),
     {
       name: 'topic-storage',
-      skipHydration: true,
+      storage: storage,
     }
   )
 );

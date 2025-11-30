@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useSettingsStore } from '@/store/settingsStore';
 import TabBar from '@/components/TabBar';
 import Stats from '@/components/Stats';
@@ -12,7 +13,7 @@ import SimuladosPage from '@/app/simulados/page';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import PWADebug from '@/components/PWADebug';
 import ScheduleManager from '@/components/ScheduleManager';
-import TourGuide from '@/components/TourGuide';
+
 
 import StreakCounter from '@/components/StreakCounter';
 
@@ -69,14 +70,19 @@ export default function Home() {
       const customEvent = event as CustomEvent;
       if (customEvent.type === 'navigate-to-simulados') {
         setActiveTab('simulados');
+        setShowSubjectManager(false);
       } else if (customEvent.type === 'navigate-to-dashboard') {
         setActiveTab('stats');
+        setShowSubjectManager(false);
       } else if (customEvent.type === 'navigate-to-pomodoro') {
         setActiveTab('pomodoro');
+        setShowSubjectManager(false);
       } else if (customEvent.type === 'navigate-to-calendar') {
         setActiveTab('calendar');
+        setShowSubjectManager(false);
       } else if (customEvent.type === 'navigate-to-schedule') {
         setActiveTab('schedule');
+        setShowSubjectManager(false);
       }
     };
 
@@ -85,6 +91,7 @@ export default function Home() {
     window.addEventListener('navigate-to-pomodoro', handleNavigation);
     window.addEventListener('navigate-to-calendar', handleNavigation);
     window.addEventListener('navigate-to-schedule', handleNavigation);
+    window.addEventListener('open-subject-manager', () => setShowSubjectManager(true));
 
     return () => {
       window.removeEventListener('navigate-to-simulados', handleNavigation);
@@ -92,6 +99,7 @@ export default function Home() {
       window.removeEventListener('navigate-to-pomodoro', handleNavigation);
       window.removeEventListener('navigate-to-calendar', handleNavigation);
       window.removeEventListener('navigate-to-schedule', handleNavigation);
+      window.removeEventListener('open-subject-manager', () => setShowSubjectManager(true));
     };
   }, []);
 
@@ -108,7 +116,6 @@ export default function Home() {
               <h2 className="text-2xl font-bold dark:text-white">Calendário</h2>
               <div className="flex gap-2 w-full sm:w-auto">
                 <button
-                  id="tour-subjects-btn"
                   onClick={() => setShowSubjectManager(true)}
                   className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex-1 sm:flex-none shadow-sm text-sm font-medium"
                 >
@@ -134,8 +141,9 @@ export default function Home() {
       {...swipeHandlers}
     >
       <div className="max-w-6xl mx-auto p-2 sm:p-3 pt-2 sm:pt-3">
-        <header className="flex justify-between items-center mb-1 sm:mb-2">
-          <div className="flex items-center gap-3" id="tour-welcome">
+        <header className="flex items-center mb-1 sm:mb-2">
+          {/* Left: Logo */}
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-lg flex items-center justify-center text-white font-bold text-xl">
               S
             </div>
@@ -144,10 +152,13 @@ export default function Home() {
             </h1>
           </div>
 
+          {/* Center: Spacer */}
+          <div className="flex-1"></div>
+
+          {/* Right: Streak + Settings */}
           <div className="flex items-center gap-3">
             <StreakCounter />
             <button
-              id="tour-settings-btn"
               onClick={() => setShowSettings(true)}
               className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors"
             >
@@ -184,7 +195,6 @@ export default function Home() {
 
         <PWAInstallPrompt />
         <PWADebug />
-        <TourGuide />
       </div>
     </div>
   );

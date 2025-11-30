@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfDay, startOfWeek, endOfWeek, isWithinInterval, parseISO, getDay } from 'date-fns';
+import { useState, useEffect, useRef } from 'react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfDay, startOfWeek, endOfWeek, isWithinInterval, parseISO, getDay, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon, XMarkIcon, PlusIcon, CalendarIcon, ClockIcon, PlayIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
@@ -33,11 +33,8 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
   const { topics: allTopics, addTopic } = useTopicStore();
   const { generateReviewsForTopic } = useReviewStore();
   const { startSession } = usePomodoroStore();
-  const [showTopicForm, setShowTopicForm] = useState(false);
-  const [newTopicTitle, setNewTopicTitle] = useState('');
-  const [newTopicDescription, setNewTopicDescription] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
-  const [selectedScheduleItemId, setSelectedScheduleItemId] = useState<string | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Initialize selected subject
   useEffect(() => {
@@ -46,32 +43,14 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
     }
   }, [subjects, selectedSubjectId]);
 
-  const handleCreateTopic = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newTopicTitle.trim() && selectedSubjectId) {
-      const newTopicDate = startOfDay(new Date(date));
-      const newTopic = addTopic(
-        newTopicTitle.trim(),
-        selectedSubjectId,
-        newTopicDescription.trim(),
-        newTopicDate,
-        selectedScheduleItemId || undefined // Pass linked item ID
-      );
-      onTopicAdded(newTopic);
-
-      // Generate reviews for the new topic
-      generateReviewsForTopic(newTopic.id);
-
-      // Reset selection but do NOT mark as complete automatically
-      if (selectedScheduleItemId) {
-        setSelectedScheduleItemId(null);
-      }
-
-      setNewTopicTitle('');
-      setNewTopicDescription('');
-      setShowTopicForm(false);
+  // Scroll to top when date changes
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
     }
-  };
+  }, [date]);
+
+
 
   const handleStartSession = (subjectId: string, topicId?: string) => {
     startSession(subjectId, topicId);
@@ -100,7 +79,7 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-4">
+      <div ref={contentRef} className="flex-1 overflow-y-auto p-3 space-y-4">
         {/* Planned Items Section */}
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -108,63 +87,10 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
               <CalendarIcon className="h-4 w-4" />
               Estudos Planejados
             </h3>
-            <button
-              onClick={() => {
-                setSelectedScheduleItemId(null);
-                setShowTopicForm(!showTopicForm);
-              }}
-              className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-medium"
-              id="tour-calendar-planned"
-            >
-              {showTopicForm ? 'Cancelar' : '+ Avulso'}
-            </button>
+
           </div>
 
-          {showTopicForm && (
-            <form onSubmit={handleCreateTopic} className="mb-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border dark:border-gray-700 animate-fade-in">
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Matéria</label>
-                  <select
-                    value={selectedSubjectId}
-                    onChange={(e) => setSelectedSubjectId(e.target.value)}
-                    className="w-full p-2 text-sm rounded-lg border dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                    required
-                  >
-                    {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Título</label>
-                  <input
-                    type="text"
-                    value={newTopicTitle}
-                    onChange={(e) => setNewTopicTitle(e.target.value)}
-                    className="w-full p-2 text-sm rounded-lg border dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                    placeholder="O que você estudou?"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Descrição</label>
-                  <textarea
-                    value={newTopicDescription}
-                    onChange={(e) => setNewTopicDescription(e.target.value)}
-                    rows={2}
-                    className="w-full p-2 text-sm rounded-lg border dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                    placeholder="Detalhes..."
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={!newTopicTitle.trim()}
-                  className="w-full py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50"
-                >
-                  Salvar Tópico
-                </button>
-              </div>
-            </form>
-          )}
+
 
           {plannedItems.length > 0 ? (
             <div className="space-y-2 mb-4">
@@ -212,7 +138,7 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+                    <div className="flex gap-1 transition-opacity focus-within:opacity-100">
                       {!isCompleted && (
                         <button
                           onClick={() => handleStartSession(subject.id, item.topicId)}
@@ -223,7 +149,16 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                         </button>
                       )}
                       <button
-                        onClick={() => onToggleScheduleItem(item.id)}
+                        onClick={() => {
+                          onToggleScheduleItem(item.id);
+                          // If we are marking as completed (currently NOT completed)
+                          if (!isCompleted) {
+                            const topicIdToReview = linkedTopic?.id || item.topicId;
+                            if (topicIdToReview) {
+                              generateReviewsForTopic(topicIdToReview);
+                            }
+                          }
+                        }}
                         className={`p-1.5 rounded-lg transition-colors ${isCompleted
                           ? 'text-yellow-600 hover:bg-yellow-100 dark:hover:bg-yellow-900/30'
                           : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'
@@ -232,26 +167,7 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                       >
                         <CheckCircleIcon className="h-5 w-5" />
                       </button>
-                      {!isCompleted && !linkedTopic && (
-                        <button
-                          onClick={() => {
-                            setSelectedSubjectId(subject.id);
-                            setSelectedScheduleItemId(item.id);
-                            if (item.topicId) {
-                              const topic = allTopics.find(t => t.id === item.topicId);
-                              if (topic) {
-                                setNewTopicTitle(topic.title);
-                                setNewTopicDescription(topic.description || '');
-                              }
-                            }
-                            setShowTopicForm(true);
-                          }}
-                          className="p-1.5 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                          title="Registrar detalhado"
-                        >
-                          <PlusIcon className="h-5 w-5" />
-                        </button>
-                      )}
+
                     </div>
                   </div>
                 );
@@ -270,13 +186,22 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
               {unlinkedTopics.map(topic => {
                 const subject = subjects.find(s => s.id === topic.subjectId);
                 return (
-                  <div key={topic.id} className="p-3 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-sm flex items-start gap-3">
-                    <div className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: subject?.color }} />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{topic.title}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{subject?.name}</p>
-                      {topic.description && <p className="text-xs text-gray-400 mt-1 line-clamp-2">{topic.description}</p>}
+                  <div key={topic.id} className="p-3 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-sm flex items-center justify-between gap-3 group">
+                    <div className="flex items-start gap-3 overflow-hidden">
+                      <div className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: subject?.color }} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{topic.title}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{subject?.name}</p>
+                        {topic.description && <p className="text-xs text-gray-400 mt-1 line-clamp-2">{topic.description}</p>}
+                      </div>
                     </div>
+                    <button
+                      onClick={() => handleStartSession(topic.subjectId, topic.id)}
+                      className="p-2 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      title="Estudar Agora"
+                    >
+                      <PlayIcon className="h-5 w-5" />
+                    </button>
                   </div>
                 );
               })}
@@ -346,7 +271,8 @@ export default function Calendar() {
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
-  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+  // Force 6 weeks (42 days) to ensure consistent height
+  const calendarEnd = addDays(calendarStart, 41);
   const daysInGrid = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -425,7 +351,7 @@ export default function Calendar() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-140px)] bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[600px] bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
 
       {/* Left Side: Calendar Grid */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -467,9 +393,19 @@ export default function Calendar() {
             const dayReviewsList = getReviewsForDay(day);
             const dayPlannedList = getPlannedItemsForDay(day);
 
-            const hasTopics = dayTopicsList.length > 0;
-            const hasReviews = dayReviewsList.length > 0;
-            const hasPlanned = dayPlannedList.length > 0;
+            // Combine items for indicators
+            const indicators = [
+              ...dayPlannedList.map(item => ({ type: 'planned', subjectId: item.subjectId })),
+              ...dayReviewsList.map(review => {
+                const topic = topics.find(t => t.id === review.topicId);
+                return { type: 'review', subjectId: topic?.subjectId };
+              }),
+              ...dayTopicsList.map(topic => ({ type: 'topic', subjectId: topic.subjectId }))
+            ];
+
+            // Limit indicators to avoid clutter
+            const displayIndicators = indicators.slice(0, 12);
+            const hasMore = indicators.length > 12;
 
             return (
               <div
@@ -493,14 +429,35 @@ export default function Calendar() {
 
                   {/* Indicators */}
                   <div className="flex flex-wrap gap-1 mt-1 content-end">
-                    {hasPlanned && (
-                      <div className="h-1.5 w-1.5 rounded-full bg-blue-400" title="Planejado" />
-                    )}
-                    {hasTopics && (
-                      <div className="h-1.5 w-1.5 rounded-full bg-green-500" title="Realizado" />
-                    )}
-                    {hasReviews && (
-                      <div className="h-1.5 w-1.5 rounded-full bg-yellow-400" title="Revisão" />
+                    {displayIndicators.map((ind, idx) => {
+                      const subject = subjects.find(s => s.id === ind.subjectId);
+                      if (!subject) return null;
+
+                      let shapeClass = "rounded-full"; // Default circle (Topic)
+                      let style: React.CSSProperties = { backgroundColor: subject.color };
+
+                      if (ind.type === 'planned') {
+                        shapeClass = "rounded-sm"; // Square for planned
+                      } else if (ind.type === 'review') {
+                        shapeClass = ""; // Triangle for review
+                        style = {
+                          ...style,
+                          clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+                          borderRadius: 0
+                        };
+                      }
+
+                      return (
+                        <div
+                          key={idx}
+                          className={`h-2.5 w-2.5 ${shapeClass}`}
+                          style={style}
+                          title={`${ind.type === 'planned' ? 'Planejado' : ind.type === 'review' ? 'Revisão' : 'Estudado'}: ${subject.name}`}
+                        />
+                      );
+                    })}
+                    {hasMore && (
+                      <span className="text-[10px] text-gray-400 leading-none">+</span>
                     )}
                   </div>
                 </div>

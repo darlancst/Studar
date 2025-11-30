@@ -12,10 +12,12 @@ interface PomodoroStore {
   currentTopicId: string | null;
   activeSubjectId: string | null; // Contexto de navegação
   activeTopicId: string | null;   // Contexto de navegação
+  activeScheduleItemId: string | null; // ID do item de cronograma específico (para desambiguação)
   timeRemaining: number; // em segundos
   completedPomodoros: number;
   elapsedSeconds: number; // segundos decorridos na sessão atual
   lastMinuteUpdate: number; // timestamp da última atualização de minuto
+  tempSessionIds: string[]; // IDs das sessões temporárias (criadas em pausas) para rollback
 
   // Sessões (do Pomodoro, não do estudo geral)
   sessions: PomodoroSession[];
@@ -26,6 +28,7 @@ interface PomodoroStore {
   // Ações
   startTimer: (topicId: string) => void;
   startSession: (subjectId: string, topicId?: string) => void; // Ação centralizada para iniciar sessão
+  setActiveScheduleItemId: (id: string | null) => void; // Define o item de cronograma ativo
   pauseTimer: () => void;
   resetTimer: () => void;
   skipToNext: () => void;
@@ -33,7 +36,8 @@ interface PomodoroStore {
   incrementElapsedTime: (seconds: number) => void;
 
   // Sessões Pomodoro
-  addSession: (topicId: string, duration: number) => void;
+  addSession: (topicId: string, duration: number) => string | null; // Retorna ID da sessão criada
+  deleteSession: (sessionId: string) => void;
   updateCurrentSession: (forceUpdate?: boolean) => void; // Atualiza a sessão atual em tempo real
   getSessionsByTopicId: (topicId: string) => PomodoroSession[];
   getTotalStudyTimeByTopicId: (topicId: string) => number; // Tempo total histórico apenas das sessões pomodoro
@@ -62,13 +66,17 @@ export const usePomodoroStore = create<PomodoroStore>()(
       currentTopicId: null,
       activeSubjectId: null,
       activeTopicId: null,
+      activeScheduleItemId: null,
       timeRemaining: DEFAULT_SETTINGS.focusDuration * 60, // em segundos
       completedPomodoros: 0,
       elapsedSeconds: 0,
       lastMinuteUpdate: 0,
+      tempSessionIds: [],
 
       sessions: [],
       settings: DEFAULT_SETTINGS,
+
+      setActiveScheduleItemId: (id) => set({ activeScheduleItemId: id }),
 
       startTimer: (topicId) => {
         const { currentTopicId, currentState, timeRemaining, isRunning } = get();
@@ -95,6 +103,7 @@ export const usePomodoroStore = create<PomodoroStore>()(
           timeRemaining: duration * 60, // Reseta o tempo
           elapsedSeconds: 0,
           lastMinuteUpdate: Date.now(),
+          tempSessionIds: [], // Limpa sessões temporárias ao iniciar novo ciclo
         });
       },
 
@@ -120,6 +129,7 @@ export const usePomodoroStore = create<PomodoroStore>()(
             currentState: 'focus',
             timeRemaining: duration * 60,
             elapsedSeconds: 0,
+            tempSessionIds: [],
           });
         }
       },
@@ -127,10 +137,12 @@ export const usePomodoroStore = create<PomodoroStore>()(
       pauseTimer: () => {
         // SE ESTAVA EM FOCO, ADICIONA O TEMPO DECORRIDO COMO NOVA SESSÃO
         if (get().currentState === 'focus' && get().currentTopicId && get().elapsedSeconds > 0) {
-          // get().updateCurrentSession(true); // REMOVIDO
           const elapsedMinutes = Math.floor(get().elapsedSeconds / 60);
           if (elapsedMinutes > 0) {
-            get().addSession(get().currentTopicId!, elapsedMinutes);
+            const sessionId = get().addSession(get().currentTopicId!, elapsedMinutes);
+            if (sessionId) {
+              set(state => ({ tempSessionIds: [...state.tempSessionIds, sessionId] }));
+            }
           }
           // Resetar elapsedSeconds após salvar, pois a pausa interrompe o ciclo atual
           set({ elapsedSeconds: 0, lastMinuteUpdate: 0 });
@@ -141,7 +153,13 @@ export const usePomodoroStore = create<PomodoroStore>()(
       },
 
       resetTimer: () => {
-        const { currentState, settings } = get();
+        const { currentState, settings, tempSessionIds } = get();
+
+        // REINICIAR: Apaga sessões temporárias criadas durante pausas neste ciclo
+        if (tempSessionIds.length > 0) {
+          tempSessionIds.forEach(id => get().deleteSession(id));
+        }
+
         let timeRemaining;
 
         switch (currentState) {
@@ -158,15 +176,12 @@ export const usePomodoroStore = create<PomodoroStore>()(
             timeRemaining = Math.max(1, settings.focusDuration || 25) * 60;
         }
 
-        if (currentState === 'focus') {
-          get().updateCurrentSession(true); // Força atualização ao resetar
-        }
-
         set({
           isRunning: false,
           timeRemaining,
           elapsedSeconds: 0,
           lastMinuteUpdate: 0,
+          tempSessionIds: [], // Limpa a lista após rollback
         });
       },
 
@@ -182,7 +197,6 @@ export const usePomodoroStore = create<PomodoroStore>()(
 
           // AO FINAL DE UM FOCO, ADICIONA UMA NOVA SESSÃO COM A DURAÇÃO COMPLETA
           if (currentTopicId) {
-            // get().updateCurrentSession(true); // REMOVIDO
             const focusMinutes = settings.focusDuration;
             if (focusMinutes > 0) {
               get().addSession(currentTopicId, focusMinutes);
@@ -211,6 +225,7 @@ export const usePomodoroStore = create<PomodoroStore>()(
           isRunning: shouldBeRunning,
           elapsedSeconds: 0, // Reseta segundos para o novo ciclo/pausa
           lastMinuteUpdate: shouldBeRunning ? Date.now() : 0,
+          tempSessionIds: [], // Commit: limpa sessões temporárias ao concluir com sucesso
         });
       },
 
@@ -249,7 +264,7 @@ export const usePomodoroStore = create<PomodoroStore>()(
       },
 
       addSession: (topicId, duration) => {
-        if (duration <= 0) return;
+        if (duration <= 0) return null;
 
         const newSession: PomodoroSession = {
           id: uuidv4(),
@@ -266,52 +281,20 @@ export const usePomodoroStore = create<PomodoroStore>()(
         }
 
         useDatesStore.getState().addDate(new Date(newSession.date));
+        return newSession.id;
+      },
+
+      deleteSession: (sessionId) => {
+        set((state) => ({
+          sessions: state.sessions.filter(s => s.id !== sessionId)
+        }));
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
       },
 
       updateCurrentSession: (forceUpdate = false) => {
-        const { currentTopicId, elapsedSeconds, sessions } = get();
-        const currentMinutes = Math.floor(elapsedSeconds / 60);
-
-        if (!currentTopicId) return; // Sai se não houver tópico selecionado
-
-        const todayStr = new Date().toISOString().split('T')[0];
-        const todaySessionIndex = sessions.findIndex(s =>
-          s.topicId === currentTopicId &&
-          s.date.startsWith(todayStr)
-        );
-
-        if (todaySessionIndex > -1) {
-          // Sessão já existe para hoje e este tópico
-          const currentSavedDuration = sessions[todaySessionIndex].duration;
-
-          // Calcula a duração que deve ser salva (garante não diminuir)
-          const durationToSet = Math.max(currentSavedDuration, currentMinutes);
-
-          // Condições para atualizar:
-          // 1. Se forçado (forceUpdate=true), E houver tempo decorrido (elapsedSeconds > 0), E a duração calculada for diferente da salva.
-          // OU
-          // 2. Se NÃO forçado (tick normal), E os minutos atuais forem maiores que os salvos.
-          const shouldUpdate =
-            (forceUpdate && elapsedSeconds > 0 && durationToSet !== currentSavedDuration) ||
-            (!forceUpdate && currentMinutes > currentSavedDuration);
-
-          if (shouldUpdate) {
-            const updatedSessions = [...sessions];
-            updatedSessions[todaySessionIndex] = {
-              ...sessions[todaySessionIndex],
-              duration: durationToSet // Usa a duração calculada
-            };
-            set({ sessions: updatedSessions });
-            if (typeof window !== 'undefined') {
-              setTimeout(() => firebaseSync.syncToCloud(), 100);
-            }
-          }
-        } else {
-          // Nenhuma sessão existe para hoje e este tópico. Adiciona se currentMinutes > 0.
-          if (currentMinutes > 0) {
-            get().addSession(currentTopicId, currentMinutes);
-          }
-        }
+        // Deprecated/Not used in new logic but kept for interface compatibility if needed
       },
 
       getSessionsByTopicId: (topicId) => {
@@ -350,8 +333,10 @@ export const usePomodoroStore = create<PomodoroStore>()(
           const str = localStorage.getItem(name);
           if (!str) return null;
           const parsed = JSON.parse(str);
-          // Não faremos migração aqui, apenas retornamos o estado como está.
-          // A conversão Date -> string deve ser feita na lógica do store se necessário.
+          // Ensure tempSessionIds exists if loading from old state
+          if (!parsed.state.tempSessionIds) {
+            parsed.state.tempSessionIds = [];
+          }
           return parsed;
         },
         setItem: (name: string, value: StorageValue<PomodoroStore>): void => {

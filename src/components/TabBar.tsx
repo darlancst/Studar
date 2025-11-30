@@ -28,6 +28,7 @@ export default function TabBar({ activeTab, setActiveTab }: TabBarProps) {
             return (
               <button
                 key={tab.name}
+
                 onClick={() => setActiveTab(tab.name)}
                 className={`
                   flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-200

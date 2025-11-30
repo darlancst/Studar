@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useSettingsStore, HeatmapThresholds } from '@/store/settingsStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
+import { useAuthStore } from '@/store/authStore';
 import SyncStatus from '@/components/SyncStatus';
 
 interface SettingsModalProps {
@@ -27,6 +28,7 @@ interface SettingsModalProps {
 export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetAction, setResetAction] = useState<'stats' | 'all'>('all');
+  const { user } = useAuthStore();
   const {
     darkMode,
     toggleDarkMode,
@@ -174,6 +176,18 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         </div>
 
         <div className="p-6 space-y-6">
+          {/* Seção de Conta */}
+          {user && (
+            <div className="pb-4 border-b dark:border-gray-700">
+              <div className="flex items-center mb-2">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Conectado como:</span>
+              </div>
+              <p className="text-lg font-medium text-gray-900 dark:text-white truncate">
+                {user.email}
+              </p>
+            </div>
+          )}
+
           {/* Seção de Sincronização */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">

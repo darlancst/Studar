@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useSubjectStore } from '@/store/subjectStore';
-import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, XMarkIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -14,10 +15,19 @@ export default function BlockScheduleEditor() {
     const [endDate, setEndDate] = useState('');
     const [description, setDescription] = useState('');
     const [restDays, setRestDays] = useState<number[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-    const handleAddItem = () => {
+    // Auto-set End Date to Start Date when Start Date changes (if End Date is empty)
+    useEffect(() => {
+        if (startDate && !endDate) {
+            setEndDate(startDate);
+        }
+    }, [startDate]);
+
+    const handleAddItem = (e: React.FormEvent) => {
+        e.preventDefault();
         if (!selectedSubjectId || !startDate || !endDate || !activeScheduleId) return;
 
         addBlockItem({
@@ -29,12 +39,13 @@ export default function BlockScheduleEditor() {
             restDays
         });
 
-        // Reset form
+        // Reset form and close modal
         setSelectedSubjectId('');
         setStartDate('');
         setEndDate('');
         setDescription('');
         setRestDays([]);
+        setIsModalOpen(false);
     };
 
     const toggleRestDay = (dayIndex: number) => {
@@ -55,130 +66,73 @@ export default function BlockScheduleEditor() {
     if (!activeScheduleId) return null;
 
     return (
-        <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4 dark:text-white">Adicionar Bloco de Estudo</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                    <div className="lg:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Matéria</label>
-                        <select
-                            value={selectedSubjectId}
-                            onChange={(e) => setSelectedSubjectId(e.target.value)}
-                            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        >
-                            <option value="">Selecione...</option>
-                            {subjects.map((subject) => (
-                                <option key={subject.id} value={subject.id}>{subject.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Início</label>
-                        <input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fim</label>
-                        <input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        />
-                    </div>
-
-                    <button
-                        onClick={handleAddItem}
-                        disabled={!selectedSubjectId || !startDate || !endDate}
-                        className="bg-primary-600 text-white p-2 rounded-md hover:bg-primary-700 disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                        <PlusIcon className="h-5 w-5" />
-                        <span>Adicionar</span>
-                    </button>
+        <div className="space-y-4">
+            {/* Header with Add Button */}
+            <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                <div>
+                    <h3 className="text-lg font-semibold dark:text-white">Blocos de Estudo</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Organize seu estudo por períodos dedicados.</p>
                 </div>
-
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição (Opcional)</label>
-                        <input
-                            type="text"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Ex: Focar em Álgebra Linear"
-                            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dias de Descanso (Sem estudo)</label>
-                        <div className="flex gap-2">
-                            {weekDays.map((day, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => toggleRestDay(index)}
-                                    className={`
-                    w-8 h-8 rounded-full text-xs font-medium flex items-center justify-center transition-colors
-                    ${restDays.includes(index)
-                                            ? 'bg-red-100 text-red-700 border border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800'
-                                            : 'bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                        }
-                  `}
-                                    title={restDays.includes(index) ? 'Dia de descanso' : 'Dia de estudo'}
-                                >
-                                    {day.charAt(0)}
-                                </button>
-                            ))}
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">Clique nos dias da semana para marcar como descanso.</p>
-                    </div>
-                </div>
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors shadow-sm"
+                >
+                    <PlusIcon className="h-5 w-5" />
+                    Adicionar Bloco
+                </button>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                <div className="p-4 border-b dark:border-gray-700">
-                    <h3 className="text-lg font-semibold dark:text-white">Blocos Planejados</h3>
-                </div>
-
+            {/* List of Blocks */}
+            <div className="space-y-3">
                 {sortedItems.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                        Nenhum bloco de estudo planejado para este cronograma.
+                    <div className="p-12 text-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
+                        <CalendarIcon className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+                        <p className="text-gray-500 dark:text-gray-400 font-medium">Nenhum bloco planejado</p>
+                        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Clique em "Adicionar Bloco" para começar.</p>
                     </div>
                 ) : (
-                    <div className="divide-y dark:divide-gray-700">
+                    <div className="grid gap-3">
                         {sortedItems.map((item) => {
                             const subject = subjects.find(s => s.id === item.subjectId);
                             return (
-                                <div key={item.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-750">
-                                    <div className="flex items-center gap-4">
+                                <div
+                                    key={item.id}
+                                    className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group"
+                                >
+                                    <div className="flex items-start gap-4">
                                         <div
-                                            className="w-3 h-12 rounded-full"
-                                            style={{ backgroundColor: subject?.color || '#ccc' }}
+                                            className="w-1.5 self-stretch rounded-full bg-gray-200 dark:bg-gray-700 shrink-0"
+                                            style={{ backgroundColor: subject?.color }}
                                         />
                                         <div>
-                                            <h4 className="font-semibold text-lg dark:text-white">
+                                            <h4 className="font-bold text-gray-900 dark:text-white text-lg leading-tight">
                                                 {subject?.name || 'Matéria removida'}
                                             </h4>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                {format(parseISO(item.startDate), "dd 'de' MMM, yyyy", { locale: ptBR })}
-                                                {' até '}
-                                                {format(parseISO(item.endDate), "dd 'de' MMM, yyyy", { locale: ptBR })}
-                                            </p>
+
+                                            <div className="flex items-center gap-2 mt-1 text-sm text-gray-600 dark:text-gray-300">
+                                                <CalendarIcon className="h-4 w-4 text-gray-400" />
+                                                <span className="font-medium">
+                                                    {format(parseISO(item.startDate), "dd/MM/yy")}
+                                                </span>
+                                                <span className="text-gray-400">→</span>
+                                                <span className="font-medium">
+                                                    {format(parseISO(item.endDate), "dd/MM/yy")}
+                                                </span>
+                                            </div>
+
                                             {item.description && (
-                                                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">
                                                     {item.description}
                                                 </p>
                                             )}
+
                                             {item.restDays && item.restDays.length > 0 && (
-                                                <div className="flex items-center gap-1 mt-1">
-                                                    <span className="text-xs text-gray-500">Descanso:</span>
+                                                <div className="flex flex-wrap gap-1.5 mt-2.5">
+                                                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                                                        Descanso:
+                                                    </span>
                                                     {item.restDays.sort().map(d => (
-                                                        <span key={d} className="text-xs bg-red-50 text-red-600 px-1 rounded border border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900">
+                                                        <span key={d} className="text-[10px] font-semibold bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30 uppercase tracking-wide">
                                                             {weekDays[d]}
                                                         </span>
                                                     ))}
@@ -189,7 +143,7 @@ export default function BlockScheduleEditor() {
 
                                     <button
                                         onClick={() => removeBlockItem(item.id)}
-                                        className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                                        className="self-end sm:self-center text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
                                         title="Remover Bloco"
                                     >
                                         <TrashIcon className="h-5 w-5" />
@@ -200,6 +154,135 @@ export default function BlockScheduleEditor() {
                     </div>
                 )}
             </div>
+
+            {/* Modal */}
+            {isModalOpen && typeof document !== 'undefined' && createPortal(
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-scale-up">
+                        <div className="flex items-center justify-between p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                Novo Bloco de Estudo
+                            </h3>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                <XMarkIcon className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleAddItem} className="p-6 space-y-5">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Matéria
+                                </label>
+                                <select
+                                    value={selectedSubjectId}
+                                    onChange={(e) => setSelectedSubjectId(e.target.value)}
+                                    className="w-full p-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                                    required
+                                >
+                                    <option value="">Selecione uma matéria...</option>
+                                    {subjects.map((subject) => (
+                                        <option key={subject.id} value={subject.id}>{subject.name}</option>
+                                    ))}
+                                </select>
+                                <div className="mt-1 text-right">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            window.dispatchEvent(new CustomEvent('open-subject-manager'));
+                                        }}
+                                        className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-medium"
+                                    >
+                                        + Nova Matéria
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                        Início
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="w-full p-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                        Fim
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className="w-full p-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Descrição (Opcional)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    placeholder="Ex: Focar em Álgebra Linear"
+                                    className="w-full p-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Dias de Descanso (Sem estudo)
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {weekDays.map((day, index) => (
+                                        <button
+                                            key={index}
+                                            type="button"
+                                            onClick={() => toggleRestDay(index)}
+                                            className={`
+                                                w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center transition-all
+                                                ${restDays.includes(index)
+                                                    ? 'bg-red-100 text-red-600 border-2 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 shadow-sm scale-105'
+                                                    : 'bg-gray-50 text-gray-500 border border-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                                                }
+                                            `}
+                                            title={restDays.includes(index) ? 'Dia de descanso' : 'Dia de estudo'}
+                                        >
+                                            {day.charAt(0)}
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    Selecione os dias da semana em que você <strong>não</strong> estudará esta matéria.
+                                </p>
+                            </div>
+
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={!selectedSubjectId || !startDate || !endDate}
+                                    className="w-full py-3 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 focus:ring-4 focus:ring-primary-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary-500/20"
+                                >
+                                    Adicionar Bloco
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }

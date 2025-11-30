@@ -54,6 +54,14 @@ export const useReviewStore = create<ReviewState>()(
       },
       generateReviewsForTopic: (topicId) => {
         const { reviewIntervals } = useSettingsStore.getState();
+        const existingReviews = get().reviews.filter(r => r.topicId === topicId);
+
+        // If there are already reviews for this topic, do not generate new ones
+        if (existingReviews.length > 0) {
+          console.log(`Reviews already exist for topic ${topicId}, skipping generation.`);
+          return;
+        }
+
         const today = new Date();
 
         reviewIntervals.forEach(days => {

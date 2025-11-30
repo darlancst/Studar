@@ -17,45 +17,38 @@ export default function Header({ onSettingsClick }: HeaderProps) {
   return (
     <header className="bg-white dark:bg-gray-900 shadow-sm relative z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-14">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                Studar
-              </h1>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {/* Nenhum link aqui agora */}
-            </div>
+        <div className="flex items-center h-14">
+          {/* Left: Logo */}
+          <div className="flex-shrink-0">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              Studar
+            </h1>
           </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center sm:gap-2">
+
+          {/* Center: Tutorial Button */}
+          <div className="flex-1 flex justify-center px-4">
             <button
               type="button"
               onClick={() => setShowFeaturesModal(true)}
-              className="p-1 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 dark:focus:ring-offset-gray-900 transition-colors duration-150"
-              title="Visão Geral: Descubra as funcionalidades do Studar!"
+              className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400 hover:from-yellow-100 hover:to-orange-100 dark:hover:from-yellow-900/30 dark:hover:to-orange-900/30 transition-all duration-200 shadow-sm hover:shadow-md"
+              title="Tutorial Completo do Studar"
+            >
+              <SparklesIcon className="h-4 w-4" />
+              <span className="text-sm font-medium">Tutorial</span>
+            </button>
+          </div>
+
+          {/* Right: Settings */}
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFeaturesModal(true)}
+              className="sm:hidden p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 dark:focus:ring-offset-gray-900 transition-colors duration-150"
+              title="Tutorial"
             >
               <SparklesIcon className="h-5 w-5" aria-hidden="true" />
             </button>
 
-            <button
-              type="button"
-              onClick={onSettingsClick}
-              className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900"
-              title="Configurações"
-            >
-              <Cog6ToothIcon className="h-6 w-6" aria-hidden="true" />
-            </button>
-          </div>
-          <div className="-mr-2 flex items-center gap-1 sm:hidden">
-            <button
-              type="button"
-              onClick={() => setShowFeaturesModal(true)}
-              className="p-1 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 dark:focus:ring-offset-gray-900 transition-colors duration-150"
-              title="Visão Geral: Descubra as funcionalidades do Studar!"
-            >
-              <SparklesIcon className="h-5 w-5" aria-hidden="true" />
-            </button>
             <button
               type="button"
               onClick={onSettingsClick}
@@ -152,4 +145,4 @@ export default function Header({ onSettingsClick }: HeaderProps) {
       )}
     </header>
   );
-} 
+}
