@@ -103,6 +103,11 @@ export default function Home() {
     };
   }, []);
 
+  // Scroll to top when active tab changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeTab]);
+
   const renderContent = () => {
     switch (activeTab) {
       case 'stats':

@@ -465,6 +465,31 @@ export default function Calendar() {
             );
           })}
         </div>
+
+        {/* Legend */}
+        <div className="px-4 py-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-600 dark:text-gray-400">
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-sm bg-gray-400" />
+              <span>Planejado</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-gray-400" />
+              <span>Estudado</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className="h-3 w-3 bg-gray-400"
+                style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
+              />
+              <span>Revisão</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-gradient-to-r from-blue-500 via-green-500 to-purple-500" />
+              <span>Cores = Matérias</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Right Side: Agenda Panel (Desktop) */}
