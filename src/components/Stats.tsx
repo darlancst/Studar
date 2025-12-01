@@ -491,8 +491,12 @@ export default function Stats() {
           </div>
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center justify-center text-center gap-2 min-h-[160px]">
-            <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-full">
-              <CalendarIcon className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+            <div className="w-24 h-24 relative mb-2">
+              <img
+                src="/dashboard-empty.gif"
+                alt="Sem planos"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <h3 className="text-base font-medium text-gray-900 dark:text-white">Sem planos agora</h3>

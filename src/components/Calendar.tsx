@@ -351,7 +351,7 @@ export default function Calendar() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[600px] bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[700px] bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
 
       {/* Left Side: Calendar Grid */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -428,7 +428,7 @@ export default function Calendar() {
                   </div>
 
                   {/* Indicators */}
-                  <div className="flex flex-wrap gap-1 mt-1 content-end">
+                  <div className="flex flex-wrap gap-0.5 mt-1 content-end">
                     {displayIndicators.map((ind, idx) => {
                       const subject = subjects.find(s => s.id === ind.subjectId);
                       if (!subject) return null;
@@ -450,7 +450,7 @@ export default function Calendar() {
                       return (
                         <div
                           key={idx}
-                          className={`h-2.5 w-2.5 ${shapeClass}`}
+                          className={`h-2 w-2 ${shapeClass}`}
                           style={style}
                           title={`${ind.type === 'planned' ? 'Planejado' : ind.type === 'review' ? 'Revisão' : 'Estudado'}: ${subject.name}`}
                         />
