@@ -31,7 +31,7 @@ interface PomodoroStore {
   setActiveScheduleItemId: (id: string | null) => void; // Define o item de cronograma ativo
   pauseTimer: () => void;
   resetTimer: () => void;
-  skipToNext: () => void;
+  skipToNext: (completed?: boolean) => void;
   updateSettings: (settings: Partial<PomodoroSettings>) => void;
   incrementElapsedTime: (seconds: number) => void;
 
@@ -185,7 +185,7 @@ export const usePomodoroStore = create<PomodoroStore>()(
         });
       },
 
-      skipToNext: () => {
+      skipToNext: (completed = false) => {
         const { currentState, settings, completedPomodoros, currentTopicId, elapsedSeconds } = get();
         let nextState: PomodoroState = 'focus';
         let timeRemaining: number;
@@ -193,13 +193,16 @@ export const usePomodoroStore = create<PomodoroStore>()(
         let shouldBeRunning = false; // Pausa começa rodando, foco começa parado
 
         if (currentState === 'focus') {
-          newCompletedPomodoros = completedPomodoros + 1;
+          // Only increment completed count and add session if naturally completed
+          if (completed) {
+            newCompletedPomodoros = completedPomodoros + 1;
 
-          // AO FINAL DE UM FOCO, ADICIONA UMA NOVA SESSÃO COM A DURAÇÃO COMPLETA
-          if (currentTopicId) {
-            const focusMinutes = settings.focusDuration;
-            if (focusMinutes > 0) {
-              get().addSession(currentTopicId, focusMinutes);
+            // AO FINAL DE UM FOCO, ADICIONA UMA NOVA SESSÃO COM A DURAÇÃO COMPLETA
+            if (currentTopicId) {
+              const focusMinutes = settings.focusDuration;
+              if (focusMinutes > 0) {
+                get().addSession(currentTopicId, focusMinutes);
+              }
             }
           }
 

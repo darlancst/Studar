@@ -15,7 +15,7 @@ import PWADebug from '@/components/PWADebug';
 import ScheduleManager from '@/components/ScheduleManager';
 
 
-import StreakCounter from '@/components/StreakCounter';
+import NextSessionDisplay from '@/components/NextSessionDisplay';
 
 import { TabName } from '@/types';
 
@@ -162,7 +162,7 @@ export default function Home() {
 
           {/* Right: Streak + Settings */}
           <div className="flex items-center gap-3">
-            <StreakCounter />
+            <NextSessionDisplay />
             <button
               onClick={() => setShowSettings(true)}
               className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors"

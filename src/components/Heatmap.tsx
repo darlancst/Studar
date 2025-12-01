@@ -117,9 +117,15 @@ export default function Heatmap({ days = 365 }: HeatmapProps) {
                             const prevWeekFirstDay = index > 0 ? weeks[index - 1][0].date : null;
                             const isNewMonth = !prevWeekFirstDay || firstDay.getMonth() !== prevWeekFirstDay.getMonth();
 
+                            // Prevent overlap: if it's the first week and the next week starts a new month, hide this label
+                            const nextWeekFirstDay = index < weeks.length - 1 ? weeks[index + 1][0].date : null;
+                            const isFirstWeekAndNextIsNewMonth = index === 0 && nextWeekFirstDay && nextWeekFirstDay.getMonth() !== firstDay.getMonth();
+
+                            const shouldShowLabel = isNewMonth && !isFirstWeekAndNextIsNewMonth;
+
                             return (
                                 <div key={index} className="w-3 relative">
-                                    {isNewMonth && (
+                                    {shouldShowLabel && (
                                         <span className="absolute left-0 text-xs text-gray-400 font-medium whitespace-nowrap">
                                             {format(firstDay, 'MMM', { locale: ptBR })}
                                         </span>

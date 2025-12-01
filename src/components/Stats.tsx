@@ -499,8 +499,8 @@ export default function Stats() {
               />
             </div>
             <div>
-              <h3 className="text-base font-medium text-gray-900 dark:text-white">Sem planos agora</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Tudo em dia! Bom descanso.</p>
+              <h3 className="text-base font-medium text-gray-900 dark:text-white">Sem estudos por hoje</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Comemore!</p>
             </div>
           </div>
         )}

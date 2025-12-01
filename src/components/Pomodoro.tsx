@@ -60,7 +60,7 @@ export default function Pomodoro() {
             });
           }
 
-          skipToNext();
+          skipToNext(true);
         } else {
           incrementElapsedTime(1);
           usePomodoroStore.setState(state => ({ timeRemaining: state.timeRemaining - 1 }));
@@ -401,7 +401,7 @@ export default function Pomodoro() {
         )}
 
         <button
-          onClick={skipToNext}
+          onClick={() => skipToNext(false)}
           className="group p-4 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           title="Pular"
         >

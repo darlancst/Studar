@@ -3,7 +3,7 @@
   "/page": "app/page.js",
   "/simulados/page": "app/simulados/page.js",
   "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/api/auth/signup/route": "app/api/auth/signup/route.js",
   "/api/auth/verify/route": "app/api/auth/verify/route.js",
+  "/api/auth/signup/route": "app/api/auth/signup/route.js",
   "/api/user-data/route": "app/api/user-data/route.js"
 }
