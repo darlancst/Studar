@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import {
@@ -53,30 +53,30 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
   const { settings: pomodoroSettings, updateSettings: updatePomodoroSettings } = usePomodoroStore();
 
-  // Estado para gerenciar o valor da meta semanal no formulÃ¡rio
+  // Estado para gerenciar o valor da meta semanal no formulário
   const [goalHours, setGoalHours] = useState(Math.floor(weeklyGoal / 60));
   const [goalMinutes, setGoalMinutes] = useState(weeklyGoal % 60);
 
-  // Estado para gerenciar os intervalos de revisÃ£o
+  // Estado para gerenciar os intervalos de revisão
   const [intervals, setIntervals] = useState<number[]>(reviewIntervals);
   const [newInterval, setNewInterval] = useState<number>(1);
 
   // Estado para gerenciar os limiares de tempo do heatmap
   const [thresholds, setThresholds] = useState<HeatmapThresholds>({ ...heatmapThresholds });
 
-  // Atualizar o estado local quando as configuraÃ§Ãµes mudarem
+  // Atualizar o estado local quando as configurações mudarem
   useEffect(() => {
     setIntervals(reviewIntervals);
     setThresholds({ ...heatmapThresholds });
   }, [reviewIntervals, heatmapThresholds]);
 
-  // FunÃ§Ã£o para atualizar a meta de tempo semanal
+  // Função para atualizar a meta de tempo semanal
   const handleUpdateWeeklyGoal = () => {
     const totalMinutes = (goalHours * 60) + goalMinutes;
     setWeeklyGoal(totalMinutes);
   };
 
-  // FunÃ§Ã£o para adicionar um novo intervalo
+  // Função para adicionar um novo intervalo
   const handleAddInterval = () => {
     if (newInterval > 0 && !intervals.includes(newInterval)) {
       const updatedIntervals = [...intervals, newInterval];
@@ -86,7 +86,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     }
   };
 
-  // FunÃ§Ã£o para remover um intervalo
+  // Função para remover um intervalo
   const handleRemoveInterval = (intervalToRemove: number) => {
     if (intervals.length > 1) { // Manter pelo menos um intervalo
       const updatedIntervals = intervals.filter(interval => interval !== intervalToRemove);
@@ -95,15 +95,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     }
   };
 
-  // FunÃ§Ã£o para atualizar um limiar especÃ­fico
+  // Função para atualizar um limiar específico
   const handleThresholdChange = (level: keyof HeatmapThresholds, value: number) => {
     const updatedThresholds = { ...thresholds, [level]: value };
     setThresholds(updatedThresholds);
   };
 
-  // FunÃ§Ã£o para salvar os limiares atualizados
+  // Função para salvar os limiares atualizados
   const handleSaveThresholds = () => {
-    // Ordenar os valores para garantir consistÃªncia (level1 < level2 < level3 < etc)
+    // Ordenar os valores para garantir consistência (level1 < level2 < level3 < etc)
     const orderedThresholds: HeatmapThresholds = {
       level1: Math.min(thresholds.level1, thresholds.level2, thresholds.level3, thresholds.level4, thresholds.level5),
       level2: 0,
@@ -112,7 +112,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       level5: 0
     };
 
-    // Encontrar o prÃ³ximo valor maior para cada nÃ­vel
+    // Encontrar o próximo valor maior para cada nível
     const values = [thresholds.level1, thresholds.level2, thresholds.level3, thresholds.level4, thresholds.level5].sort((a, b) => a - b);
     orderedThresholds.level1 = values[0];
     orderedThresholds.level2 = values[1];
@@ -124,7 +124,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     setHeatmapThresholds(orderedThresholds);
   };
 
-  // FunÃ§Ã£o para resetar os limiares para os valores padrÃ£o
+  // Função para resetar os limiares para os valores padrão
   const handleResetThresholds = () => {
     const defaultThresholds: HeatmapThresholds = {
       level1: 30,
@@ -137,18 +137,18 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     setHeatmapThresholds(defaultThresholds);
   };
 
-  // FunÃ§Ã£o para resetar todas as estatÃ­sticas
+  // Função para resetar todas as estatísticas
   const handleResetStats = () => {
     resetStats();
     setShowResetConfirm(false);
   };
 
-  // FunÃ§Ã£o para resetar os pomodoros
+  // Função para resetar os pomodoros
   const handleResetPomodoros = () => {
     resetPomodoros();
   };
 
-  // FunÃ§Ã£o para resetar todos os dados
+  // Função para resetar todos os dados
   const handleResetAllData = () => {
     resetAllData();
     setShowResetConfirm(false);
@@ -167,19 +167,19 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     }
   };
 
-  // FunÃ§Ã£o para aplicar folga de 1 dia
+  // Função para aplicar folga de 1 dia
   const handleDayOff = () => {
     const today = format(new Date(), 'yyyy-MM-dd');
     addVacation(today, today);
-    alert('Folga aplicada! Todas as tarefas de hoje foram adiadas para amanhÃ£.');
+    alert('Folga aplicada! Todas as tarefas foram adiadas para amanhã.');
   };
 
-  // FunÃ§Ã£o para aplicar perÃ­odo de fÃ©rias
+  // Função para aplicar período de férias
   const handleApplyVacation = () => {
     if (vacationStartDate && vacationEndDate) {
       addVacation(vacationStartDate, vacationEndDate);
       setShowVacationModal(false);
-      alert('FÃ©rias aplicadas! Todas as tarefas foram adiadas.');
+      alert('Férias aplicadas! Todas as tarefas foram adiadas.');
     }
   };
 
@@ -189,7 +189,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
           <div className="flex items-center">
             <Cog6ToothIcon className="h-6 w-6 mr-2 text-gray-700 dark:text-gray-300" />
-            <h2 className="text-xl font-semibold dark:text-white">ConfiguraÃ§Ãµes</h2>
+            <h2 className="text-xl font-semibold dark:text-white">Configurações</h2>
           </div>
           <button
             onClick={onClose}
@@ -200,7 +200,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         </div>
 
         <div className="p-6 space-y-6">
-          {/* SeÃ§Ã£o de Conta */}
+          {/* Seção de Conta */}
           {user && (
             <div className="pb-4 border-b dark:border-gray-700">
               <div className="flex items-center mb-2">
@@ -212,25 +212,25 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
           )}
 
-          {/* SeÃ§Ã£o de SincronizaÃ§Ã£o */}
+          {/* Seção de Sincronização */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">
               <ArrowPathIcon className="h-5 w-5 mr-2 text-blue-500" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">SincronizaÃ§Ã£o</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Sincronização</h3>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-              Status e aÃ§Ãµes de sincronizaÃ§Ã£o da sua conta.
+              Status e ações de sincronização da sua conta.
             </p>
             <div className="relative">
               <SyncStatus />
             </div>
           </div>
 
-          {/* SeÃ§Ã£o de AparÃªncia */}
+          {/* Seção de Aparência */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">
               <PaintBrushIcon className="h-5 w-5 mr-2 text-indigo-500" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">AparÃªncia</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Aparência</h3>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-700 dark:text-gray-300">Tema</span>
@@ -253,7 +253,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          {/* SeÃ§Ã£o de Pomodoro */}
+          {/* Seção de Pomodoro */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">
               <ClockIcon className="h-5 w-5 mr-2 text-red-500" />
@@ -325,7 +325,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 />
               </div>
 
-              {/* ConfiguraÃ§Ã£o de Som */}
+              {/* Configuração de Som */}
               <div className="col-span-2 mt-2 pt-2 border-t dark:border-gray-700">
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -363,7 +363,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          {/* SeÃ§Ã£o de Metas */}
+          {/* Seção de Metas */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">
               <ChartBarIcon className="h-5 w-5 mr-2 text-green-500" />
@@ -419,11 +419,11 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          {/* SeÃ§Ã£o de RevisÃµes */}
+          {/* Seção de Revisões */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">
               <CalendarIcon className="h-5 w-5 mr-2 text-blue-500" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Intervalos de RevisÃ£o</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Intervalos de Revisão</h3>
             </div>
             <div className="space-y-4">
               <div>
@@ -472,14 +472,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          {/* SeÃ§Ã£o de FÃ©rias/Folga */}
+          {/* Seção de Férias/Folga */}
           <div className="pb-4 border-b dark:border-gray-700">
             <div className="flex items-center mb-4">
               <PaperAirplaneIcon className="h-5 w-5 mr-2 text-cyan-500" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">FÃ©rias / Folga</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Férias / Folga</h3>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Ative o modo fÃ©rias para adiar todas as tarefas futuras.
+              Ative o modo férias para adiar todas as tarefas futuras.
             </p>
             <div className="space-y-3">
               <button
@@ -494,13 +494,11 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 className="w-full px-4 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800 transition-colors flex items-center justify-center gap-2"
               >
                 <CalendarIcon className="h-5 w-5" />
-                Programar FÃ©rias...
+                Programar Férias...
               </button>
-
-              {/* HistÃ³rico de FÃ©rias */}
               {vacationPeriods.length > 0 && (
                 <div className="mt-4 pt-4 border-t dark:border-gray-700">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">HistÃ³rico:</p>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Histórico:</p>
                   <div className="space-y-1 max-h-24 overflow-y-auto">
                     {vacationPeriods.slice(-5).reverse().map((v) => (
                       <div key={v.id} className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-2">
@@ -518,7 +516,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          {/* SeÃ§Ã£o de Reiniciar Dados */}
+          {/* Seção de Reiniciar Dados */}
           <div className="pb-4">
             <div className="flex items-center mb-4">
               <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-red-500" />
@@ -542,14 +540,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <ChartBarIcon className="h-4 w-4 mr-2 text-gray-500" />
-                  <span className="text-gray-700 dark:text-gray-300">EstatÃ­sticas</span>
+                  <span className="text-gray-700 dark:text-gray-300">Estatísticas</span>
                 </div>
                 <button
                   onClick={() => handleShowResetConfirm('stats')}
                   className="px-3 py-1 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/30 text-sm flex items-center"
                 >
                   <ExclamationTriangleIcon className="h-4 w-4 mr-1" />
-                  Reiniciar estatÃ­sticas
+                  Reiniciar estatísticas
                 </button>
               </div>
 
@@ -562,7 +560,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   Reiniciar todos os dados
                 </button>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Esta aÃ§Ã£o reiniciarÃ¡ todos os dados, incluindo estatÃ­sticas, histÃ³rico de sessÃµes e contadores.
+                  Esta ação reiniciará todos os dados, incluindo estatísticas, histórico de sessões e contadores.
                 </p>
               </div>
             </div>
@@ -570,19 +568,19 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         </div>
       </div>
 
-      {/* Modal de confirmaÃ§Ã£o */}
+      {/* Modal de confirmação */}
       {showResetConfirm && (
         <div className="fixed inset-0 z-50 bg-gray-700 bg-opacity-50 dark:bg-black dark:bg-opacity-60 flex items-center justify-center">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md mx-4">
             <h3 className="text-lg font-semibold mb-4 dark:text-white text-red-600 dark:text-red-400 flex items-center">
               <ExclamationTriangleIcon className="h-5 w-5 mr-2" />
-              {resetAction === 'stats' ? 'Reiniciar EstatÃ­sticas' : 'Reiniciar Todos os Dados'}
+              {resetAction === 'stats' ? 'Reiniciar Estatísticas' : 'Reiniciar Todos os Dados'}
             </h3>
             <p className="text-gray-700 dark:text-gray-300 mb-6">
               {resetAction === 'stats' ? (
-                <>Tem certeza que deseja reiniciar todas as estatÃ­sticas? Isso <strong className="font-bold text-red-600 dark:text-red-400">excluirÃ¡ permanentemente</strong> todos os seus registros de estudo e progresso. Esta aÃ§Ã£o nÃ£o pode ser desfeita.</>
+                <>Tem certeza que deseja reiniciar todas as estatísticas? Isso <strong className="font-bold text-red-600 dark:text-red-400">excluirá permanentemente</strong> todos os seus registros de estudo e progresso. Esta ação não pode ser desfeita.</>
               ) : (
-                <>Tem certeza que deseja reiniciar todos os dados? Isso <strong className="font-bold text-red-600 dark:text-red-400">excluirÃ¡ permanentemente</strong> todas as suas matÃ©rias, tÃ³picos, revisÃµes, sessÃµes de estudo e estatÃ­sticas. Esta aÃ§Ã£o nÃ£o pode ser desfeita.</>
+                <>Tem certeza que deseja reiniciar todos os dados? Isso <strong className="font-bold text-red-600 dark:text-red-400">excluirá permanentemente</strong> todas as suas matérias, tópicos, revisões, sessões de estudo e estatísticas. Esta ação não pode ser desfeita.</>
               )}
             </p>
             <div className="flex justify-end space-x-3">
@@ -612,7 +610,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               Programar Ferias
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Todas as tarefas a partir da data inicial serao adiadas pelo numero de dias selecionado.
+              Todas as tarefas a partir da data inicial serao adiadas.
             </p>
             <div className="space-y-4 mb-6">
               <div>
@@ -625,11 +623,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               </div>
             </div>
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4">
-              <p className="text-xs text-amber-700 dark:text-amber-400"><strong>O que sera adiado:</strong> Revisoes, Blocos de Estudo, Cronogramas e Simulados.</p>
+              <p className="text-xs text-amber-700 dark:text-amber-400"><strong>O que sera adiado:</strong> Revisoes, Blocos, Cronogramas e Simulados.</p>
             </div>
             <div className="flex justify-end space-x-3">
-              <button onClick={() => setShowVacationModal(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center"><XMarkIcon className="h-4 w-4 mr-1" />Cancelar</button>
-              <button onClick={handleApplyVacation} className="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 flex items-center"><CheckIcon className="h-4 w-4 mr-1" />Aplicar Ferias</button>
+              <button onClick={() => setShowVacationModal(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center">
+                <XMarkIcon className="h-4 w-4 mr-1" />Cancelar
+              </button>
+              <button onClick={handleApplyVacation} className="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 flex items-center">
+                <CheckIcon className="h-4 w-4 mr-1" />Aplicar Ferias
+              </button>
             </div>
           </div>
         </div>
