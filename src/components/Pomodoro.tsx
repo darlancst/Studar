@@ -7,6 +7,7 @@ import { useReviewStore } from '@/store/reviewStore';
 import { PlayIcon, PauseIcon, ArrowPathIcon, ForwardIcon, CheckCircleIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } from 'date-fns';
 import confetti from 'canvas-confetti';
+import { playNotificationSound } from '@/utils/sounds';
 
 export default function Pomodoro() {
   const { subjects } = useSubjectStore();
@@ -49,8 +50,7 @@ export default function Pomodoro() {
           usePomodoroStore.setState({ timeRemaining: 0 });
 
           // Play sound
-          const audio = new Audio('/notification.mp3');
-          audio.play().catch(e => console.log('Audio play failed', e));
+          playNotificationSound();
 
           if (currentState === 'focus') {
             confetti({

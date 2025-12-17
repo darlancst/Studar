@@ -1,1 +1,101 @@
-if(!self.define){let e,c={};const s=(s,i)=>(s=new URL(s+".js",i).href,c[s]||new Promise(c=>{if("document"in self){const e=document.createElement("script");e.src=s,e.onload=c,document.head.appendChild(e)}else e=s,importScripts(s),c()}).then(()=>{let e=c[s];if(!e)throw new Error(`Module ${s} didn’t register its module`);return e}));self.define=(i,a)=>{const n=e||("document"in self?document.currentScript.src:"")||location.href;if(c[n])return;let t={};const o=e=>s(e,n),r={module:{uri:n},exports:t,require:o};c[n]=Promise.all(i.map(e=>r[e]||o(e))).then(e=>(a(...e),t))}}define(["./workbox-cb477421"],function(e){"use strict";importScripts(),self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"/_next/app-build-manifest.json",revision:"c8c01663077034942d0573d08d62f45c"},{url:"/_next/static/2cqW4_zIT2G_WP10KEoG6/_buildManifest.js",revision:"a1b7599199e2e8c82f2c6bcf8d8aca61"},{url:"/_next/static/2cqW4_zIT2G_WP10KEoG6/_ssgManifest.js",revision:"b6652df95db52feb4daf4eca35380933"},{url:"/_next/static/chunks/140-155146d546b8bde2.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/531-aacf105e3534257c.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/622-58bf7386bd62d9aa.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/690-16b1af0cccba2fe2.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/776-e6dc1d11fdeda021.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/938-0dae74f48878c2e0.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/app/_not-found-52de003d3708ca92.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/app/layout-980b736a0c554c4b.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/app/page-19c3e3a2d7fb2f53.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/app/simulados/page-140ad739e1834949.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/ca377847-d1090946b5f385e6.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/fd9d1056-1a634a6a610d4470.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/framework-c5181c9431ddc45b.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/main-40989c810e448030.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/main-app-376749954f07895d.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/pages/_app-98cb51ec6f9f135f.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/pages/_error-e87e5963ec1b8011.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/chunks/polyfills-c67a75d1b6f99dc8.js",revision:"837c0df77fd5009c9e46d446188ecfd0"},{url:"/_next/static/chunks/webpack-2f88ee4482e428a1.js",revision:"2cqW4_zIT2G_WP10KEoG6"},{url:"/_next/static/css/93512a7ce1fc1d18.css",revision:"93512a7ce1fc1d18"},{url:"/_next/static/media/19cfc7226ec3afaa-s.woff2",revision:"9dda5cfc9a46f256d0e131bb535e46f8"},{url:"/_next/static/media/21350d82a1f187e9-s.woff2",revision:"4e2553027f1d60eff32898367dd4d541"},{url:"/_next/static/media/8e9860b6e62d6359-s.woff2",revision:"01ba6c2a184b8cba08b0d57167664d75"},{url:"/_next/static/media/ba9851c3c22cd980-s.woff2",revision:"9e494903d6b0ffec1a1e14d34427d44d"},{url:"/_next/static/media/c5fe6dc8356a8c31-s.woff2",revision:"027a89e9ab733a145db70f09b8a18b42"},{url:"/_next/static/media/df0a9ae256c0569c-s.woff2",revision:"d54db44de5ccb18886ece2fda72bdfe0"},{url:"/_next/static/media/e4af272ccee01ff0-s.p.woff2",revision:"65850a373e258f1c897a2b3d75eb74de"},{url:"/dashboard-empty.gif",revision:"2b5fff991fd354b7fbe8316746cd3436"},{url:"/favicon.ico",revision:"0a0ad9de9dcecf77073d02d98ae046d8"},{url:"/icons/android-chrome-192x192.png",revision:"0b643aa7064788f6504fd971dcfb4a56"},{url:"/icons/android-chrome-512x512.png",revision:"f653b2299bd163c6cbc276acfb610b43"},{url:"/icons/apple-touch-icon.png",revision:"a5fd626c3ab90c7da7826bfcde6fc2d5"},{url:"/icons/favicon-16x16.png",revision:"87dd92efec3ba53067a5b16123094812"},{url:"/icons/favicon-32x32.png",revision:"3737fd66aaa73678d34c672041a17c95"},{url:"/icons/favicon.ico",revision:"0a0ad9de9dcecf77073d02d98ae046d8"},{url:"/logo.svg",revision:"1c8786755f1b5a1f6d826731dd130112"},{url:"/manifest.json",revision:"835ab75010b610a4d4602c2a7399f59c"}],{ignoreURLParametersMatching:[]}),e.cleanupOutdatedCaches(),e.registerRoute("/",new e.NetworkFirst({cacheName:"start-url",plugins:[{cacheWillUpdate:async({request:e,response:c,event:s,state:i})=>c&&"opaqueredirect"===c.type?new Response(c.body,{status:200,statusText:"OK",headers:c.headers}):c}]}),"GET"),e.registerRoute(/^https?.*/,new e.NetworkFirst({cacheName:"offlineCache",plugins:[new e.ExpirationPlugin({maxEntries:200})]}),"GET")});
+/**
+ * Copyright 2018 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// If the loader is already loaded, just stop.
+if (!self.define) {
+  let registry = {};
+
+  // Used for `eval` and `importScripts` where we can't get script URL by other means.
+  // In both cases, it's safe to use a global var because those functions are synchronous.
+  let nextDefineUri;
+
+  const singleRequire = (uri, parentUri) => {
+    uri = new URL(uri + ".js", parentUri).href;
+    return registry[uri] || (
+      
+        new Promise(resolve => {
+          if ("document" in self) {
+            const script = document.createElement("script");
+            script.src = uri;
+            script.onload = resolve;
+            document.head.appendChild(script);
+          } else {
+            nextDefineUri = uri;
+            importScripts(uri);
+            resolve();
+          }
+        })
+      
+      .then(() => {
+        let promise = registry[uri];
+        if (!promise) {
+          throw new Error(`Module ${uri} didn’t register its module`);
+        }
+        return promise;
+      })
+    );
+  };
+
+  self.define = (depsNames, factory) => {
+    const uri = nextDefineUri || ("document" in self ? document.currentScript.src : "") || location.href;
+    if (registry[uri]) {
+      // Module is already loading or loaded.
+      return;
+    }
+    let exports = {};
+    const require = depUri => singleRequire(depUri, uri);
+    const specialDeps = {
+      module: { uri },
+      exports,
+      require
+    };
+    registry[uri] = Promise.all(depsNames.map(
+      depName => specialDeps[depName] || require(depName)
+    )).then(deps => {
+      factory(...deps);
+      return exports;
+    });
+  };
+}
+define(['./workbox-e43f5367'], (function (workbox) { 'use strict';
+
+  importScripts();
+  self.skipWaiting();
+  workbox.clientsClaim();
+  workbox.registerRoute("/", new workbox.NetworkFirst({
+    "cacheName": "start-url",
+    plugins: [{
+      cacheWillUpdate: async ({
+        request,
+        response,
+        event,
+        state
+      }) => {
+        if (response && response.type === 'opaqueredirect') {
+          return new Response(response.body, {
+            status: 200,
+            statusText: 'OK',
+            headers: response.headers
+          });
+        }
+        return response;
+      }
+    }]
+  }), 'GET');
+  workbox.registerRoute(/.*/i, new workbox.NetworkOnly({
+    "cacheName": "dev",
+    plugins: []
+  }), 'GET');
+
+}));
+//# sourceMappingURL=sw.js.map
