@@ -36,6 +36,9 @@ export default function Pomodoro() {
 
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [selectedTopicOverrides, setSelectedTopicOverrides] = useState<Record<string, string>>({});
+  // Rastreia os tópicos já estudados para cada item de cronograma (bloco/semanal)
+  // Formato: { itemId: [topicId1, topicId2, ...] }
+  const [completedTopicsPerItem, setCompletedTopicsPerItem] = useState<Record<string, string[]>>({});
 
 
   // Timer effect
@@ -237,73 +240,117 @@ export default function Pomodoro() {
     }
   };
 
-  const handleFinishContent = (itemId?: string) => {
-    // 1. Se houver um item planejado selecionado, marca como concluído
+  // Função para marcar um TÓPICO como estudado (mas NÃO marca o bloco como concluído)
+  const handleFinishTopic = (itemId?: string) => {
     const targetId = itemId || selectedItemId;
-    const isAlreadyCompleted = targetId && completedScheduleItems.includes(targetId);
+    if (!targetId) return;
 
-    if (targetId) {
-      toggleScheduleItemCompletion(targetId);
-    }
-
-    // 2. Identificar o tópico para gerar revisões
-    let topicIdToReview = '';
-
-    // Tenta encontrar o item planejado
     const plannedItem = todayPlannedItems.find(p => p.item.id === targetId);
+    if (!plannedItem) return;
 
-    if (plannedItem) {
-      // a. Tenta encontrar tópico vinculado (criado via input ou previamente vinculado)
-      const linkedTopic = topics.find(t => t.linkedScheduleItemId === targetId);
-      if (linkedTopic) {
-        topicIdToReview = linkedTopic.id;
-      }
-      // b. Se não, usa o topicId do item
-      else if (plannedItem.item.topicId) {
-        topicIdToReview = plannedItem.item.topicId;
-      }
-      // c. Fallback: verifica se há um override (caso a vinculação tenha falhado por algum motivo)
-      else if (selectedTopicOverrides[targetId]) {
-        const overrideTopic = topics.find(t =>
-          t.subjectId === plannedItem.item.subjectId &&
-          t.title.toLowerCase() === selectedTopicOverrides[targetId].toLowerCase()
+    // 1. Identificar o tópico que foi estudado
+    let topicIdStudied = '';
+
+    // a. Se há um override (texto digitado pelo usuário)
+    const overrideText = selectedTopicOverrides[targetId];
+    if (overrideText && overrideText.trim()) {
+      // Verifica se já existe um tópico com esse nome
+      const existingTopic = topics.find(t =>
+        t.subjectId === plannedItem.item.subjectId &&
+        t.title.toLowerCase() === overrideText.toLowerCase()
+      );
+
+      if (existingTopic) {
+        topicIdStudied = existingTopic.id;
+      } else {
+        // Cria um novo tópico
+        const newTopic = addTopic(
+          overrideText,
+          plannedItem.item.subjectId,
+          undefined,
+          undefined,
+          targetId
         );
-        if (overrideTopic) topicIdToReview = overrideTopic.id;
+        topicIdStudied = newTopic.id;
+      }
+    }
+    // b. Se o item já tem um topicId definido
+    else if (plannedItem.item.topicId) {
+      const topic = topics.find(t => t.id === plannedItem.item.topicId);
+      if (topic) {
+        topicIdStudied = topic.id;
       }
     }
 
-    // d. Fallback final: usa o tópico ativo/corrente se não encontrou pelo item
-    if (!topicIdToReview) {
-      topicIdToReview = currentTopicId || activeTopicId || '';
+    if (!topicIdStudied) return; // Não há tópico definido
+
+    // 2. Registrar o tópico como estudado para este item
+    setCompletedTopicsPerItem(prev => {
+      const existing = prev[targetId] || [];
+      if (existing.includes(topicIdStudied)) return prev; // Já registrado
+      return {
+        ...prev,
+        [targetId]: [...existing, topicIdStudied]
+      };
+    });
+
+    // 3. Gerar revisões para o tópico
+    const isValidTopic = topics.some(t => t.id === topicIdStudied);
+    if (isValidTopic) {
+      generateReviewsForTopic(topicIdStudied);
     }
 
-    // Gera as revisões se encontrou um tópico válido
-    if (topicIdToReview) {
-      // Verify if it is a real topic and not just a subject ID or invalid ID
-      const isValidTopic = topics.some(t => t.id === topicIdToReview);
+    // 4. Limpar o input de override para permitir digitar novo tópico
+    setSelectedTopicOverrides(prev => {
+      const newOverrides = { ...prev };
+      delete newOverrides[targetId];
+      return newOverrides;
+    });
 
-      if (isValidTopic) {
-        // Gera as revisões (1, 7, 30 dias)
-        generateReviewsForTopic(topicIdToReview);
-      }
-    }
+    // 5. Feedback visual
+    confetti({
+      particleCount: 80,
+      spread: 60,
+      origin: { y: 0.6 },
+      colors: ['#10B981', '#34D399', '#6EE7B7']
+    });
 
-    // Feedback visual - Apenas se estiver marcando como concluído (não estava concluído antes)
-    if (!isAlreadyCompleted) {
-      confetti({
-        particleCount: 150,
-        spread: 100,
-        origin: { y: 0.6 },
-        colors: ['#FFD700', '#FFA500', '#FF4500']
-      });
-    }
+    // 6. Resetar o timer
+    resetTimer();
+    usePomodoroStore.setState({ activeTopicId: null, activeSubjectId: null, activeScheduleItemId: null });
+    // NÃO limpar selectedItemId - mantém o item selecionado para permitir adicionar outro tópico
+  };
 
-    // Reseta o timer/sessão se estiver rodando o item concluído
-    if (targetId === selectedItemId) {
-      resetTimer();
-      usePomodoroStore.setState({ activeTopicId: null, activeSubjectId: null, activeScheduleItemId: null });
-      setSelectedItemId('');
-    }
+  // Função para FINALIZAR o bloco (marcar como concluído e encerrar)
+  const handleFinishBlock = (itemId?: string) => {
+    const targetId = itemId || selectedItemId;
+    if (!targetId) return;
+
+    // Marca o bloco como concluído
+    toggleScheduleItemCompletion(targetId);
+
+    // Feedback visual
+    confetti({
+      particleCount: 150,
+      spread: 100,
+      origin: { y: 0.6 },
+      colors: ['#FFD700', '#FFA500', '#FF4500']
+    });
+
+    // Limpar estado
+    resetTimer();
+    usePomodoroStore.setState({ activeTopicId: null, activeSubjectId: null, activeScheduleItemId: null });
+    setSelectedItemId('');
+    setSelectedTopicOverrides(prev => {
+      const newOverrides = { ...prev };
+      delete newOverrides[targetId];
+      return newOverrides;
+    });
+  };
+
+  // Mantém compatibilidade - função legada que chama a nova lógica
+  const handleFinishContent = (itemId?: string) => {
+    handleFinishTopic(itemId);
   };
 
   const getStatusColor = () => {
@@ -511,12 +558,32 @@ export default function Pomodoro() {
                     </div>
                   </div>
 
+                  {/* Tópicos já estudados neste bloco */}
+                  {completedTopicsPerItem[item.id] && completedTopicsPerItem[item.id].length > 0 && !isCompleted && (
+                    <div className="pl-5 animate-fade-in">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Tópicos estudados:</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {completedTopicsPerItem[item.id].map(topicId => {
+                          const topic = topics.find(t => t.id === topicId);
+                          return topic ? (
+                            <span key={topicId} className="text-xs bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full border border-green-100 dark:border-green-900/50 flex items-center gap-1">
+                              <CheckCircleIcon className="h-3 w-3" />
+                              {topic.title}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Topic Input for Generic Subject Items */}
-                  {!linkedTopic && !item.topicId && !isCompleted && isSelected && !isRunning && (
+                  {!isCompleted && isSelected && !isRunning && (
                     <div className="pl-5 animate-fade-in" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="text"
-                        placeholder="O que você vai estudar?"
+                        placeholder={completedTopicsPerItem[item.id]?.length > 0
+                          ? "Adicionar outro tópico..."
+                          : "O que você vai estudar?"}
                         value={selectedTopicOverrides[item.id] || ''}
                         onChange={(e) => {
                           setSelectedTopicOverrides(prev => ({
@@ -526,15 +593,28 @@ export default function Pomodoro() {
                         }}
                         className="w-full text-sm p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all placeholder-gray-400 dark:placeholder-gray-600"
                       />
+
+                      {/* Botão Finalizar Estudo - aparece quando já estudou pelo menos 1 tópico */}
+                      {completedTopicsPerItem[item.id] && completedTopicsPerItem[item.id].length > 0 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFinishBlock(item.id);
+                          }}
+                          className="mt-3 w-full py-2 px-4 text-sm font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/50 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+                        >
+                          Finalizar Estudo do Dia
+                        </button>
+                      )}
                     </div>
                   )}
 
-                  {/* Show selected topic if running or completed */}
-                  {!linkedTopic && !item.topicId && (isRunning || isCompleted) && effectiveTopic && (
+                  {/* Show selected topic if running */}
+                  {isRunning && isSelected && selectedTopicOverrides[item.id] && (
                     <div className="pl-5 animate-fade-in">
                       <p className="text-sm text-primary-600 dark:text-primary-400 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
-                        Estudando: <span className="font-medium">{effectiveTopic.title}</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse"></span>
+                        Estudando: <span className="font-medium">{selectedTopicOverrides[item.id]}</span>
                       </p>
                     </div>
                   )}
