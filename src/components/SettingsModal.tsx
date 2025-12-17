@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import {
@@ -601,36 +601,38 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
           </div>
         </div>
-      {/* Modal de Ferias */}
+      )}
+
+      {/* Modal de Férias */}
       {showVacationModal && (
         <div className="fixed inset-0 z-50 bg-gray-700 bg-opacity-50 dark:bg-black dark:bg-opacity-60 flex items-center justify-center">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md mx-4">
             <h3 className="text-lg font-semibold mb-4 dark:text-white text-cyan-600 dark:text-cyan-400 flex items-center">
               <CalendarIcon className="h-5 w-5 mr-2" />
-              Programar Ferias
+              Programar Férias
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Todas as tarefas a partir da data inicial serao adiadas.
+              Todas as tarefas a partir da data inicial serão adiadas.
             </p>
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data de Inicio</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data de Início</label>
                 <input type="date" value={vacationStartDate} onChange={(e) => setVacationStartDate(e.target.value)} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data de Termino</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data de Término</label>
                 <input type="date" value={vacationEndDate} onChange={(e) => setVacationEndDate(e.target.value)} min={vacationStartDate} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
             </div>
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4">
-              <p className="text-xs text-amber-700 dark:text-amber-400"><strong>O que sera adiado:</strong> Revisoes, Blocos, Cronogramas e Simulados.</p>
+              <p className="text-xs text-amber-700 dark:text-amber-400"><strong>O que será adiado:</strong> Revisões, Blocos, Cronogramas e Simulados.</p>
             </div>
             <div className="flex justify-end space-x-3">
               <button onClick={() => setShowVacationModal(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center">
                 <XMarkIcon className="h-4 w-4 mr-1" />Cancelar
               </button>
               <button onClick={handleApplyVacation} className="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 flex items-center">
-                <CheckIcon className="h-4 w-4 mr-1" />Aplicar Ferias
+                <CheckIcon className="h-4 w-4 mr-1" />Aplicar Férias
               </button>
             </div>
           </div>
