@@ -32,6 +32,7 @@ export interface BlockScheduleItem {
     endDate: string; // ISO Date string
     description?: string;
     restDays: number[]; // 0-6 (Sunday-Saturday) - Dias de descanso dentro do bloco
+    topicIds?: string[]; // Array de tópicos (opcional para compatibilidade)
 }
 
 interface ScheduleState {

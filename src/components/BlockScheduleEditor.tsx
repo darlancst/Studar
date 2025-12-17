@@ -11,11 +11,16 @@ export default function BlockScheduleEditor() {
     const { subjects } = useSubjectStore();
 
     const [selectedSubjectId, setSelectedSubjectId] = useState('');
+    const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([]);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [description, setDescription] = useState('');
     const [restDays, setRestDays] = useState<number[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Tópicos da matéria selecionada
+    const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
+    const availableTopics = selectedSubject?.topics || [];
 
     const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -36,11 +41,13 @@ export default function BlockScheduleEditor() {
             startDate,
             endDate,
             description,
-            restDays
+            restDays,
+            topicIds: selectedTopicIds.length > 0 ? selectedTopicIds : undefined
         });
 
         // Reset form and close modal
         setSelectedSubjectId('');
+        setSelectedTopicIds([]);
         setStartDate('');
         setEndDate('');
         setDescription('');
@@ -54,6 +61,20 @@ export default function BlockScheduleEditor() {
                 ? prev.filter(d => d !== dayIndex)
                 : [...prev, dayIndex]
         );
+    };
+
+    const toggleTopicSelection = (topicId: string) => {
+        setSelectedTopicIds(prev =>
+            prev.includes(topicId)
+                ? prev.filter(id => id !== topicId)
+                : [...prev, topicId]
+        );
+    };
+
+    // Reset topic selection when subject changes
+    const handleSubjectChange = (subjectId: string) => {
+        setSelectedSubjectId(subjectId);
+        setSelectedTopicIds([]);
     };
 
     // Filtrar itens apenas do cronograma ativo
@@ -138,6 +159,25 @@ export default function BlockScheduleEditor() {
                                                     ))}
                                                 </div>
                                             )}
+
+                                            {/* Exibir Tópicos selecionados */}
+                                            {item.topicIds && item.topicIds.length > 0 && (() => {
+                                                const topics = item.topicIds
+                                                    .map(topicId => subject?.topics?.find(t => t.id === topicId))
+                                                    .filter(Boolean);
+                                                return topics.length > 0 ? (
+                                                    <div className="flex flex-wrap gap-1.5 mt-2.5">
+                                                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                                                            Tópicos:
+                                                        </span>
+                                                        {topics.map(topic => (
+                                                            <span key={topic!.id} className="text-[10px] font-medium bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full border border-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-900/30">
+                                                                {topic!.title}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                ) : null;
+                                            })()}
                                         </div>
                                     </div>
 
@@ -178,7 +218,7 @@ export default function BlockScheduleEditor() {
                                 </label>
                                 <select
                                     value={selectedSubjectId}
-                                    onChange={(e) => setSelectedSubjectId(e.target.value)}
+                                    onChange={(e) => handleSubjectChange(e.target.value)}
                                     className="w-full p-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                                     required
                                 >
@@ -200,6 +240,44 @@ export default function BlockScheduleEditor() {
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Seleção de Tópicos */}
+                            {selectedSubjectId && availableTopics.length > 0 && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Tópicos (opcional)
+                                    </label>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                        Selecione os tópicos que pretende estudar neste bloco
+                                    </p>
+                                    <div className="max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-2 space-y-1">
+                                        {availableTopics.map((topic) => (
+                                            <label
+                                                key={topic.id}
+                                                className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${selectedTopicIds.includes(topic.id)
+                                                    ? 'bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800'
+                                                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border border-transparent'
+                                                    }`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedTopicIds.includes(topic.id)}
+                                                    onChange={() => toggleTopicSelection(topic.id)}
+                                                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                                                />
+                                                <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                                                    {topic.title}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    {selectedTopicIds.length > 0 && (
+                                        <p className="text-xs text-primary-600 dark:text-primary-400 mt-2">
+                                            {selectedTopicIds.length} tópico(s) selecionado(s)
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
