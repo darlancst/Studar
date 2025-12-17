@@ -434,7 +434,7 @@ export default function Stats() {
   };
 
   return (
-    <div className="space-y-3 pb-20 animate-fade-in">
+    <div className="space-y-4 pb-20 animate-fade-in-up">
       {/* 1. Widget "Agora" - Command Center */}
       <div className="w-full" id="tour-pomodoro-widget">
         {nextSubject ? (
@@ -555,64 +555,64 @@ export default function Stats() {
 
       {/* 3. Cards de Resumo (KPIs) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3" id="tour-stats-kpi">
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <div className="group bg-white dark:bg-gray-800/90 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800/50 transition-all duration-300">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className="p-2 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-xl group-hover:scale-105 transition-transform">
               <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="text-sm text-gray-500 dark:text-gray-400">Tempo Total</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Tempo Total</span>
           </div>
           <div className="mt-1">
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
               {Math.floor(totalStudyTime / 60)}h {totalStudyTime % 60}m
             </span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+        <div className="group bg-white dark:bg-gray-800/90 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800/50 transition-all duration-300">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className="p-2 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl group-hover:scale-105 transition-transform">
               <CheckCircleIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
-            <span className="text-sm text-gray-500 dark:text-gray-400">Sessões</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Sessões</span>
           </div>
           <div className="mt-1">
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
               {totalSessions}
             </span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <ClipboardDocumentCheckIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+        <div className="group bg-white dark:bg-gray-800/90 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800/50 transition-all duration-300">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className="p-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 rounded-xl group-hover:scale-105 transition-transform">
+              <ClipboardDocumentCheckIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <span className="text-sm text-gray-500 dark:text-gray-400">Revisões</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Revisões</span>
           </div>
           <div className="mt-1">
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
               {totalReviews}
             </span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+        <div className="group bg-white dark:bg-gray-800/90 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-orange-200 dark:hover:border-orange-800/50 transition-all duration-300">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className="p-2 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-xl group-hover:scale-105 transition-transform">
               <TrophyIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             </div>
-            <span className="text-sm text-gray-500 dark:text-gray-400">Meta</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Meta Semanal</span>
           </div>
           <div className="mt-1">
-            <div className="flex items-end gap-1 mb-1">
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="flex items-end gap-1.5 mb-1.5">
+              <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
                 {Math.floor(weeklyProgress.percentage)}%
               </span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-orange-500 h-1.5 rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-orange-400 to-orange-500 h-2 rounded-full transition-all duration-700 ease-out"
                 style={{ width: `${weeklyProgress.percentage}%` }}
               />
             </div>
@@ -621,25 +621,27 @@ export default function Stats() {
       </div>
 
       {/* Heatmap Section */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700" id="tour-heatmap">
-        <h3 className="text-lg font-semibold mb-1 dark:text-white flex items-center gap-2">
-          <FireIcon className="w-5 h-5 text-orange-500" />
+      <div className="bg-white dark:bg-gray-800/90 p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-all duration-300" id="tour-heatmap">
+        <h3 className="text-lg font-semibold mb-2 dark:text-white flex items-center gap-2">
+          <div className="p-1.5 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-lg">
+            <FireIcon className="w-5 h-5 text-orange-500" />
+          </div>
           Consistência de Estudos
         </h3>
         <Heatmap />
       </div>
 
       {/* Gráficos Principais */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col">
-          <h3 className="text-lg font-semibold mb-3 dark:text-white">Evolução do Estudo</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white dark:bg-gray-800/90 p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-all duration-300 flex flex-col">
+          <h3 className="text-lg font-semibold mb-4 dark:text-white">Evolução do Estudo</h3>
           <div className="flex-1 min-h-[250px]">
             <Line data={lineChartData} options={chartOptions} />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col">
-          <h3 className="text-lg font-semibold mb-3 dark:text-white">Distribuição por Matéria</h3>
+        <div className="bg-white dark:bg-gray-800/90 p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-all duration-300 flex flex-col">
+          <h3 className="text-lg font-semibold mb-4 dark:text-white">Distribuição por Matéria</h3>
           <div className="flex-1 min-h-[250px] flex items-center justify-center">
             <Doughnut data={pieChartData} options={pieOptions} />
           </div>
