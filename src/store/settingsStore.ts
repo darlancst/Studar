@@ -36,6 +36,10 @@ interface SettingsState {
   heatmapThresholds: HeatmapThresholds;
   setHeatmapThresholds: (thresholds: HeatmapThresholds) => void;
   
+  // Som de notificação
+  soundEnabled: boolean;
+  toggleSoundEnabled: () => void;
+  
   // Funções de Reset
   resetStats: () => void;
   resetPomodoros: () => void; 
@@ -61,6 +65,7 @@ export const useSettingsStore = create<SettingsState>()(
       weeklyGoalEndDate: null, // Inicializa como null
       reviewIntervals: [1, 7, 30], // Intervalos padrão (1, 7 e 30 dias)
       heatmapThresholds: DEFAULT_HEATMAP_THRESHOLDS, // Limiares padrão
+      soundEnabled: true, // Som habilitado por padrão
       
       // Alterna entre tema claro e escuro
       toggleDarkMode: () => {
@@ -108,6 +113,11 @@ export const useSettingsStore = create<SettingsState>()(
         if (typeof window !== 'undefined') {
           setTimeout(() => firebaseSync.syncToCloud(), 100);
         }
+      },
+      
+      // Alterna som de notificação
+      toggleSoundEnabled: () => {
+        set({ soundEnabled: !get().soundEnabled });
       },
       
       // Reset das estatísticas

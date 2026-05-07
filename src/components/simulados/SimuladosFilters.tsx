@@ -52,7 +52,7 @@ export default function SimuladosFilters({
         )}
       </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
         <div>
           <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
             Matéria

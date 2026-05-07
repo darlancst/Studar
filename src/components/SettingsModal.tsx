@@ -48,7 +48,9 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     reviewIntervals,
     setReviewIntervals,
     heatmapThresholds,
-    setHeatmapThresholds
+    setHeatmapThresholds,
+    soundEnabled,
+    toggleSoundEnabled
   } = useSettingsStore();
 
   const { settings: pomodoroSettings, updateSettings: updatePomodoroSettings } = usePomodoroStore();
@@ -331,33 +333,48 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Sons de Foco
                   </label>
-                  <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                    <input
-                      type="checkbox"
-                      name="toggle"
-                      id="sound-toggle"
-                      className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                      checked={pomodoroSettings.soundEnabled ?? false}
-                      onChange={(e) => updatePomodoroSettings({ soundEnabled: e.target.checked })}
-                      style={{ right: pomodoroSettings.soundEnabled ? '0' : 'auto', left: pomodoroSettings.soundEnabled ? 'auto' : '0', borderColor: pomodoroSettings.soundEnabled ? '#4F46E5' : '#D1D5DB' }}
+                  <button
+                    type="button"
+                    onClick={() => updatePomodoroSettings({ soundEnabled: !pomodoroSettings.soundEnabled })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
+                      pomodoroSettings.soundEnabled ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                        pomodoroSettings.soundEnabled ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                     />
-                    <label
-                      htmlFor="sound-toggle"
-                      className={`toggle-label block overflow-hidden h-5 rounded-full cursor-pointer ${pomodoroSettings.soundEnabled ? 'bg-primary-600' : 'bg-gray-300'}`}
-                    ></label>
-                  </div>
+                  </button>
                 </div>
 
                 {pomodoroSettings.soundEnabled && (
-                  <select
-                    value={pomodoroSettings.selectedSound || 'rain'}
-                    onChange={(e) => updatePomodoroSettings({ selectedSound: e.target.value })}
-                    className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
-                  >
-                    <option value="rain">Chuva</option>
-                    <option value="forest">Floresta</option>
-                    <option value="coffee">Cafeteria</option>
-                  </select>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { value: 'rain', label: 'Chuva', emoji: '🌧️' },
+                      { value: 'forest', label: 'Floresta', emoji: '🌳' },
+                      { value: 'coffee', label: 'Cafeteria', emoji: '☕' },
+                    ].map(sound => {
+                      const isSelected = (pomodoroSettings.selectedSound || 'rain') === sound.value;
+                      return (
+                        <button
+                          key={sound.value}
+                          type="button"
+                          onClick={() => updatePomodoroSettings({ selectedSound: sound.value })}
+                          className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-center ${
+                            isSelected
+                              ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                          }`}
+                        >
+                          <span className="text-xl">{sound.emoji}</span>
+                          <span className={`text-xs font-medium ${isSelected ? 'text-primary-700 dark:text-primary-300' : 'text-gray-600 dark:text-gray-400'}`}>
+                            {sound.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             </div>

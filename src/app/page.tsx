@@ -13,6 +13,7 @@ import SimuladosPage from '@/app/simulados/page';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import PWADebug from '@/components/PWADebug';
 import ScheduleManager from '@/components/ScheduleManager';
+import StreakCounter from '@/components/StreakCounter';
 
 
 import NextSessionDisplay from '@/components/NextSessionDisplay';
@@ -116,17 +117,15 @@ export default function Home() {
         return <Pomodoro />;
       case 'calendar':
         return (
-          <div>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-2 sm:gap-0">
+          <div className="pb-20 sm:pb-0">
+            <div className="flex justify-between items-center mb-2">
               <h2 className="text-2xl font-bold dark:text-white">Calendário</h2>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <button
-                  onClick={() => setShowSubjectManager(true)}
-                  className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex-1 sm:flex-none shadow-sm text-sm font-medium"
-                >
-                  Matérias e Tópicos
-                </button>
-              </div>
+              <button
+                onClick={() => setShowSubjectManager(true)}
+                className="bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-700 transition-colors shadow-sm text-xs sm:text-sm font-medium"
+              >
+                Matérias e Tópicos
+              </button>
             </div>
             <Calendar />
           </div>
@@ -161,6 +160,7 @@ export default function Home() {
 
           {/* Right: Next Session + Settings */}
           <div className="flex items-center gap-2 sm:gap-3">
+            <StreakCounter />
             <NextSessionDisplay />
             <button
               onClick={() => setShowSettings(true)}

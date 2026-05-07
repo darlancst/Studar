@@ -490,18 +490,55 @@ export default function Stats() {
             </div>
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center justify-center text-center gap-2 min-h-[160px]">
-            <div className="w-24 h-24 relative mb-2">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center justify-center text-center gap-3 min-h-[160px]">
+            <div className="w-24 h-24 relative mb-1">
               <img
                 src="/dashboard-empty.gif"
                 alt="Sem planos"
                 className="w-full h-full object-contain"
               />
             </div>
-            <div>
-              <h3 className="text-base font-medium text-gray-900 dark:text-white">Sem estudos por hoje</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Comemore!</p>
-            </div>
+            {subjects.length === 0 ? (
+              <div>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white">Comece sua jornada! 📚</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Crie sua primeira matéria para começar</p>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-subject-manager'))}
+                  className="mt-3 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
+                >
+                  Criar Matéria
+                </button>
+              </div>
+            ) : schedules.filter(s => s.isActive).length === 0 ? (
+              <div>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white">Monte seu cronograma 📅</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Organize seus estudos da semana</p>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-schedule'))}
+                  className="mt-3 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
+                >
+                  Criar Cronograma
+                </button>
+              </div>
+            ) : todayMinutes > 0 ? (
+              <div>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white">Mandou bem hoje! ✅</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Você já estudou {Math.floor(todayMinutes / 60)}h {todayMinutes % 60}m
+                </p>
+              </div>
+            ) : (
+              <div>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white">Dia livre! 🎉</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Descanse ou inicie uma sessão avulsa</p>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-pomodoro'))}
+                  className="mt-3 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm"
+                >
+                  Iniciar Sessão
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -605,15 +642,24 @@ export default function Stats() {
             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Meta Semanal</span>
           </div>
           <div className="mt-1">
-            <div className="flex items-end gap-1.5 mb-1.5">
-              <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
+            <div className="flex items-end justify-between mb-1.5">
+              <span className={`text-2xl font-bold tabular-nums ${weeklyProgress.percentage >= 100 ? 'text-amber-500' : 'text-gray-900 dark:text-white'}`}>
                 {Math.floor(weeklyProgress.percentage)}%
               </span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">
+                {Math.floor(weeklyProgress.current / 60)}h{weeklyProgress.current % 60}m / {Math.floor(weeklyProgress.target / 60)}h{weeklyProgress.target % 60}m
+              </span>
             </div>
-            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
               <div
-                className="bg-gradient-to-r from-orange-400 to-orange-500 h-2 rounded-full transition-all duration-700 ease-out"
-                style={{ width: `${weeklyProgress.percentage}%` }}
+                className={`h-2.5 rounded-full animate-fill-bar ${
+                  weeklyProgress.percentage >= 100
+                    ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 animate-shimmer'
+                    : weeklyProgress.percentage >= 80
+                    ? 'bg-gradient-to-r from-orange-400 to-orange-500 animate-shimmer'
+                    : 'bg-gradient-to-r from-orange-400 to-orange-500'
+                }`}
+                style={{ '--fill-width': `${weeklyProgress.percentage}%` } as React.CSSProperties}
               />
             </div>
           </div>

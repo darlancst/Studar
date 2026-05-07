@@ -8,6 +8,7 @@ import { PlayIcon, PauseIcon, ArrowPathIcon, ForwardIcon, CheckCircleIcon, Spark
 import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } from 'date-fns';
 import confetti from 'canvas-confetti';
 import { playNotificationSound } from '@/utils/sounds';
+import { useSettingsStore } from '@/store/settingsStore';
 
 export default function Pomodoro() {
   const { subjects } = useSubjectStore();
@@ -52,8 +53,9 @@ export default function Pomodoro() {
           // Timer finished (check <= 1 because we are about to decrement)
           usePomodoroStore.setState({ timeRemaining: 0 });
 
-          // Play sound
-          playNotificationSound();
+          // Play sound (if enabled)
+          const pomodoroState = usePomodoroStore.getState();
+          if (pomodoroState.settings?.soundEnabled !== false) playNotificationSound();
 
           if (currentState === 'focus') {
             confetti({
@@ -391,6 +393,37 @@ export default function Pomodoro() {
     return !overrideText || overrideText.trim().length === 0;
   }, [currentState, currentTopicId, selectedItemId, todayPlannedItems, topics, selectedTopicOverrides]);
 
+  // Keyboard shortcuts (desktop only)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in inputs
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      switch (e.key) {
+        case ' ':
+          e.preventDefault();
+          if (isRunning) {
+            pauseTimer();
+          } else if (!isStartDisabled) {
+            handleStart();
+          }
+          break;
+        case 'r':
+        case 'R':
+          resetTimer();
+          break;
+        case 's':
+        case 'S':
+          skipToNext(false);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isRunning, isStartDisabled]);
+
   return (
     <div className="max-w-md mx-auto space-y-8 pb-24">
       {/* Header Minimalista */}
@@ -454,6 +487,13 @@ export default function Pomodoro() {
         >
           <ForwardIcon className="h-6 w-6 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
         </button>
+      </div>
+
+      {/* Keyboard shortcuts hint (desktop only) */}
+      <div className="hidden sm:flex items-center justify-center gap-4 text-[10px] text-gray-300 dark:text-gray-600">
+        <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-400 dark:text-gray-500 font-mono">Espaço</kbd> play/pause</span>
+        <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-400 dark:text-gray-500 font-mono">R</kbd> reiniciar</span>
+        <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-400 dark:text-gray-500 font-mono">S</kbd> pular</span>
       </div>
 
       {/* Seção de Itens Planejados para Hoje */}
