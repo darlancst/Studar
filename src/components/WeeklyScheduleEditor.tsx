@@ -48,14 +48,32 @@ export default function WeeklyScheduleEditor() {
         setIsModalOpen(false);
     };
 
+    const getLastEndTimeForDay = (dayIndex: number): string => {
+        const dayItems = scheduleItems
+            .filter(item => item.dayOfWeek === dayIndex)
+            .sort((a, b) => b.endTime.localeCompare(a.endTime)); // latest first
+        if (dayItems.length > 0) {
+            return dayItems[0].endTime; // suggest starting where last item ends
+        }
+        return '08:00'; // default only if no items yet
+    };
+
+    const applySmartStartTime = (dayIndex: number) => {
+        const suggestedStart = getLastEndTimeForDay(dayIndex);
+        setStartTime(suggestedStart);
+        // endTime will auto-update via useEffect (+1h)
+    };
+
     const handleDayClick = (dayIndex: number) => {
         setSelectedDay(dayIndex);
+        applySmartStartTime(dayIndex);
         setIsModalOpen(true);
     };
 
     const openModal = () => {
         const today = new Date().getDay();
         setSelectedDay(today);
+        applySmartStartTime(today);
         setIsModalOpen(true);
     };
 
@@ -113,13 +131,13 @@ export default function WeeklyScheduleEditor() {
                                     return (
                                         <div
                                             key={item.id}
-                                            className="px-2 py-1 rounded-md text-[10px] relative group border dark:border-gray-700 leading-tight shadow-sm"
+                                            className="px-2 py-1 rounded-md text-[10px] relative border dark:border-gray-700 leading-tight shadow-sm"
                                             style={{
                                                 backgroundColor: subject ? `${subject.color}15` : undefined,
                                                 borderLeft: subject ? `3px solid ${subject.color}` : undefined
                                             }}
                                         >
-                                            <div className="font-semibold dark:text-white truncate pr-4">
+                                            <div className="font-semibold dark:text-white truncate pr-5">
                                                 {subject?.name || 'Removida'}
                                             </div>
                                             <div className="text-gray-500 dark:text-gray-400 text-[9px] flex items-center gap-1 mt-0.5">
@@ -132,7 +150,7 @@ export default function WeeklyScheduleEditor() {
                                                     e.stopPropagation();
                                                     removeWeeklyItem(item.id);
                                                 }}
-                                                className="absolute top-1 right-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30"
+                                                className="absolute top-1 right-1 text-gray-400 hover:text-red-500 transition-colors p-0.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30"
                                                 title="Remover"
                                             >
                                                 <TrashIcon className="h-3 w-3" />

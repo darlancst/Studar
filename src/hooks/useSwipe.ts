@@ -12,7 +12,7 @@ interface SwipeOutput {
     onTouchEnd: () => void;
 }
 
-export default function useSwipe({ onSwipeLeft, onSwipeRight, threshold = 50 }: SwipeInput): SwipeOutput {
+export default function useSwipe({ onSwipeLeft, onSwipeRight, threshold = 80 }: SwipeInput): SwipeOutput {
     const [touchStart, setTouchStart] = useState<number | null>(null);
     const [touchEnd, setTouchEnd] = useState<number | null>(null);
 

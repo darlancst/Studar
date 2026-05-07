@@ -48,7 +48,7 @@ export default function Home() {
   const swipeHandlers = useSwipe({
     onSwipeLeft: handleSwipeLeft,
     onSwipeRight: handleSwipeRight,
-    threshold: 50
+    threshold: 80
   });
 
   // Aplicar classe dark no body baseado no estado do Zustand
