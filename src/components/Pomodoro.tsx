@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useWakeLock } from '@/hooks/useWakeLock';
 import { useSubjectStore } from '@/store/subjectStore';
 import { useTopicStore } from '@/store/topicStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
@@ -11,6 +12,9 @@ import { playNotificationSound } from '@/utils/sounds';
 import { useSettingsStore } from '@/store/settingsStore';
 
 export default function Pomodoro() {
+  // Referência para o timestamp de quando o timer começou/retomou a contar
+  const timerStartRef = useRef<number>(0);
+  const timeRemainingAtStartRef = useRef<number>(0);
   const { subjects } = useSubjectStore();
   const { topics, addTopic } = useTopicStore();
   const {
@@ -40,40 +44,85 @@ export default function Pomodoro() {
   // Rastreia os tópicos já estudados para cada item de cronograma (bloco/semanal)
   // Formato: { itemId: [topicId1, topicId2, ...] }
   const [completedTopicsPerItem, setCompletedTopicsPerItem] = useState<Record<string, string[]>>({});
+  // Rastreia qual item está no modo "O que você estudou?" (após clicar ✓)
+  const [finishingItemId, setFinishingItemId] = useState<string>('');
 
 
-  // Timer effect
+  // Wake Lock: impede a tela do celular de desligar enquanto o timer roda
+  useWakeLock(isRunning);
+
+  // Quando o timer começa ou retoma, salva o timestamp atual
+  useEffect(() => {
+    if (isRunning) {
+      timerStartRef.current = Date.now();
+      timeRemainingAtStartRef.current = usePomodoroStore.getState().timeRemaining;
+    }
+  }, [isRunning]);
+
+  // Função para recalcular o tempo com base no relógio real
+  const recalculateTimer = useCallback(() => {
+    if (!isRunning || !timerStartRef.current) return;
+
+    const now = Date.now();
+    const elapsedMs = now - timerStartRef.current;
+    const elapsedSeconds = Math.floor(elapsedMs / 1000);
+    const newTimeRemaining = timeRemainingAtStartRef.current - elapsedSeconds;
+
+    if (newTimeRemaining <= 0) {
+      // Timer terminou (pode ter terminado enquanto a tela estava desligada)
+      usePomodoroStore.setState({ timeRemaining: 0 });
+
+      // Atualiza o tempo de estudo decorrido
+      const totalFocusElapsed = timeRemainingAtStartRef.current; // todo o tempo restante foi consumido
+      const prevElapsed = usePomodoroStore.getState().elapsedSeconds;
+      incrementElapsedTime(totalFocusElapsed - (timeRemainingAtStartRef.current - usePomodoroStore.getState().timeRemaining));
+
+      // Toca som (se habilitado)
+      const pomodoroState = usePomodoroStore.getState();
+      if (pomodoroState.settings?.soundEnabled !== false) playNotificationSound();
+
+      if (currentState === 'focus') {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+
+      skipToNext(true);
+    } else {
+      // Atualiza o tempo restante e o tempo de estudo decorrido
+      const prevTimeRemaining = usePomodoroStore.getState().timeRemaining;
+      const secondsPassed = prevTimeRemaining - newTimeRemaining;
+      if (secondsPassed > 0) {
+        incrementElapsedTime(secondsPassed);
+      }
+      usePomodoroStore.setState({ timeRemaining: newTimeRemaining });
+    }
+  }, [isRunning, currentState, skipToNext, incrementElapsedTime]);
+
+  // Timer principal baseado em timestamps reais (resiliente a suspensão do browser)
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRunning) {
       interval = setInterval(() => {
-        const { timeRemaining } = usePomodoroStore.getState();
-
-        if (timeRemaining <= 1) {
-          // Timer finished (check <= 1 because we are about to decrement)
-          usePomodoroStore.setState({ timeRemaining: 0 });
-
-          // Play sound (if enabled)
-          const pomodoroState = usePomodoroStore.getState();
-          if (pomodoroState.settings?.soundEnabled !== false) playNotificationSound();
-
-          if (currentState === 'focus') {
-            confetti({
-              particleCount: 100,
-              spread: 70,
-              origin: { y: 0.6 }
-            });
-          }
-
-          skipToNext(true);
-        } else {
-          incrementElapsedTime(1);
-          usePomodoroStore.setState(state => ({ timeRemaining: state.timeRemaining - 1 }));
-        }
+        recalculateTimer();
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRunning, currentState, skipToNext, incrementElapsedTime]);
+  }, [isRunning, recalculateTimer]);
+
+  // Quando o usuário volta para a aba (ex: tela ligou), recalcula imediatamente
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isRunning) {
+        recalculateTimer();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isRunning, recalculateTimer]);
 
   // Obter itens planejados para hoje (Memoized)
   const todayPlannedItems = useMemo(() => {
@@ -309,7 +358,10 @@ export default function Pomodoro() {
       return newOverrides;
     });
 
-    // 5. Feedback visual
+    // 5. Sair do modo de finalização (mas manter o item selecionado para adicionar mais tópicos)
+    setFinishingItemId('');
+
+    // 6. Feedback visual
     confetti({
       particleCount: 80,
       spread: 60,
@@ -317,7 +369,7 @@ export default function Pomodoro() {
       colors: ['#10B981', '#34D399', '#6EE7B7']
     });
 
-    // 6. Resetar o timer
+    // 7. Resetar o timer
     resetTimer();
     usePomodoroStore.setState({ activeTopicId: null, activeSubjectId: null, activeScheduleItemId: null });
     // NÃO limpar selectedItemId - mantém o item selecionado para permitir adicionar outro tópico
@@ -343,6 +395,7 @@ export default function Pomodoro() {
     resetTimer();
     usePomodoroStore.setState({ activeTopicId: null, activeSubjectId: null, activeScheduleItemId: null });
     setSelectedItemId('');
+    setFinishingItemId('');
     setSelectedTopicOverrides(prev => {
       const newOverrides = { ...prev };
       delete newOverrides[targetId];
@@ -381,17 +434,9 @@ export default function Pomodoro() {
     const selectedPlan = todayPlannedItems.find(p => p.item.id === selectedItemId);
     if (!selectedPlan) return true;
 
-    // Check if topic is already assigned
-    if (selectedPlan.item.topicId) return false;
-
-    // Check for linked topic
-    const linkedTopic = topics.find(t => t.linkedScheduleItemId === selectedItemId);
-    if (linkedTopic) return false;
-
-    // Check for user input override
-    const overrideText = selectedTopicOverrides[selectedItemId];
-    return !overrideText || overrideText.trim().length === 0;
-  }, [currentState, currentTopicId, selectedItemId, todayPlannedItems, topics, selectedTopicOverrides]);
+    // Permitir iniciar sem tópico definido — o tópico será preenchido ao finalizar
+    return false;
+  }, [currentState, currentTopicId, selectedItemId, todayPlannedItems]);
 
   // Keyboard shortcuts (desktop only)
   useEffect(() => {
@@ -583,14 +628,25 @@ export default function Pomodoro() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (!isLocked) handleFinishContent(item.id);
+                          if (isLocked) return;
+                          // Se o item já tem tópico definido, finaliza direto
+                          if (item.topicId || linkedTopic) {
+                            handleFinishContent(item.id);
+                          } else {
+                            // Entra no modo "O que você estudou?" — pede o tópico
+                            setFinishingItemId(item.id);
+                            // Pausa o timer se estiver rodando
+                            if (isRunning) pauseTimer();
+                          }
                         }}
                         disabled={isLocked}
                         className={`p-2 rounded-full transition-all ${isLocked
                           ? 'text-gray-300 cursor-not-allowed'
                           : isCompleted
                             ? 'text-green-500 bg-green-50 dark:bg-green-900/20'
-                            : 'text-gray-300 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
+                            : finishingItemId === item.id
+                              ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/20'
+                              : 'text-gray-300 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
                           }`}
                       >
                         <CheckCircleIcon className="h-6 w-6" />
@@ -616,23 +672,61 @@ export default function Pomodoro() {
                     </div>
                   )}
 
-                  {/* Topic Input for Generic Subject Items */}
-                  {!isCompleted && isSelected && !isRunning && (
+                  {/* Input de tópico — aparece ao clicar ✓ (modo finalização) ou ao ter tópicos já estudados */}
+                  {!isCompleted && isSelected && !isRunning && (finishingItemId === item.id || (completedTopicsPerItem[item.id]?.length > 0)) && (
                     <div className="pl-5 animate-fade-in" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="text"
-                        placeholder={completedTopicsPerItem[item.id]?.length > 0
-                          ? "Adicionar outro tópico..."
-                          : "O que você vai estudar?"}
-                        value={selectedTopicOverrides[item.id] || ''}
-                        onChange={(e) => {
-                          setSelectedTopicOverrides(prev => ({
-                            ...prev,
-                            [item.id]: e.target.value
-                          }));
-                        }}
-                        className="w-full text-sm p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all placeholder-gray-400 dark:placeholder-gray-600"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder={completedTopicsPerItem[item.id]?.length > 0
+                            ? "Adicionar outro tópico..."
+                            : "O que você estudou? (ex: pp. 45-120)"}
+                          value={selectedTopicOverrides[item.id] || ''}
+                          onChange={(e) => {
+                            setSelectedTopicOverrides(prev => ({
+                              ...prev,
+                              [item.id]: e.target.value
+                            }));
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && selectedTopicOverrides[item.id]?.trim()) {
+                              handleFinishTopic(item.id);
+                            }
+                          }}
+                          autoFocus={finishingItemId === item.id}
+                          className="flex-1 text-sm p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all placeholder-gray-400 dark:placeholder-gray-600"
+                        />
+                        {/* Botão Confirmar — só aparece quando tem texto digitado */}
+                        {selectedTopicOverrides[item.id]?.trim() && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFinishTopic(item.id);
+                            }}
+                            className="px-3 py-2 text-sm font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/50 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors whitespace-nowrap"
+                          >
+                            Salvar
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Botão Cancelar — volta ao estado normal sem registrar */}
+                      {finishingItemId === item.id && !completedTopicsPerItem[item.id]?.length && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFinishingItemId('');
+                            setSelectedTopicOverrides(prev => {
+                              const newOverrides = { ...prev };
+                              delete newOverrides[item.id];
+                              return newOverrides;
+                            });
+                          }}
+                          className="mt-2 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      )}
 
                       {/* Botão Finalizar Estudo - aparece quando já estudou pelo menos 1 tópico */}
                       {completedTopicsPerItem[item.id] && completedTopicsPerItem[item.id].length > 0 && (
@@ -646,16 +740,6 @@ export default function Pomodoro() {
                           Finalizar Estudo do Dia
                         </button>
                       )}
-                    </div>
-                  )}
-
-                  {/* Show selected topic if running */}
-                  {isRunning && isSelected && selectedTopicOverrides[item.id] && (
-                    <div className="pl-5 animate-fade-in">
-                      <p className="text-sm text-primary-600 dark:text-primary-400 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse"></span>
-                        Estudando: <span className="font-medium">{selectedTopicOverrides[item.id]}</span>
-                      </p>
                     </div>
                   )}
                 </div>
