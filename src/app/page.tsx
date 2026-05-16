@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useSettingsStore } from '@/store/settingsStore';
 import TabBar from '@/components/TabBar';
@@ -31,17 +31,55 @@ export default function Home() {
   // Ordem das abas para navegação via swipe
   const tabsOrder: TabName[] = ['stats', 'calendar', 'schedule', 'pomodoro', 'simulados'];
 
+  // --- Histórico de abas para o botão voltar do celular ---
+  const tabHistoryRef = useRef<TabName[]>(['stats']);
+  const isPopStateNav = useRef(false);
+
+  const handleTabChange = useCallback((tab: TabName) => {
+    if (tab === activeTab) return;
+
+    if (!isPopStateNav.current) {
+      // Navegação normal (clique/swipe): adiciona ao histórico do browser
+      tabHistoryRef.current.push(tab);
+      window.history.pushState({ tab }, '', '');
+    }
+    isPopStateNav.current = false;
+
+    setActiveTab(tab);
+  }, [activeTab]);
+
+  // Botão voltar do celular: volta para a aba anterior
+  useEffect(() => {
+    // Push estado inicial ao montar
+    window.history.replaceState({ tab: 'stats' }, '', '');
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (tabHistoryRef.current.length > 1) {
+        tabHistoryRef.current.pop(); // Remove a aba atual
+        const previousTab = tabHistoryRef.current[tabHistoryRef.current.length - 1];
+        isPopStateNav.current = true;
+        setActiveTab(previousTab);
+      } else {
+        // Se não tem histórico, re-push para evitar sair do app
+        window.history.pushState({ tab: activeTab }, '', '');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [activeTab]);
+
   const handleSwipeLeft = () => {
     const currentIndex = tabsOrder.indexOf(activeTab);
     if (currentIndex < tabsOrder.length - 1) {
-      setActiveTab(tabsOrder[currentIndex + 1]);
+      handleTabChange(tabsOrder[currentIndex + 1]);
     }
   };
 
   const handleSwipeRight = () => {
     const currentIndex = tabsOrder.indexOf(activeTab);
     if (currentIndex > 0) {
-      setActiveTab(tabsOrder[currentIndex - 1]);
+      handleTabChange(tabsOrder[currentIndex - 1]);
     }
   };
 
@@ -70,19 +108,19 @@ export default function Home() {
     const handleNavigation = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.type === 'navigate-to-simulados') {
-        setActiveTab('simulados');
+        handleTabChange('simulados');
         setShowSubjectManager(false);
       } else if (customEvent.type === 'navigate-to-dashboard') {
-        setActiveTab('stats');
+        handleTabChange('stats');
         setShowSubjectManager(false);
       } else if (customEvent.type === 'navigate-to-pomodoro') {
-        setActiveTab('pomodoro');
+        handleTabChange('pomodoro');
         setShowSubjectManager(false);
       } else if (customEvent.type === 'navigate-to-calendar') {
-        setActiveTab('calendar');
+        handleTabChange('calendar');
         setShowSubjectManager(false);
       } else if (customEvent.type === 'navigate-to-schedule') {
-        setActiveTab('schedule');
+        handleTabChange('schedule');
         setShowSubjectManager(false);
       }
     };
@@ -102,42 +140,12 @@ export default function Home() {
       window.removeEventListener('navigate-to-schedule', handleNavigation);
       window.removeEventListener('open-subject-manager', () => setShowSubjectManager(true));
     };
-  }, []);
+  }, [handleTabChange]);
 
   // Scroll to top when active tab changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [activeTab]);
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'stats':
-        return <Stats />;
-      case 'pomodoro':
-        return <Pomodoro />;
-      case 'calendar':
-        return (
-          <div className="pb-20 sm:pb-0">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-2xl font-bold dark:text-white">Calendário</h2>
-              <button
-                onClick={() => setShowSubjectManager(true)}
-                className="bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-700 transition-colors shadow-sm text-xs sm:text-sm font-medium"
-              >
-                Matérias e Tópicos
-              </button>
-            </div>
-            <Calendar />
-          </div>
-        );
-      case 'simulados':
-        return <SimuladosPage />;
-      case 'schedule':
-        return <ScheduleManager />;
-      default:
-        return null;
-    }
-  };
 
   return (
     <div
@@ -178,18 +186,44 @@ export default function Home() {
         <div className="hidden sm:block mb-2">
           <TabBar
             activeTab={activeTab}
-            setActiveTab={setActiveTab}
+            setActiveTab={handleTabChange}
           />
         </div>
 
-        <main className="animate-fade-in">
-          {renderContent()}
+        {/* Componentes mantidos montados para preservar estado (display: none quando inativo) */}
+        <main>
+          <div style={{ display: activeTab === 'stats' ? 'block' : 'none' }}>
+            <Stats />
+          </div>
+          <div style={{ display: activeTab === 'pomodoro' ? 'block' : 'none' }}>
+            <Pomodoro />
+          </div>
+          <div style={{ display: activeTab === 'calendar' ? 'block' : 'none' }}>
+            <div className="pb-20 sm:pb-0">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-2xl font-bold dark:text-white">Calendário</h2>
+                <button
+                  onClick={() => setShowSubjectManager(true)}
+                  className="bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-700 transition-colors shadow-sm text-xs sm:text-sm font-medium"
+                >
+                  Matérias e Tópicos
+                </button>
+              </div>
+              <Calendar />
+            </div>
+          </div>
+          <div style={{ display: activeTab === 'simulados' ? 'block' : 'none' }}>
+            <SimuladosPage />
+          </div>
+          <div style={{ display: activeTab === 'schedule' ? 'block' : 'none' }}>
+            <ScheduleManager />
+          </div>
         </main>
 
         <div className="sm:hidden">
           <TabBar
             activeTab={activeTab}
-            setActiveTab={setActiveTab}
+            setActiveTab={handleTabChange}
           />
         </div>
 
@@ -206,4 +240,5 @@ export default function Home() {
       </div>
     </div>
   );
-} 
+}
+ 
