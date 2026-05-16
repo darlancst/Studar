@@ -51,13 +51,13 @@ export default function Pomodoro() {
   // Wake Lock: impede a tela do celular de desligar enquanto o timer roda
   useWakeLock(isRunning);
 
-  // Quando o timer começa ou retoma, salva o timestamp atual
+  // Quando o timer começa, retoma, ou transiciona (foco→pausa→foco), salva o timestamp atual
   useEffect(() => {
     if (isRunning) {
       timerStartRef.current = Date.now();
       timeRemainingAtStartRef.current = usePomodoroStore.getState().timeRemaining;
     }
-  }, [isRunning]);
+  }, [isRunning, currentState]);
 
   // Função para recalcular o tempo com base no relógio real
   const recalculateTimer = useCallback(() => {
