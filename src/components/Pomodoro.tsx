@@ -346,7 +346,9 @@ export default function Pomodoro() {
     });
 
     // 3. Gerar revisões para o tópico
-    const isValidTopic = topics.some(t => t.id === topicIdStudied);
+    // Usa getState() para pegar os tópicos atualizados (evita closure stale após addTopic)
+    const freshTopics = useTopicStore.getState().topics;
+    const isValidTopic = freshTopics.some(t => t.id === topicIdStudied);
     if (isValidTopic) {
       generateReviewsForTopic(topicIdStudied);
     }
