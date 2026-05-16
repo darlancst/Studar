@@ -24,6 +24,7 @@ import { useVacationStore } from '@/store/vacationStore';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import SyncStatus from '@/components/SyncStatus';
+import { ALARM_OPTIONS, playAlarmSound } from '@/utils/sounds';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -327,11 +328,11 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 />
               </div>
 
-              {/* Configuração de Som */}
+              {/* Configuração de Som do Alarme */}
               <div className="col-span-2 mt-2 pt-2 border-t dark:border-gray-700">
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Sons de Foco
+                    Som do Alarme
                   </label>
                   <button
                     type="button"
@@ -350,17 +351,16 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
                 {pomodoroSettings.soundEnabled && (
                   <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { value: 'rain', label: 'Chuva', emoji: '🌧️' },
-                      { value: 'forest', label: 'Floresta', emoji: '🌳' },
-                      { value: 'coffee', label: 'Cafeteria', emoji: '☕' },
-                    ].map(sound => {
-                      const isSelected = (pomodoroSettings.selectedSound || 'rain') === sound.value;
+                    {ALARM_OPTIONS.map(sound => {
+                      const isSelected = (pomodoroSettings.selectedSound || 'ding') === sound.value;
                       return (
                         <button
                           key={sound.value}
                           type="button"
-                          onClick={() => updatePomodoroSettings({ selectedSound: sound.value })}
+                          onClick={() => {
+                            updatePomodoroSettings({ selectedSound: sound.value });
+                            playAlarmSound(sound.value);
+                          }}
                           className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-center ${
                             isSelected
                               ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'

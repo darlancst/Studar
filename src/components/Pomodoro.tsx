@@ -8,7 +8,7 @@ import { useReviewStore } from '@/store/reviewStore';
 import { PlayIcon, PauseIcon, ArrowPathIcon, ForwardIcon, CheckCircleIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } from 'date-fns';
 import confetti from 'canvas-confetti';
-import { playNotificationSound } from '@/utils/sounds';
+import { playAlarmSound } from '@/utils/sounds';
 import { useSettingsStore } from '@/store/settingsStore';
 
 export default function Pomodoro() {
@@ -77,9 +77,11 @@ export default function Pomodoro() {
       const prevElapsed = usePomodoroStore.getState().elapsedSeconds;
       incrementElapsedTime(totalFocusElapsed - (timeRemainingAtStartRef.current - usePomodoroStore.getState().timeRemaining));
 
-      // Toca som (se habilitado)
+      // Toca som do alarme (se habilitado)
       const pomodoroState = usePomodoroStore.getState();
-      if (pomodoroState.settings?.soundEnabled !== false) playNotificationSound();
+      if (pomodoroState.settings?.soundEnabled !== false) {
+        playAlarmSound(pomodoroState.settings?.selectedSound || 'ding');
+      }
 
       if (currentState === 'focus') {
         confetti({

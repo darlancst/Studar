@@ -53,8 +53,8 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   shortBreakDuration: 5, // 5 minutos
   longBreakDuration: 15, // 15 minutos
   longBreakInterval: 4, // A cada 4 pomodoros
-  soundEnabled: false,
-  selectedSound: 'rain',
+  soundEnabled: true,
+  selectedSound: 'ding',
 };
 
 export const usePomodoroStore = create<PomodoroStore>()(
