@@ -59,10 +59,8 @@ export default function Home() {
         const previousTab = tabHistoryRef.current[tabHistoryRef.current.length - 1];
         isPopStateNav.current = true;
         setActiveTab(previousTab);
-      } else {
-        // Se não tem histórico, re-push para evitar sair do app
-        window.history.pushState({ tab: activeTab }, '', '');
       }
+      // Se não tem histórico, deixa o browser lidar (sai do app normalmente)
     };
 
     window.addEventListener('popstate', handlePopState);
