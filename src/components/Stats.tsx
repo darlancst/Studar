@@ -435,7 +435,7 @@ export default function Stats() {
   };
 
   return (
-    <div className="space-y-4 pb-20 animate-fade-in-up">
+    <div className="space-y-4 pb-20">
       {/* 1. Widget "Agora" - Command Center */}
       <div className="w-full" id="tour-pomodoro-widget">
         {nextSubject ? (

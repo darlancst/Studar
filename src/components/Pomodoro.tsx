@@ -548,7 +548,7 @@ export default function Pomodoro() {
 
       {/* Seção de Itens Planejados para Hoje */}
       {todayPlannedItems.length > 0 && (
-        <div className="space-y-4 animate-fade-in px-2">
+        <div className="space-y-4 px-2">
           <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center">
             Planejado para Hoje
           </h3>

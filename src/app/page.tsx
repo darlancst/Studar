@@ -65,7 +65,8 @@ export default function Home() {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [activeTab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSwipeLeft = () => {
     const currentIndex = tabsOrder.indexOf(activeTab);
