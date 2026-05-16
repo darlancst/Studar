@@ -24,11 +24,11 @@ interface AgendaPanelProps {
   onCompleteReview: (id: string) => void;
   onTopicAdded: (topic: Topic) => void;
   onCloseMobile?: () => void;
-  completedScheduleItems: string[];
+  isItemCompleted: (itemId: string) => boolean;
   onToggleScheduleItem: (itemId: string) => void;
 }
 
-function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, onTopicAdded, onCloseMobile, completedScheduleItems, onToggleScheduleItem }: AgendaPanelProps) {
+function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, onTopicAdded, onCloseMobile, isItemCompleted, onToggleScheduleItem }: AgendaPanelProps) {
   const { subjects } = useSubjectStore();
   const { topics: allTopics, addTopic } = useTopicStore();
   const { generateReviewsForTopic } = useReviewStore();
@@ -98,7 +98,7 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                 const subject = subjects.find(s => s.id === item.subjectId);
                 if (!subject) return null;
 
-                const isCompleted = completedScheduleItems.includes(item.id);
+                const isCompleted = isItemCompleted(item.id);
                 // Find linked topic for this schedule item
                 const linkedTopic = topics.find(t => t.linkedScheduleItemId === item.id);
 
@@ -265,7 +265,7 @@ export default function Calendar() {
   const { topics } = useTopicStore();
   const { reviews, toggleReviewCompletion } = useReviewStore();
   const { darkMode } = useSettingsStore();
-  const { schedules, weeklyItems, blockItems, completedScheduleItems, toggleScheduleItemCompletion } = useScheduleStore();
+  const { schedules, weeklyItems, blockItems, isItemCompletedForDate, toggleScheduleItemCompletion } = useScheduleStore();
 
   // Calendar Grid Logic
   const monthStart = startOfMonth(currentMonth);
@@ -501,8 +501,8 @@ export default function Calendar() {
           plannedItems={dayPlannedItems}
           onCompleteReview={handleToggleReview}
           onTopicAdded={handleTopicAdded}
-          completedScheduleItems={completedScheduleItems}
-          onToggleScheduleItem={toggleScheduleItemCompletion}
+          isItemCompleted={(itemId) => isItemCompletedForDate(itemId, format(selectedDate, 'yyyy-MM-dd'))}
+          onToggleScheduleItem={(itemId) => toggleScheduleItemCompletion(itemId, format(selectedDate, 'yyyy-MM-dd'))}
         />
       </div>
 
@@ -518,8 +518,8 @@ export default function Calendar() {
               onCompleteReview={handleToggleReview}
               onTopicAdded={handleTopicAdded}
               onCloseMobile={() => setShowMobileAgenda(false)}
-              completedScheduleItems={completedScheduleItems}
-              onToggleScheduleItem={toggleScheduleItemCompletion}
+              isItemCompleted={(itemId) => isItemCompletedForDate(itemId, format(selectedDate, 'yyyy-MM-dd'))}
+              onToggleScheduleItem={(itemId) => toggleScheduleItemCompletion(itemId, format(selectedDate, 'yyyy-MM-dd'))}
             />
           </div>
         </div>

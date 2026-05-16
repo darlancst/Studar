@@ -3,6 +3,11 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { firebaseSync } from '@/services/firebaseSync';
 
+export interface CompletedScheduleItem {
+    itemId: string;
+    date: string; // ISO date string YYYY-MM-DD
+}
+
 export type ScheduleMode = 'weekly' | 'block';
 
 export interface Schedule {
@@ -56,9 +61,10 @@ interface ScheduleState {
     removeBlockItem: (id: string) => void;
     updateBlockItem: (id: string, item: Partial<BlockScheduleItem>) => void;
 
-    // Completed Items Tracking
-    completedScheduleItems: string[]; // IDs of completed schedule items (weekly or block)
-    toggleScheduleItemCompletion: (itemId: string) => void;
+    // Completed Items Tracking (per-date)
+    completedScheduleItems: CompletedScheduleItem[];
+    toggleScheduleItemCompletion: (itemId: string, date?: string) => void;
+    isItemCompletedForDate: (itemId: string, date: string) => boolean;
 
     resetSchedule: () => void;
 }
@@ -183,13 +189,24 @@ export const useScheduleStore = create<ScheduleState>()(
 
             completedScheduleItems: [],
 
-            toggleScheduleItemCompletion: (itemId) => {
+            isItemCompletedForDate: (itemId, date) => {
+                return get().completedScheduleItems.some(
+                    item => item.itemId === itemId && item.date === date
+                );
+            },
+
+            toggleScheduleItemCompletion: (itemId, date) => {
+                const dateStr = date || new Date().toISOString().split('T')[0];
                 set((state) => {
-                    const isCompleted = state.completedScheduleItems.includes(itemId);
+                    const isCompleted = state.completedScheduleItems.some(
+                        item => item.itemId === itemId && item.date === dateStr
+                    );
                     return {
                         completedScheduleItems: isCompleted
-                            ? state.completedScheduleItems.filter(id => id !== itemId)
-                            : [...state.completedScheduleItems, itemId]
+                            ? state.completedScheduleItems.filter(
+                                item => !(item.itemId === itemId && item.date === dateStr)
+                              )
+                            : [...state.completedScheduleItems, { itemId, date: dateStr }]
                     };
                 });
                 if (typeof window !== 'undefined') {
@@ -213,6 +230,14 @@ export const useScheduleStore = create<ScheduleState>()(
         {
             name: 'schedule-storage',
             storage: storage,
+            version: 1,
+            migrate: (persistedState: any, version: number) => {
+                if (version === 0) {
+                    // Migração: limpar completedScheduleItems antigos (eram string[], agora são {itemId, date}[])
+                    persistedState.completedScheduleItems = [];
+                }
+                return persistedState;
+            },
         }
     )
 );

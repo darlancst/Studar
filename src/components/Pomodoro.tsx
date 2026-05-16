@@ -37,7 +37,7 @@ export default function Pomodoro() {
 
   const { generateReviewsForTopic } = useReviewStore();
 
-  const { schedules, weeklyItems, blockItems, completedScheduleItems, toggleScheduleItemCompletion } = useScheduleStore();
+  const { schedules, weeklyItems, blockItems, isItemCompletedForDate, toggleScheduleItemCompletion } = useScheduleStore();
 
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [selectedTopicOverrides, setSelectedTopicOverrides] = useState<Record<string, string>>({});
@@ -177,7 +177,8 @@ export default function Pomodoro() {
     const allItems = [...plannedItems, ...avulsoItems];
 
     return allItems.map(item => {
-      const isCompleted = !item.isAvulso && completedScheduleItems.includes(item.id);
+      const todayStr = format(new Date(), 'yyyy-MM-dd');
+      const isCompleted = !item.isAvulso && isItemCompletedForDate(item.id, todayStr);
       return { item, status: isCompleted ? 'completed' : 'pending' };
     }).sort((a, b) => {
       // 1. Sort by status (pending first)
@@ -200,7 +201,7 @@ export default function Pomodoro() {
 
       return 0;
     });
-  }, [schedules, weeklyItems, blockItems, topics, completedScheduleItems]);
+  }, [schedules, weeklyItems, blockItems, topics, isItemCompletedForDate]);
 
   // Sync with active session from store (Context API)
   useEffect(() => {
@@ -385,7 +386,7 @@ export default function Pomodoro() {
     if (!targetId) return;
 
     // Marca o bloco como concluído
-    toggleScheduleItemCompletion(targetId);
+    toggleScheduleItemCompletion(targetId, format(new Date(), 'yyyy-MM-dd'));
 
     // Feedback visual
     confetti({

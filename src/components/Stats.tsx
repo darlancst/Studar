@@ -84,7 +84,7 @@ export default function Stats() {
   const { studyDates: dates } = useDatesStore();
   const { weeklyGoal } = useSettingsStore();
   const { simulados } = useSimuladosStore();
-  const { schedules, weeklyItems, blockItems, completedScheduleItems } = useScheduleStore();
+  const { schedules, weeklyItems, blockItems, isItemCompletedForDate } = useScheduleStore();
   const isDarkMode = useDarkMode();
 
   const [period, setPeriod] = useState<StatsPeriod>('week');
@@ -154,7 +154,8 @@ export default function Stats() {
     });
 
     // Filter out completed items
-    plannedItems = plannedItems.filter(item => !completedScheduleItems.includes(item.id));
+    const todayStr = format(today, 'yyyy-MM-dd');
+    plannedItems = plannedItems.filter(item => !isItemCompletedForDate(item.id, todayStr));
 
     // Ordenar por horário
     plannedItems.sort((a, b) => {

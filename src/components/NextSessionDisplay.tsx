@@ -6,7 +6,7 @@ import { parseISO, isWithinInterval, startOfDay, getDay, isSameDay, format } fro
 import { ptBR } from 'date-fns/locale';
 
 export default function NextSessionDisplay() {
-    const { schedules, weeklyItems, blockItems, completedScheduleItems } = useScheduleStore();
+    const { schedules, weeklyItems, blockItems, isItemCompletedForDate } = useScheduleStore();
     const { subjects } = useSubjectStore();
     const { topics } = useTopicStore();
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -58,7 +58,7 @@ export default function NextSessionDisplay() {
 
         // 1. Check for CURRENT session (now is within start-end)
         const currentItem = todayItems.find(item => {
-            if (completedScheduleItems.includes(item.id)) return false;
+            if (isItemCompletedForDate(item.id, format(today, 'yyyy-MM-dd'))) return false;
             if (item.startTime && item.endTime) {
                 return currentTimeString >= item.startTime && currentTimeString <= item.endTime;
             }
@@ -78,7 +78,7 @@ export default function NextSessionDisplay() {
 
         // 2. Check for NEXT session today
         const upcomingItems = todayItems.filter(item => {
-            if (completedScheduleItems.includes(item.id)) return false;
+            if (isItemCompletedForDate(item.id, format(today, 'yyyy-MM-dd'))) return false;
             if (item.startTime) {
                 return item.startTime > currentTimeString;
             }
@@ -123,7 +123,7 @@ export default function NextSessionDisplay() {
 
         return null;
 
-    }, [schedules, weeklyItems, blockItems, completedScheduleItems, subjects, currentTime]);
+    }, [schedules, weeklyItems, blockItems, isItemCompletedForDate, subjects, currentTime]);
 
     if (!nextSession) {
         return null;

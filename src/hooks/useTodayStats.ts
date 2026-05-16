@@ -2,16 +2,17 @@ import { useMemo } from 'react';
 import { useReviewStore } from '@/store/reviewStore';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useTopicStore } from '@/store/topicStore';
-import { startOfDay, isWithinInterval, parseISO, getDay, isSameDay, isValid } from 'date-fns';
+import { startOfDay, isWithinInterval, parseISO, getDay, isSameDay, isValid, format } from 'date-fns';
 
 export function useTodayStats() {
     const { getPendingReviewsByDate } = useReviewStore();
-    const { schedules, weeklyItems, blockItems, completedScheduleItems } = useScheduleStore();
+    const { schedules, weeklyItems, blockItems, isItemCompletedForDate } = useScheduleStore();
     const { topics } = useTopicStore();
 
     const stats = useMemo(() => {
         const today = new Date();
         if (!isValid(today)) return { reviews: 0, planned: 0, completed: 0, remaining: 0 };
+        const todayStr = format(today, 'yyyy-MM-dd');
 
         // 1. Pending Reviews
         const pendingReviews = getPendingReviewsByDate ? getPendingReviewsByDate(today) : [];
@@ -41,7 +42,7 @@ export function useTodayStats() {
 
                 // Check completion
                 items.forEach(item => {
-                    if (completedScheduleItems && completedScheduleItems.includes(item.id)) {
+                    if (isItemCompletedForDate(item.id, todayStr)) {
                         completedCount++;
                     }
                 });
@@ -63,7 +64,7 @@ export function useTodayStats() {
 
                 // Check completion
                 items.forEach(item => {
-                    if (completedScheduleItems && completedScheduleItems.includes(item.id)) {
+                    if (isItemCompletedForDate(item.id, todayStr)) {
                         completedCount++;
                     }
                 });
@@ -85,7 +86,7 @@ export function useTodayStats() {
             completed: completedCount,
             remaining: Math.max(0, plannedCount - completedCount)
         };
-    }, [getPendingReviewsByDate, schedules, weeklyItems, blockItems, completedScheduleItems, topics]);
+    }, [getPendingReviewsByDate, schedules, weeklyItems, blockItems, isItemCompletedForDate, topics]);
 
     return stats;
 }
