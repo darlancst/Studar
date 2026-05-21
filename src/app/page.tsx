@@ -46,48 +46,60 @@ export default function Home() {
     if (!isPopStateNav.current) {
       // Navegação normal (clique/swipe): adiciona ao histórico do browser
       tabHistoryRef.current.push(tab);
-      window.history.pushState({ tab }, '', '');
+      window.history.pushState({ tab, modalCount: 0 }, '', '');
     }
     isPopStateNav.current = false;
 
     setActiveTab(tab);
   }, [activeTab]);
 
-  // Botão voltar do celular: volta para a aba anterior
+  // Botão voltar do celular: volta para a aba anterior ou fecha janelas abertas
   useEffect(() => {
-    // Push estado inicial ao montar
-    window.history.replaceState({ tab: 'stats' }, '', '');
+    // Inicializa o estado de histórico inicial se necessário
+    if (typeof window !== 'undefined') {
+      const currentState = window.history.state;
+      if (!currentState || !currentState.tab) {
+        window.history.replaceState({ tab: 'stats', modalCount: 0 }, '', '');
+      }
+    }
 
     const handlePopState = (e: PopStateEvent) => {
+      const state = e.state || { tab: 'stats', modalCount: 0 };
+      const targetTab = state.tab || 'stats';
+      const targetModalCount = state.modalCount || 0;
+
       const win = window as any;
       const stack = win._modalCloseStack;
 
-      // Se há um modal aberto, fecha ele e desfaz a navegação
-      if (stack && stack.length > 0) {
+      // Se o stack de modais abertos for maior que o modalCount esperado pelo histórico,
+      // fecha os modais excedentes (um a um por popstate)
+      if (stack && stack.length > targetModalCount) {
         const handler = stack.pop();
-        if (handler) handler();
-
-        // Re-push o estado atual da aba para desfazer o "back" do browser
-        // e manter o usuário na mesma aba
-        const currentTab = tabHistoryRef.current[tabHistoryRef.current.length - 1];
-        window.history.pushState({ tab: currentTab }, '', '');
+        if (handler) {
+          handler();
+        }
         return;
       }
 
-      // Sem modais: navegação normal entre abas
-      if (tabHistoryRef.current.length > 1) {
-        tabHistoryRef.current.pop(); // Remove a aba atual
-        const previousTab = tabHistoryRef.current[tabHistoryRef.current.length - 1];
+      // Sem modais excedentes para fechar: trata como navegação normal entre abas
+      if (targetTab !== activeTab) {
+        // Encontra no tabHistory se existe para atualizar nosso ref local
+        const tabIndex = tabHistoryRef.current.indexOf(targetTab);
+        if (tabIndex !== -1) {
+          // Trunca o histórico local até o índice da aba encontrada
+          tabHistoryRef.current = tabHistoryRef.current.slice(0, tabIndex + 1);
+        } else {
+          tabHistoryRef.current.push(targetTab);
+        }
         isPopStateNav.current = true;
-        setActiveTab(previousTab);
+        setActiveTab(targetTab);
       }
-      // Se não tem histórico, deixa o browser lidar (sai do app normalmente)
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeTab]);
 
   const handleSwipeLeft = () => {
     const currentIndex = tabsOrder.indexOf(activeTab);
