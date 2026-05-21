@@ -13,6 +13,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { Topic, Review } from '@/types';
+import { useRegisterModal } from '@/hooks/useRegisterModal';
 
 // --- Agenda Panel Component ---
 
@@ -255,6 +256,8 @@ export default function Calendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showMobileAgenda, setShowMobileAgenda] = useState(false);
+
+  useRegisterModal(showMobileAgenda, () => setShowMobileAgenda(false));
 
   // Data states
   const [dayTopics, setDayTopics] = useState<Topic[]>([]);

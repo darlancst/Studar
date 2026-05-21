@@ -21,12 +21,17 @@ import NextSessionDisplay from '@/components/NextSessionDisplay';
 import { TabName } from '@/types';
 
 import useSwipe from '@/hooks/useSwipe';
+import { useRegisterModal } from '@/hooks/useRegisterModal';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabName>('stats');
   const [showSubjectManager, setShowSubjectManager] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const isDarkMode = useSettingsStore((state) => state.darkMode);
+
+  // Register main modals with back button handler
+  useRegisterModal(showSubjectManager, () => setShowSubjectManager(false));
+  useRegisterModal(showSettings, () => setShowSettings(false));
 
   // Ordem das abas para navegação via swipe
   const tabsOrder: TabName[] = ['stats', 'calendar', 'schedule', 'pomodoro', 'simulados'];
@@ -54,6 +59,21 @@ export default function Home() {
     window.history.replaceState({ tab: 'stats' }, '', '');
 
     const handlePopState = (e: PopStateEvent) => {
+      const win = window as any;
+
+      if (win.ignoreNextPopState) {
+        win.ignoreNextPopState = false;
+        return;
+      }
+
+      if (win.modalCloseHandlers && win.modalCloseHandlers.length > 0) {
+        const handler = win.modalCloseHandlers.pop();
+        if (handler) {
+          handler();
+        }
+        return;
+      }
+
       if (tabHistoryRef.current.length > 1) {
         tabHistoryRef.current.pop(); // Remove a aba atual
         const previousTab = tabHistoryRef.current[tabHistoryRef.current.length - 1];

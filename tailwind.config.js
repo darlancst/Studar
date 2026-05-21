@@ -36,6 +36,12 @@ module.exports = {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         border: 'hsl(var(--border))',
+        gray: {
+          700: 'rgb(var(--gray-700) / <alpha-value>)',
+          800: 'rgb(var(--gray-800) / <alpha-value>)',
+          900: 'rgb(var(--gray-900) / <alpha-value>)',
+          950: 'rgb(var(--gray-950) / <alpha-value>)',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

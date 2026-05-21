@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRegisterModal } from '@/hooks/useRegisterModal';
 import { createPortal } from 'react-dom';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useSubjectStore } from '@/store/subjectStore';
@@ -15,6 +16,8 @@ export default function WeeklyScheduleEditor() {
     const [startTime, setStartTime] = useState('08:00');
     const [endTime, setEndTime] = useState('09:00');
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    useRegisterModal(isModalOpen, () => setIsModalOpen(false));
 
     const weekDays = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 

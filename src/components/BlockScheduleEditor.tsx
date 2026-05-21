@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRegisterModal } from '@/hooks/useRegisterModal';
 import { createPortal } from 'react-dom';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useSubjectStore } from '@/store/subjectStore';
@@ -16,6 +17,8 @@ export default function BlockScheduleEditor() {
     const [description, setDescription] = useState('');
     const [restDays, setRestDays] = useState<number[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    useRegisterModal(isModalOpen, () => setIsModalOpen(false));
 
     const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 

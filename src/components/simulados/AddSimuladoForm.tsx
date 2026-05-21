@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRegisterModal } from '@/hooks/useRegisterModal';
 import { createPortal } from 'react-dom';
 import { useSimuladosStore } from '@/store/simuladosStore';
 import { useSubjectStore } from '@/store/subjectStore';
@@ -17,6 +18,7 @@ interface AddSimuladoFormProps {
 }
 
 export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimuladoFormProps) {
+  useRegisterModal(true, onClose);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [subjectId, setSubjectId] = useState('');
   const [topicId, setTopicId] = useState('');

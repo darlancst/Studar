@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRegisterModal } from '@/hooks/useRegisterModal';
 import {
   XMarkIcon,
   SunIcon,
@@ -34,6 +35,9 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetAction, setResetAction] = useState<'stats' | 'all'>('all');
   const [showVacationModal, setShowVacationModal] = useState(false);
+
+  useRegisterModal(showResetConfirm, () => setShowResetConfirm(false));
+  useRegisterModal(showVacationModal, () => setShowVacationModal(false));
   const [vacationStartDate, setVacationStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [vacationEndDate, setVacationEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const { user } = useAuthStore();

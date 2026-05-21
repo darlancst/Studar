@@ -24,28 +24,40 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 199 89% 48%;
     --radius: 0.75rem;
+
+    /* Default Tailwind Grays for Light Mode */
+    --gray-700: 55 65 81;
+    --gray-800: 31 41 55;
+    --gray-900: 17 24 39;
+    --gray-950: 3 7 18;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 0 0% 0%; /* Absolute black #000000 */
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 0 0% 0%; /* Absolute black #000000 */
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 0 0% 0%; /* Absolute black #000000 */
     --popover-foreground: 210 40% 98%;
     --primary: 199 89% 48%;
     --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 0 0% 5%; /* Ultra dark gray #0d0d0d */
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 0 0% 5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 0 0% 5%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 0 0% 12%; /* Very dark gray borders */
+    --input: 0 0% 12%;
     --ring: 199 89% 48%;
+
+    /* OLED optimized grays */
+    --gray-700: 24 24 24;    /* Subtle borders/text #181818 */
+    --gray-800: 10 10 10;    /* Card overlay surfaces #0a0a0a */
+    --gray-900: 0 0 0;       /* Main surfaces #000000 */
+    --gray-950: 0 0 0;       /* Base background #000000 */
   }
 }
 
@@ -70,10 +82,7 @@
 
   .dark body {
     @apply bg-gray-950 text-gray-100;
-    background-image:
-      radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.12) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, rgba(14, 165, 233, 0.05) 0px, transparent 50%);
+    background-image: none; /* No radial gradients on OLED black background */
   }
 }
 

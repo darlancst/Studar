@@ -6,6 +6,7 @@ import BlockScheduleEditor from './BlockScheduleEditor';
 import { PlusIcon, TrashIcon, CalendarDaysIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useRegisterModal } from '@/hooks/useRegisterModal';
 
 export default function ScheduleManager() {
     const {
@@ -17,6 +18,8 @@ export default function ScheduleManager() {
     } = useScheduleStore();
 
     const [showCreateForm, setShowCreateForm] = useState(false);
+
+    useRegisterModal(showCreateForm, () => setShowCreateForm(false));
     const [newName, setNewName] = useState('');
     const [newStartDate, setNewStartDate] = useState('');
     const [newEndDate, setNewEndDate] = useState('');
