@@ -60,13 +60,6 @@ export default function Home() {
 
     const handlePopState = (e: PopStateEvent) => {
       const win = window as any;
-
-      // Ignorar popstate gerado pelo nosso próprio history.back() na limpeza do modal
-      if (win._skipPopStateCount > 0) {
-        win._skipPopStateCount--;
-        return;
-      }
-
       const stack = win._modalCloseStack;
 
       // Se há um modal aberto, fecha ele.
@@ -78,9 +71,11 @@ export default function Home() {
         return;
       }
 
-      // Se caímos em uma entrada de modal órfã (modal já fechado, mas entrada ficou no histórico)
+      // Se caímos em uma entrada de modal órfã (modal já fechado mas a entrada ficou)
+      // Isso não deve acontecer com a nova abordagem replaceState, mas é uma salvaguarda.
       if (e.state && e.state._modal) {
-        window.history.back();
+        // Substitui a entrada órfã pela aba atual para não perder o estado
+        window.history.replaceState({ tab: tabHistoryRef.current[tabHistoryRef.current.length - 1] }, '', '');
         return;
       }
 
