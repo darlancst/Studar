@@ -228,11 +228,11 @@ export default function Home() {
           </div>
           <div style={{ display: activeTab === 'calendar' ? 'block' : 'none' }}>
             <div className="pb-20 sm:pb-0">
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                 <h2 className="text-2xl font-bold dark:text-white">Calendário</h2>
                 <button
                   onClick={() => setShowSubjectManager(true)}
-                  className="bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-700 transition-colors shadow-sm text-xs sm:text-sm font-medium"
+                  className="w-full sm:w-auto bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm text-center"
                 >
                   Matérias e Tópicos
                 </button>

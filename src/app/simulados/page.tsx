@@ -107,7 +107,7 @@ const SimuladosPage = () => {
         <h1 className="text-2xl font-bold">Meus Simulados</h1>
         <button
           onClick={handleAddNew}
-          className="w-full sm:w-auto bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm"
+          className="w-full sm:w-auto bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm flex items-center justify-center text-center"
         >
           Adicionar Simulado
         </button>

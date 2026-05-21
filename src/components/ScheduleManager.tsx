@@ -55,7 +55,7 @@ export default function ScheduleManager() {
                 <button
                     id="tour-schedule-btn"
                     onClick={() => setShowCreateForm(true)}
-                    className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 flex items-center gap-2 text-sm font-medium shadow-sm transition-colors"
+                    className="w-full sm:w-auto bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 flex items-center justify-center gap-2 text-sm font-medium shadow-sm transition-colors"
                 >
                     <PlusIcon className="h-5 w-5" />
                     Novo Cronograma
