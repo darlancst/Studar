@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, BookOpenIcon } from '@heroicons/react/24/outline';
 import { useSettingsStore } from '@/store/settingsStore';
 import TabBar from '@/components/TabBar';
 import Stats from '@/components/Stats';
@@ -232,9 +232,10 @@ export default function Home() {
                 <h2 className="text-2xl font-bold dark:text-white">Calendário</h2>
                 <button
                   onClick={() => setShowSubjectManager(true)}
-                  className="w-full sm:w-auto bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm text-center"
+                  className="w-full sm:w-auto bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm flex items-center justify-center gap-2 text-center"
                 >
-                  Matérias e Tópicos
+                  <BookOpenIcon className="h-5 w-5" />
+                  Gerenciar Matérias
                 </button>
               </div>
               <Calendar />

@@ -11,6 +11,8 @@ import SimuladosChart from '@/components/simulados/SimuladosChart';
 import Pagination from '@/components/Pagination';
 import { useTopicStore } from '@/store/topicStore';
 
+import { PlusIcon } from '@heroicons/react/24/outline';
+
 const ITEMS_PER_PAGE = 5;
 
 const SimuladosPage = () => {
@@ -107,8 +109,9 @@ const SimuladosPage = () => {
         <h1 className="text-2xl font-bold">Meus Simulados</h1>
         <button
           onClick={handleAddNew}
-          className="w-full sm:w-auto bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm flex items-center justify-center text-center"
+          className="w-full sm:w-auto bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm flex items-center justify-center gap-2 text-center"
         >
+          <PlusIcon className="h-5 w-5" />
           Adicionar Simulado
         </button>
       </div>
