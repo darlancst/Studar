@@ -46,7 +46,7 @@ export default function Home() {
     if (!isPopStateNav.current) {
       // Navegação normal (clique/swipe): adiciona ao histórico do browser
       tabHistoryRef.current.push(tab);
-      window.history.pushState({ tab, modalCount: 0 }, '', '');
+      window.history.pushState({ tab }, '', '');
     }
     isPopStateNav.current = false;
 
@@ -59,17 +59,26 @@ export default function Home() {
     if (typeof window !== 'undefined') {
       const currentState = window.history.state;
       if (!currentState || !currentState.tab) {
-        window.history.replaceState({ tab: 'stats', modalCount: 0 }, '', '');
+        window.history.replaceState({ tab: 'stats' }, '', '');
       }
     }
 
+    const getModalCountFromHash = (hash: string): number => {
+      if (!hash || !hash.startsWith('#modal-')) return 0;
+      const count = parseInt(hash.replace('#modal-', ''), 10);
+      return isNaN(count) ? 0 : count;
+    };
+
     const handlePopState = (e: PopStateEvent) => {
-      const state = e.state || { tab: 'stats', modalCount: 0 };
+      const state = e.state || { tab: 'stats' };
       const targetTab = state.tab || 'stats';
-      const targetModalCount = state.modalCount || 0;
 
       const win = window as any;
       const stack = win._modalCloseStack;
+
+      // Parse targetModalCount a partir do hash da URL atual
+      const currentHash = typeof window !== 'undefined' ? window.location.hash : '';
+      const targetModalCount = getModalCountFromHash(currentHash);
 
       // Se o stack de modais abertos for maior que o modalCount esperado pelo histórico,
       // fecha os modais excedentes (um a um por popstate)

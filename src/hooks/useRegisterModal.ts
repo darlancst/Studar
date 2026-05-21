@@ -19,19 +19,10 @@ export function useRegisterModal(isOpen: boolean, onClose: () => void) {
     const win = window as any;
     if (!win._modalCloseStack) win._modalCloseStack = [];
 
-    const currentState = window.history.state || { tab: 'stats', modalCount: 0 };
-    const newModalCount = (currentState.modalCount || 0) + 1;
+    const newModalCount = win._modalCloseStack.length + 1;
 
-    // Push history state to indicate a modal is open
-    window.history.pushState(
-      {
-        tab: currentState.tab || 'stats',
-        modalCount: newModalCount,
-        isModal: true,
-      },
-      '',
-      ''
-    );
+    // Push hash to history to indicate a modal is open
+    window.location.hash = `modal-${newModalCount}`;
 
     const handler = () => {
       onCloseRef.current();
@@ -50,13 +41,15 @@ export function useRegisterModal(isOpen: boolean, onClose: () => void) {
       }
 
       // If closed manually (not via popstate/back button),
-      // the history state will still have the modal state.
-      // We go back in history to remove the modal state entry.
-      const currState = window.history.state;
-      if (currState && currState.isModal && currState.modalCount >= registeredModalCount) {
+      // the hash will still be `#modal-X`.
+      // We go back in history to remove the hash.
+      const currentHash = window.location.hash;
+      const expectedHash = `#modal-${registeredModalCount}`;
+      if (currentHash === expectedHash) {
         window.history.back();
       }
     };
   }, [isOpen]);
 }
+
 
