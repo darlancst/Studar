@@ -60,20 +60,21 @@ export default function Home() {
 
     const handlePopState = (e: PopStateEvent) => {
       const win = window as any;
+      const stack = win._modalCloseStack;
 
-      if (win.ignoreNextPopState) {
-        win.ignoreNextPopState = false;
+      // Se há um modal aberto, fecha ele e desfaz a navegação
+      if (stack && stack.length > 0) {
+        const handler = stack.pop();
+        if (handler) handler();
+
+        // Re-push o estado atual da aba para desfazer o "back" do browser
+        // e manter o usuário na mesma aba
+        const currentTab = tabHistoryRef.current[tabHistoryRef.current.length - 1];
+        window.history.pushState({ tab: currentTab }, '', '');
         return;
       }
 
-      if (win.modalCloseHandlers && win.modalCloseHandlers.length > 0) {
-        const handler = win.modalCloseHandlers.pop();
-        if (handler) {
-          handler();
-        }
-        return;
-      }
-
+      // Sem modais: navegação normal entre abas
       if (tabHistoryRef.current.length > 1) {
         tabHistoryRef.current.pop(); // Remove a aba atual
         const previousTab = tabHistoryRef.current[tabHistoryRef.current.length - 1];
