@@ -15,6 +15,7 @@ export default function Pomodoro() {
   // Referência para o timestamp de quando o timer começou/retomou a contar
   const timerStartRef = useRef<number>(0);
   const timeRemainingAtStartRef = useRef<number>(0);
+  const reportedElapsedSecondsRef = useRef<number>(0);
   const { subjects } = useSubjectStore();
   const { topics, addTopic } = useTopicStore();
   const {
@@ -56,6 +57,7 @@ export default function Pomodoro() {
     if (isRunning) {
       timerStartRef.current = Date.now();
       timeRemainingAtStartRef.current = usePomodoroStore.getState().timeRemaining;
+      reportedElapsedSecondsRef.current = 0;
     }
   }, [isRunning, currentState]);
 
@@ -65,8 +67,8 @@ export default function Pomodoro() {
 
     const now = Date.now();
     const elapsedMs = now - timerStartRef.current;
-    const elapsedSeconds = Math.floor(elapsedMs / 1000);
-    const newTimeRemaining = timeRemainingAtStartRef.current - elapsedSeconds;
+    const elapsedSecondsFromStart = Math.floor(elapsedMs / 1000);
+    const newTimeRemaining = timeRemainingAtStartRef.current - elapsedSecondsFromStart;
 
     if (newTimeRemaining <= 0) {
       // Timer terminou (pode ter terminado enquanto a tela estava desligada)
@@ -74,8 +76,11 @@ export default function Pomodoro() {
 
       // Atualiza o tempo de estudo decorrido
       const totalFocusElapsed = timeRemainingAtStartRef.current; // todo o tempo restante foi consumido
-      const prevElapsed = usePomodoroStore.getState().elapsedSeconds;
-      incrementElapsedTime(totalFocusElapsed - (timeRemainingAtStartRef.current - usePomodoroStore.getState().timeRemaining));
+      const deltaSeconds = totalFocusElapsed - reportedElapsedSecondsRef.current;
+      if (deltaSeconds > 0) {
+        incrementElapsedTime(deltaSeconds);
+        reportedElapsedSecondsRef.current = totalFocusElapsed;
+      }
 
       // Toca som do alarme (se habilitado)
       const pomodoroState = usePomodoroStore.getState();
@@ -94,10 +99,10 @@ export default function Pomodoro() {
       skipToNext(true);
     } else {
       // Atualiza o tempo restante e o tempo de estudo decorrido
-      const prevTimeRemaining = usePomodoroStore.getState().timeRemaining;
-      const secondsPassed = prevTimeRemaining - newTimeRemaining;
-      if (secondsPassed > 0) {
-        incrementElapsedTime(secondsPassed);
+      const deltaSeconds = elapsedSecondsFromStart - reportedElapsedSecondsRef.current;
+      if (deltaSeconds > 0) {
+        incrementElapsedTime(deltaSeconds);
+        reportedElapsedSecondsRef.current = elapsedSecondsFromStart;
       }
       usePomodoroStore.setState({ timeRemaining: newTimeRemaining });
     }

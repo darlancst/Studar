@@ -1,21 +1,26 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Custom hook to register modals to a global handler stack.
+ * Custom hook para registrar modais no handler global de botão voltar.
  *
- * Strategy (simples, sem flags de coordenação):
- * - Quando modal abre: salva o estado atual, empilha { _modal: true }.
- * - Botão voltar: browser vai para a entrada anterior; popstate fecha o modal e retorna sem navegar tabs.
- * - Fechamento manual (X): cleanup verifica se o estado atual ainda é { _modal: true };
- *   se sim, substitui pelo estado anterior via replaceState (síncrono, sem disparar popstate).
- *   Se não (back button já consumiu a entrada), não faz nada.
+ * Estratégia (sentinel único para todos os modais):
+ * - Quando o PRIMEIRO modal abre: salva o estado atual e empilha UMA entrada
+ *   sentinel { _modalSentinel: true } no histórico.
+ * - Modais subsequentes: apenas se registram no stack, sem empilhar mais entradas.
+ * - Botão voltar: o browser consome o sentinel → popstate fecha o modal do topo
+ *   e re-empilha o sentinel se houver mais modais abertos.
+ * - Fechamento manual (X): se for o último modal, substitui o sentinel pela
+ *   entrada anterior via replaceState (síncrono, sem disparar popstate).
  */
+
+// Contagem global de modais abertos (module-level, persiste entre renders)
+let openModalCount = 0;
+// Estado do histórico anterior ao primeiro modal
+let stateBeforeModals: any = null;
+
 export function useRegisterModal(isOpen: boolean, onClose: () => void) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
-
-  // Estado do histórico antes de abrir o modal
-  const stateBeforeModal = useRef<any>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -24,33 +29,44 @@ export function useRegisterModal(isOpen: boolean, onClose: () => void) {
     const win = window as any;
     if (!win._modalCloseStack) win._modalCloseStack = [];
 
-    // Salva o estado atual antes de empilhar a entrada do modal
-    stateBeforeModal.current = window.history.state ?? { tab: 'stats' };
-
     const handler = () => {
       onCloseRef.current();
     };
 
-    // Empilha uma entrada dummy para este modal
-    window.history.pushState({ _modal: true }, '', '');
+    openModalCount++;
+    if (openModalCount === 1) {
+      // Primeiro modal: salva estado atual e empilha sentinel
+      stateBeforeModals = window.history.state ?? { tab: 'stats' };
+      window.history.pushState({ _modalSentinel: true }, '', '');
+    }
+    // Modais subsequentes não empilham mais entradas
+
     win._modalCloseStack.push(handler);
 
     return () => {
-      // Remove o handler do stack
+      // Remove handler do stack
       const index = win._modalCloseStack.indexOf(handler);
       if (index !== -1) {
         win._modalCloseStack.splice(index, 1);
       }
+      openModalCount--;
 
-      // Verifica o estado ATUAL do histórico:
-      // - Se ainda é { _modal: true }: o modal foi fechado manualmente (X).
-      //   Substitui pela entrada anterior (replaceState é síncrono, não dispara popstate).
-      // - Se não é { _modal: true }: o botão voltar já consumiu a entrada dummy.
-      //   O popstate já foi tratado. Não faz nada.
-      const currState = window.history.state;
-      if (currState && currState._modal) {
-        window.history.replaceState(stateBeforeModal.current, '', '');
+      // Se fechado pelo botão voltar: o popstate handler já gerencia o sentinel
+      if (win._modalClosedByBack) {
+        win._modalClosedByBack = false;
+        return;
       }
+
+      // Fechado manualmente (X, clique fora, etc.)
+      if (openModalCount === 0) {
+        // Último modal fechado: remove o sentinel substituindo pelo estado anterior
+        const currState = window.history.state;
+        if (currState && currState._modalSentinel) {
+          window.history.replaceState(stateBeforeModals, '', '');
+        }
+        stateBeforeModals = null;
+      }
+      // Se ainda há modais abertos, o sentinel permanece para o próximo "voltar"
     };
   }, [isOpen]);
 }

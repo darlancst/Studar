@@ -63,15 +63,20 @@ export default function Home() {
       const stack = win._modalCloseStack;
 
       // Se há modal aberto: fecha e NÃO navega tabs.
-      // O browser já voltou da entrada dummy { _modal: true } para a entrada da aba.
       if (stack && stack.length > 0) {
+        win._modalClosedByBack = true;
         const handler = stack.pop();
         if (handler) handler();
+
+        // Se ainda restam modais abertos no stack, re-empilha o sentinel
+        if (stack.length > 0) {
+          window.history.pushState({ _modalSentinel: true }, '', '');
+        }
         return;
       }
 
-      // Entrada órfã de modal (sem modal aberto mas state é _modal): substituir pelo tab atual
-      if (e.state && e.state._modal) {
+      // Entrada órfã de modal (sem modal aberto mas state é sentinel): substituir pelo tab atual
+      if (e.state && (e.state._modal || e.state._modalSentinel)) {
         const currentTab = tabHistoryRef.current[tabHistoryRef.current.length - 1] ?? 'stats';
         window.history.replaceState({ tab: currentTab }, '', '');
         return;
