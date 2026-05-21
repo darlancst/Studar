@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { supabase } from '@/lib/supabaseClient';
 
 export interface AuthUser {
   id: string;
@@ -17,9 +18,9 @@ interface AuthState {
   setUser: (user: AuthUser | null, token: string | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   
-  // Funções de API
+  // Funções de API conectadas ao Supabase
   signup: (email: string, password: string, name?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   verifyToken: () => Promise<void>;
@@ -47,14 +48,20 @@ export const useAuthStore = create<AuthState>()(
 
       setError: (error) => set({ error, loading: false }),
 
-      logout: () => {
+      logout: async () => {
+        try {
+          await supabase.auth.signOut();
+        } catch (e) {
+          console.error('Erro no logout do Supabase:', e);
+        }
+        
         set({
           user: null,
           token: null,
           isAuthenticated: false,
           error: null,
         });
-        // Limpar localStorage (opcional)
+        // Limpar localStorage
         if (typeof window !== 'undefined') {
           localStorage.removeItem('auth-storage');
         }
@@ -63,19 +70,25 @@ export const useAuthStore = create<AuthState>()(
       signup: async (email, password, name) => {
         set({ loading: true, error: null });
         try {
-          const res = await fetch('/api/auth/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, name }),
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { name: name || '' },
+            },
           });
 
-          const data = await res.json();
+          if (error) throw new Error(error.message);
+          if (!data.user) throw new Error('Erro ao criar conta');
 
-          if (!res.ok) {
-            throw new Error(data.error || 'Erro ao criar conta');
-          }
+          const token = data.session?.access_token || null;
 
-          get().setUser(data.user, data.token);
+          get().setUser({
+            id: data.user.id,
+            email: data.user.email || email,
+            name: name || '',
+          }, token);
+          
           set({ loading: false });
         } catch (error: any) {
           set({ error: error.message, loading: false });
@@ -86,19 +99,20 @@ export const useAuthStore = create<AuthState>()(
       login: async (email, password) => {
         set({ loading: true, error: null });
         try {
-          const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
           });
 
-          const data = await res.json();
+          if (error) throw new Error(error.message);
+          if (!data.user || !data.session) throw new Error('Erro ao fazer login');
 
-          if (!res.ok) {
-            throw new Error(data.error || 'Erro ao fazer login');
-          }
-
-          get().setUser(data.user, data.token);
+          get().setUser({
+            id: data.user.id,
+            email: data.user.email || email,
+            name: data.user.user_metadata?.name || '',
+          }, data.session.access_token);
+          
           set({ loading: false });
         } catch (error: any) {
           set({ error: error.message, loading: false });
@@ -107,24 +121,19 @@ export const useAuthStore = create<AuthState>()(
       },
 
       verifyToken: async () => {
-        const token = get().token;
-        if (!token) {
-          get().logout();
-          return;
-        }
-
         try {
-          const res = await fetch('/api/auth/verify', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          if (!res.ok) {
+          const { data, error } = await supabase.auth.getSession();
+          if (error || !data.session) {
             get().logout();
             return;
           }
 
-          const data = await res.json();
-          set({ user: data.user, isAuthenticated: true });
+          get().setUser({
+            id: data.session.user.id,
+            email: data.session.user.email || '',
+            name: data.session.user.user_metadata?.name || '',
+          }, data.session.access_token);
+          
         } catch (error) {
           console.error('Erro ao verificar token:', error);
           get().logout();
@@ -141,4 +150,3 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
-

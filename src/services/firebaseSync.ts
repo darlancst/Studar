@@ -1,4 +1,3 @@
-// KV-only sync service (Vercel KV via API routes)
 import { useSubjectStore } from '@/store/subjectStore';
 import { useTopicStore } from '@/store/topicStore';
 import { useReviewStore } from '@/store/reviewStore';
@@ -7,8 +6,8 @@ import { useSimuladosStore } from '@/store/simuladosStore';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAuthStore } from '@/store/authStore';
+import { supabase } from '@/lib/supabaseClient';
 
-// Interface para dados do usuário no Firebase
 export interface UserData {
   subjects: any[];
   topics: any[];
@@ -23,14 +22,12 @@ export class FirebaseSync {
   private userId: string | null = null;
   private unsubscribes: (() => void)[] = [];
 
-  // Usa o userId quando disponível; caso contrário, um deviceId persistido localmente
   private getStorageKey(): string | null {
     if (this.userId) return this.userId;
     if (typeof window === 'undefined') return null;
     try {
       let deviceId = localStorage.getItem('deviceId');
       if (!deviceId) {
-        // Gera um id estável para o dispositivo (anônimo)
         deviceId = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
           ? crypto.randomUUID()
           : `dev_${Math.random().toString(36).slice(2)}`;
@@ -45,21 +42,23 @@ export class FirebaseSync {
   private async kvSave(userData: UserData): Promise<boolean> {
     const key = this.getStorageKey();
     if (!key) return false;
+    
     try {
-      const token = useAuthStore.getState().token;
-      const headers: HeadersInit = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      // Usando Supabase em vez da API Route inexistente
+      const { error } = await supabase
+        .from('user_data')
+        .upsert(
+          { id: key, data: userData, updated_at: new Date().toISOString() },
+          { onConflict: 'id' }
+        );
 
-      const res = await fetch('/api/user-data', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ userId: key, data: userData }),
-      });
-      return res.ok;
+      if (error) {
+        console.error('Erro detalhado do Supabase:', error);
+        return false;
+      }
+      return true;
     } catch (e) {
-      console.error('❌ Erro ao salvar no KV:', e);
+      console.error('❌ Erro ao salvar na nuvem:', e);
       return false;
     }
   }
@@ -67,40 +66,40 @@ export class FirebaseSync {
   private async kvLoad(): Promise<UserData | null> {
     const key = this.getStorageKey();
     if (!key) return null;
+    
     try {
-      const token = useAuthStore.getState().token;
-      const headers: HeadersInit = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      const { data, error } = await supabase
+        .from('user_data')
+        .select('data')
+        .eq('id', key)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = 0 rows returned (esperado em novos usuários)
+        console.error('Erro ao buscar dados do Supabase:', error);
+        return null;
       }
 
-      const url = `/api/user-data?userId=${encodeURIComponent(key)}`;
-      const res = await fetch(url, { method: 'GET', headers });
-      if (!res.ok) return null;
-      const json = await res.json();
-      return (json?.data as UserData) || null;
+      if (!data) return null;
+      
+      return (data.data as UserData) || null;
     } catch (e) {
-      console.error('❌ Erro ao carregar do KV:', e);
+      console.error('❌ Erro ao carregar da nuvem:', e);
       return null;
     }
   }
 
-  // Configurar userId do usuário autenticado
   setUser(user: { id?: string } | null) {
     this.userId = user?.id || null;
     this.unsubscribes.forEach(unsub => unsub());
     this.unsubscribes = [];
   }
 
-  // Podemos sincronizar no client (via API route)
   private canSync(): boolean {
     return typeof window !== 'undefined';
   }
 
-  // Sincronizar dados das stores para KV
   async syncToCloud() {
     try {
-      // Lê diretamente das stores para evitar problemas com chaves do localStorage
       const subjects = useSubjectStore.getState().subjects;
       const topics = useTopicStore.getState().topics;
       const reviews = useReviewStore.getState().reviews;
@@ -125,10 +124,9 @@ export class FirebaseSync {
         lastSync: Date.now(),
       };
 
-      // KV persistência
       const savedOnKv = await this.kvSave(userData);
       if (savedOnKv) {
-        console.log('✅ Dados sincronizados com sucesso para o KV');
+        console.log('✅ Dados sincronizados com sucesso para a Nuvem');
         try { localStorage.setItem('lastSync', String(userData.lastSync)); } catch { }
         return true;
       }
@@ -139,13 +137,11 @@ export class FirebaseSync {
     }
   }
 
-  // Sincronizar dados do KV para as stores
   async syncFromCloud() {
     try {
       const userData: UserData | null = await this.kvLoad();
 
       if (userData) {
-        // Atualizar stores com dados da nuvem (isso persiste no localStorage através do middleware)
         useSubjectStore.setState({ subjects: userData.subjects || [] });
         useTopicStore.setState({ topics: userData.topics || [] });
         useReviewStore.setState({ reviews: userData.reviews || [] });
@@ -154,7 +150,6 @@ export class FirebaseSync {
 
         if (userData.settings) {
           const s = useSettingsStore.getState();
-          // Aplicar campos conhecidos, mantendo valores atuais se ausentes
           if (typeof userData.settings.darkMode === 'boolean' && userData.settings.darkMode !== s.darkMode) {
             useSettingsStore.setState({ darkMode: userData.settings.darkMode });
           }
@@ -175,8 +170,6 @@ export class FirebaseSync {
         try { localStorage.setItem('lastSync', String(userData.lastSync || Date.now())); } catch { }
 
         console.log('✅ Dados baixados da nuvem e stores reidratadas com sucesso');
-
-        // Disparar evento para atualizar UI
         window.dispatchEvent(new CustomEvent('dataSync'));
         return true;
       }
@@ -187,21 +180,16 @@ export class FirebaseSync {
     return false;
   }
 
-  // Configurar sincronização em tempo real
   startRealtimeSync() {
-    // KV não possui realtime nativo; sem-op
+    // Sem realtime nativo configurado para poupar requisições
   }
 
-  // Sincronização inicial ao fazer login
   async initialSync() {
     try {
-      // Primeiro, tenta baixar dados do KV
       const cloudSyncSuccess = await this.syncFromCloud();
       if (!cloudSyncSuccess) {
-        // Se não há dados na nuvem, envia dados locais
         await this.syncToCloud();
       }
-      // Realtime removido no modo KV-only
       return true;
     } catch (error) {
       console.error('❌ Erro na sincronização inicial:', error);
@@ -209,40 +197,31 @@ export class FirebaseSync {
     }
   }
 
-  // Função para salvar dados priorizando a nuvem, com fallback local
   async saveData(_key: string, _data: any) {
-    // Primeiro tenta sincronizar com a nuvem se possível
     if (this.canSync()) {
       try {
         await this.syncToCloud();
-        // Atualiza lastSync local apenas como marca de tempo
         try { localStorage.setItem('lastSync', Date.now().toString()); } catch { }
         window.dispatchEvent(new CustomEvent('dataSync'));
         return;
       } catch (e) {
-        // Continua para fallback local
       }
     }
-
-    // Fallback: persiste localmente para manter funcionamento offline
     try {
       localStorage.setItem('lastSync', Date.now().toString());
     } catch { }
     window.dispatchEvent(new CustomEvent('dataSync'));
   }
 
-  // Limpar todos os listeners
   cleanup() {
     this.unsubscribes.forEach(unsub => unsub());
     this.unsubscribes = [];
   }
 
-  // Verificar status de conexão
   async checkConnection() {
     if (typeof navigator !== 'undefined') return navigator.onLine;
     return true;
   }
 }
 
-// Instância singleton
 export const firebaseSync = new FirebaseSync();
