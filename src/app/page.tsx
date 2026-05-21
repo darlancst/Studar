@@ -70,8 +70,8 @@ export default function Home() {
     };
 
     const handlePopState = (e: PopStateEvent) => {
-      const state = e.state || { tab: 'stats' };
-      const targetTab = state.tab || 'stats';
+      const state = e.state;
+      const targetTab = state && state.tab ? state.tab : activeTab;
 
       const win = window as any;
       const stack = win._modalCloseStack;
