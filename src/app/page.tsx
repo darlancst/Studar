@@ -46,7 +46,7 @@ export default function Home() {
     if (!isPopStateNav.current) {
       // Navegação normal (clique/swipe): adiciona ao histórico do browser
       tabHistoryRef.current.push(tab);
-      window.history.pushState({ tab }, '', '');
+      window.history.pushState({ ...window.history.state, tab }, '', '');
     }
     isPopStateNav.current = false;
 
@@ -55,8 +55,8 @@ export default function Home() {
 
   // Botão voltar do celular: volta para a aba anterior
   useEffect(() => {
-    // Define o estado inicial
-    window.history.replaceState({ tab: 'stats' }, '', '');
+    // Define o estado inicial preservando o estado do Next.js
+    window.history.replaceState({ ...window.history.state, tab: 'stats' }, '', '');
 
     const handlePopState = (e: PopStateEvent) => {
       const win = window as any;
@@ -70,7 +70,7 @@ export default function Home() {
 
         // Se ainda restam modais abertos no stack, re-empilha o sentinel
         if (stack.length > 0) {
-          window.history.pushState({ _modalSentinel: true }, '', '');
+          window.history.pushState({ ...window.history.state, _modalSentinel: true }, '', '');
         }
         return;
       }
@@ -78,7 +78,7 @@ export default function Home() {
       // Entrada órfã de modal (sem modal aberto mas state é sentinel): substituir pelo tab atual
       if (e.state && (e.state._modal || e.state._modalSentinel)) {
         const currentTab = tabHistoryRef.current[tabHistoryRef.current.length - 1] ?? 'stats';
-        window.history.replaceState({ tab: currentTab }, '', '');
+        window.history.replaceState({ ...window.history.state, tab: currentTab }, '', '');
         return;
       }
 

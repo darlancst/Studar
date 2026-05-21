@@ -37,7 +37,7 @@ export function useRegisterModal(isOpen: boolean, onClose: () => void) {
     if (openModalCount === 1) {
       // Primeiro modal: salva estado atual e empilha sentinel
       stateBeforeModals = window.history.state ?? { tab: 'stats' };
-      window.history.pushState({ _modalSentinel: true }, '', '');
+      window.history.pushState({ ...window.history.state, _modalSentinel: true }, '', '');
     }
     // Modais subsequentes não empilham mais entradas
 
@@ -62,7 +62,7 @@ export function useRegisterModal(isOpen: boolean, onClose: () => void) {
         // Último modal fechado: remove o sentinel substituindo pelo estado anterior
         const currState = window.history.state;
         if (currState && currState._modalSentinel) {
-          window.history.replaceState(stateBeforeModals, '', '');
+          window.history.replaceState({ ...stateBeforeModals }, '', '');
         }
         stateBeforeModals = null;
       }
