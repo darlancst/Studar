@@ -55,38 +55,36 @@ export default function Home() {
 
   // Botão voltar do celular: volta para a aba anterior
   useEffect(() => {
-    // Push estado inicial ao montar
+    // Define o estado inicial
     window.history.replaceState({ tab: 'stats' }, '', '');
 
     const handlePopState = (e: PopStateEvent) => {
       const win = window as any;
       const stack = win._modalCloseStack;
 
-      // Se há um modal aberto, fecha ele.
-      // O browser já voltou da entrada dummy do modal, não precisa de pushState.
+      // Se há modal aberto: fecha e NÃO navega tabs.
+      // O browser já voltou da entrada dummy { _modal: true } para a entrada da aba.
       if (stack && stack.length > 0) {
-        win._modalClosedByBack = true;
         const handler = stack.pop();
         if (handler) handler();
         return;
       }
 
-      // Se caímos em uma entrada de modal órfã (modal já fechado mas a entrada ficou)
-      // Isso não deve acontecer com a nova abordagem replaceState, mas é uma salvaguarda.
+      // Entrada órfã de modal (sem modal aberto mas state é _modal): substituir pelo tab atual
       if (e.state && e.state._modal) {
-        // Substitui a entrada órfã pela aba atual para não perder o estado
-        window.history.replaceState({ tab: tabHistoryRef.current[tabHistoryRef.current.length - 1] }, '', '');
+        const currentTab = tabHistoryRef.current[tabHistoryRef.current.length - 1] ?? 'stats';
+        window.history.replaceState({ tab: currentTab }, '', '');
         return;
       }
 
       // Sem modais: navegação normal entre abas
       if (tabHistoryRef.current.length > 1) {
-        tabHistoryRef.current.pop(); // Remove a aba atual
+        tabHistoryRef.current.pop();
         const previousTab = tabHistoryRef.current[tabHistoryRef.current.length - 1];
         isPopStateNav.current = true;
         setActiveTab(previousTab);
       }
-      // Se não tem histórico, deixa o browser lidar (sai do app normalmente)
+      // Se histórico vazio, deixa o browser lidar (sai do app)
     };
 
     window.addEventListener('popstate', handlePopState);
