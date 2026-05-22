@@ -38,8 +38,6 @@ export default function Home() {
   const tabsOrder: TabName[] = ['stats', 'calendar', 'schedule', 'pomodoro', 'simulados'];
 
   // --- Histórico de abas para o botão voltar do celular ---
-  const lastBackPressTime = useRef(0);
-
   useEffect(() => {
     const handleShowToast = () => {
       setShowExitToast(true);
@@ -47,6 +45,25 @@ export default function Home() {
     };
     window.addEventListener('show-exit-toast', handleShowToast);
     return () => window.removeEventListener('show-exit-toast', handleShowToast);
+  }, []);
+
+  const exitTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    // Cancela a intenção de sair se o usuário interagir com a tela
+    const handleInteraction = () => {
+      if (exitTimerRef.current) {
+        clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = null;
+        window.history.pushState({ tab: 'stats', appInit: true }, '', '');
+      }
+    };
+    window.addEventListener('click', handleInteraction, true);
+    window.addEventListener('touchstart', handleInteraction, true);
+    return () => {
+      window.removeEventListener('click', handleInteraction, true);
+      window.removeEventListener('touchstart', handleInteraction, true);
+    };
   }, []);
 
   const handleTabChange = useCallback((tab: TabName) => {
@@ -90,16 +107,20 @@ export default function Home() {
 
       // 2. Intercepta saída na tela inicial
       if (e.state && e.state.dummy) {
-        const now = Date.now();
-        if (now - lastBackPressTime.current < 2000) {
+        if (exitTimerRef.current) {
           // Confirmou a saída com clique duplo
+          clearTimeout(exitTimerRef.current);
+          exitTimerRef.current = null;
           window.history.back();
         } else {
           // Primeira tentativa de sair
-          lastBackPressTime.current = now;
           window.dispatchEvent(new CustomEvent('show-exit-toast'));
-          // Restaura a tela inicial na frente da âncora
-          window.history.pushState({ tab: 'stats', appInit: true }, '', '');
+          
+          exitTimerRef.current = setTimeout(() => {
+            // Se o tempo passou e o usuário não apertou de novo nem tocou na tela
+            window.history.pushState({ tab: 'stats', appInit: true }, '', '');
+            exitTimerRef.current = null;
+          }, 2000);
         }
         return;
       }
