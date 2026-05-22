@@ -50,15 +50,15 @@ export default function ScheduleManager() {
 
     return (
         <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <h2 className="text-2xl font-bold dark:text-white">Cronogramas de Estudo</h2>
+            <div className="flex flex-row justify-between items-center gap-2">
+                <h2 className="text-xl sm:text-2xl font-bold dark:text-white">Cronogramas</h2>
                 <button
                     id="tour-schedule-btn"
                     onClick={() => setShowCreateForm(true)}
-                    className="w-full sm:w-auto bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 flex items-center justify-center gap-2 text-sm font-medium shadow-sm transition-colors"
+                    className="bg-primary-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-primary-700 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium shadow-sm transition-colors"
                 >
-                    <PlusIcon className="h-5 w-5" />
-                    Novo Cronograma
+                    <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Novo
                 </button>
             </div>
 
