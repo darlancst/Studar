@@ -37,6 +37,8 @@ export function useRegisterModal(isOpen: boolean, onClose: () => void) {
     if (openModalCount === 1) {
       // Primeiro modal: empilha sentinel usando hash para evitar Next.js
       window.history.pushState(null, '', '#modal');
+      // Bloqueia o scroll do fundo da página
+      document.body.style.overflow = 'hidden';
     }
     // Modais subsequentes não empilham mais entradas
 
@@ -49,6 +51,11 @@ export function useRegisterModal(isOpen: boolean, onClose: () => void) {
         win._modalCloseStack.splice(index, 1);
       }
       openModalCount--;
+
+      if (openModalCount === 0) {
+        // Restaura o scroll do fundo da página
+        document.body.style.overflow = '';
+      }
 
       // Se fechado pelo botão voltar: o hashchange handler já gerencia o sentinel
       if (win._modalClosedByBack) {
