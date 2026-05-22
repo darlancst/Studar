@@ -184,9 +184,13 @@ export default function Home() {
         <header className="flex items-center justify-between mb-3 sm:mb-4">
           {/* Left: Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-gradient-to-br from-primary-500 via-primary-600 to-blue-600 rounded-2xl shadow-lg shadow-primary-500/25 flex items-center justify-center text-white font-bold text-xl transition-transform hover:scale-105">
+            <button 
+              onClick={() => handleTabChange('stats')}
+              className="w-11 h-11 bg-gradient-to-br from-primary-500 via-primary-600 to-blue-600 rounded-2xl shadow-lg shadow-primary-500/25 flex items-center justify-center text-white font-bold text-xl transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+              title="Página Inicial (Estatísticas)"
+            >
               S
-            </div>
+            </button>
             <div className="hidden sm:block">
               <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-gray-600 dark:from-white dark:via-gray-200 dark:to-gray-400">
                 Studar
