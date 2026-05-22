@@ -43,7 +43,7 @@ export default function Pomodoro() {
 
   const { generateReviewsForTopic } = useReviewStore();
 
-  const { schedules, weeklyItems, blockItems, isItemCompletedForDate, toggleScheduleItemCompletion } = useScheduleStore();
+  const { schedules, weeklyItems, blockItems, completedScheduleItems, isItemCompletedForDate, toggleScheduleItemCompletion } = useScheduleStore();
 
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [selectedTopicOverrides, setSelectedTopicOverrides] = useState<Record<string, string>>({});
@@ -210,7 +210,7 @@ export default function Pomodoro() {
 
       return 0;
     });
-  }, [schedules, weeklyItems, blockItems, topics, isItemCompletedForDate]);
+  }, [schedules, weeklyItems, blockItems, topics, isItemCompletedForDate, completedScheduleItems]);
 
   // Obter o item selecionado ou ativo no momento
   const activePlan = useMemo(() => {
