@@ -778,11 +778,13 @@ export default function Pomodoro() {
       {/* Header Minimalista */}
       <div className="flex flex-row justify-between items-center gap-2 mb-2 w-full min-w-0">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight shrink-0">Foco</h2>
-        <div className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border shadow-sm transition-all ${currentState === 'focus'
-          ? 'bg-primary-50/80 text-primary-700 border-primary-150/50 dark:bg-primary-950/40 dark:text-primary-400 dark:border-primary-850/50'
-          : 'bg-green-50/80 text-green-700 border-green-150/50 dark:bg-green-950/40 dark:text-green-400 dark:border-green-850/50'
+        <div className={`px-2.5 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 border shadow-sm transition-all ${currentState === 'focus'
+          ? 'bg-primary-600 text-white border-primary-600 dark:bg-primary-500 dark:text-gray-950 dark:border-primary-500'
+          : 'bg-green-600 text-white border-green-600 dark:bg-green-500 dark:text-gray-950 dark:border-green-500'
           }`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${currentState === 'focus' ? 'bg-primary-500' : 'bg-green-500'
+          <span className={`w-1.5 h-1.5 rounded-full ${currentState === 'focus' 
+            ? 'bg-white dark:bg-gray-950' 
+            : 'bg-white dark:bg-gray-950'
             }`}></span>
           {getStatusText()}
         </div>
