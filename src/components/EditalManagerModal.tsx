@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { XMarkIcon, TrashIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useSubjectStore } from '@/store/subjectStore';
 import { useEditalStore } from '@/store/editalStore';
@@ -18,15 +18,23 @@ interface JsonImportEntry {
 
 export default function EditalManagerModal({ onClose }: EditalManagerModalProps) {
   const { subjects } = useSubjectStore();
-  const { items, addItems, toggleItem, deleteItemsBySubject, resetEdital, deleteItemsByGoal } = useEditalStore();
+  const { items, addItems, toggleItem, deleteItemsBySubject, resetEdital, deleteItemsByGoal, purgeOrphanItems } = useEditalStore();
   const { goals, activeGoalId, setActiveGoal, addGoal, deleteGoal } = useGoalStore();
   const [jsonInput, setJsonInput] = useState('');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
   
+  const orphanCount = items.filter(i => !i.goalId).length;
   const currentItems = items.filter(i => i.goalId === activeGoalId);
   const [showImport, setShowImport] = useState(currentItems.length === 0);
   const [activeSubjectId, setActiveSubjectId] = useState<string>(subjects[0]?.id || '');
+
+  // Auto-limpar itens sem concurso quando a modal abre (se houver concursos)
+  useEffect(() => {
+    if (goals.length > 0) {
+      purgeOrphanItems();
+    }
+  }, []);
 
   useRegisterModal(true, onClose);
 
@@ -186,24 +194,6 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Tópicos do Edital</h3>
                 <div className="flex items-center gap-3">
-                  {items.some(i => !i.goalId) && (
-                    <button
-                      onClick={() => {
-                        if (confirm('Apagar matérias antigas que não pertencem a nenhum concurso?')) {
-                          useEditalStore.setState((state) => ({
-                            items: state.items.filter(i => i.goalId)
-                          }));
-                          import('@/services/firebaseSync').then(m => {
-                            m.firebaseSync.syncToCloud();
-                          });
-                        }
-                      }}
-                      className="text-xs text-orange-400 hover:text-orange-500 transition-colors flex items-center gap-1"
-                    >
-                      <TrashIcon className="w-3.5 h-3.5" />
-                      Limpar Lixo Antigo
-                    </button>
-                  )}
                   <button
                     onClick={() => {
                       if (confirm('Apagar TODO o edital deste concurso?')) {

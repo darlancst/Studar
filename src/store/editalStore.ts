@@ -11,6 +11,7 @@ interface EditalStore {
   toggleItem: (id: string) => void;
   deleteItemsBySubject: (subjectId: string) => void;
   deleteItemsByGoal: (goalId: string) => void;
+  purgeOrphanItems: () => void;
   resetEdital: () => void;
 }
 
@@ -42,17 +43,30 @@ export const useEditalStore = create<EditalStore>()(
       },
 
       deleteItemsBySubject: (subjectId) => {
-        set((state) => ({
-          items: state.items.filter((item) => item.subjectId !== subjectId),
-        }));
-        setTimeout(() => firebaseSync.syncToCloud(), 100);
+        set((state) => {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+          return {
+            items: state.items.filter((item) => item.subjectId !== subjectId),
+          };
+        });
       },
 
       deleteItemsByGoal: (goalId) => {
-        set((state) => ({
-          items: state.items.filter((item) => item.goalId !== goalId),
-        }));
-        setTimeout(() => firebaseSync.syncToCloud(), 100);
+        set((state) => {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+          return {
+            items: state.items.filter((item) => item.goalId !== goalId),
+          };
+        });
+      },
+
+      purgeOrphanItems: () => {
+        set((state) => {
+          const cleaned = state.items.filter((item) => !!item.goalId);
+          if (cleaned.length === state.items.length) return state; // noop
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+          return { items: cleaned };
+        });
       },
 
       resetEdital: () => {
