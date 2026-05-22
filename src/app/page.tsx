@@ -125,17 +125,15 @@ export default function Home() {
         return;
       }
 
-      // 3. Se cair num sentinel órfão, força a volta para o stats
+      // 3. Se cair num sentinel órfão, apenas pula ele
       if (e.state && (e.state._modal || e.state._modalSentinel)) {
-        window.history.replaceState({ tab: 'stats', appInit: true }, '', '');
-        setActiveTab('stats');
+        window.history.back();
         return;
       }
 
       // 4. Navegação normal
-      if (e.state && e.state.tab) {
-        setActiveTab(e.state.tab);
-      }
+      const targetTab = (e.state && e.state.tab) ? e.state.tab : 'stats';
+      setActiveTab(targetTab);
     };
 
     window.addEventListener('popstate', handlePopState);
