@@ -206,7 +206,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 space-y-4">
           {/* Seção de Conta */}
           {user && (
             <div className="pb-4 border-b dark:border-gray-700">
@@ -234,8 +234,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </div>
 
           {/* Seção de Aparência */}
-          <div className="pb-4 border-b dark:border-gray-700">
-            <div className="flex items-center mb-4">
+          <div className="pb-3 border-b dark:border-gray-700">
+            <div className="flex items-center mb-2">
               <PaintBrushIcon className="h-5 w-5 mr-2 text-indigo-500" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">Aparência</h3>
             </div>
@@ -261,12 +261,12 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </div>
 
           {/* Seção de Pomodoro */}
-          <div className="pb-4 border-b dark:border-gray-700">
-            <div className="flex items-center mb-4">
+          <div className="pb-3 border-b dark:border-gray-700">
+            <div className="flex items-center mb-2">
               <ClockIcon className="h-5 w-5 mr-2 text-red-500" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">Pomodoro</h3>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Foco (min)
@@ -385,12 +385,12 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </div>
 
           {/* Seção de Metas */}
-          <div className="pb-4 border-b dark:border-gray-700">
-            <div className="flex items-center mb-4">
+          <div className="pb-3 border-b dark:border-gray-700">
+            <div className="flex items-center mb-2">
               <ChartBarIcon className="h-5 w-5 mr-2 text-green-500" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">Metas</h3>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Meta semanal de estudo
@@ -441,17 +441,17 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </div>
 
           {/* Seção de Revisões */}
-          <div className="pb-4 border-b dark:border-gray-700">
-            <div className="flex items-center mb-4">
+          <div className="pb-3 border-b dark:border-gray-700">
+            <div className="flex items-center mb-2">
               <CalendarIcon className="h-5 w-5 mr-2 text-blue-500" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">Intervalos de Revisão</h3>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Intervalos atuais (dias):
                 </label>
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-2 mb-2">
                   {intervals.sort((a, b) => a - b).map((interval) => (
                     <div key={interval} className="inline-flex items-center bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-md">
                       <span className="text-gray-800 dark:text-gray-200">{interval} {interval === 1 ? 'dia' : 'dias'}</span>
@@ -493,16 +493,18 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          {/* Seção de Férias/Folga */}
-          <div className="pb-4 border-b dark:border-gray-700">
-            <div className="flex items-center mb-4">
-              <PaperAirplaneIcon className="h-5 w-5 mr-2 text-cyan-500" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Férias / Folga</h3>
+          {/* Seção de Férias/Folgas */}
+          <div className="pb-3 border-b dark:border-gray-700">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center">
+                <SunIcon className="h-5 w-5 mr-2 text-yellow-500" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Férias e Folgas</h3>
+              </div>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Ative o modo férias para adiar todas as tarefas futuras.
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+              Pause seus cronogramas temporariamente.
             </p>
-            <div className="space-y-3">
+            <div className="flex flex-col gap-2">
               <button
                 onClick={handleDayOff}
                 className="w-full px-4 py-2.5 rounded-lg bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 border border-cyan-200 dark:border-cyan-800 transition-colors flex items-center justify-center gap-2"
@@ -518,8 +520,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 Programar Férias...
               </button>
               {vacationPeriods.length > 0 && (
-                <div className="mt-4 pt-4 border-t dark:border-gray-700">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Histórico:</p>
+                <div className="mt-2 pt-2 border-t dark:border-gray-700">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Histórico:</p>
                   <div className="space-y-1 max-h-24 overflow-y-auto">
                     {vacationPeriods.slice(-5).reverse().map((v) => (
                       <div key={v.id} className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-2">
@@ -537,13 +539,13 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          {/* Seção de Reiniciar Dados */}
-          <div className="pb-4">
-            <div className="flex items-center mb-4">
-              <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-red-500" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Reiniciar Dados</h3>
+          {/* Gerenciamento de Dados */}
+          <div className="pt-2">
+            <div className="flex items-center mb-2">
+              <TrashIcon className="h-5 w-5 mr-2 text-red-500" />
+              <h3 className="text-lg font-medium text-red-600 dark:text-red-400">Zona de Perigo</h3>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <ClockIcon className="h-4 w-4 mr-2 text-gray-500" />
