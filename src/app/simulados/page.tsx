@@ -113,7 +113,7 @@ const SimuladosPage = () => {
       {/* Header */}
       <div className="flex flex-row justify-between items-center gap-2 mb-2 w-full min-w-0">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-          <h1 className="text-2xl font-bold shrink-0">Simulados</h1>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight shrink-0">Simulados</h2>
           {goals.length > 0 && (
             <select
               value={activeGoalId || ''}
@@ -128,10 +128,10 @@ const SimuladosPage = () => {
         </div>
         <button
           onClick={handleAddNew}
-          className="shrink-0 bg-primary-600 text-white px-4 py-1.5 sm:py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm flex items-center justify-center gap-1.5 sm:gap-2"
+          className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md hover:shadow-primary-600/10 transition-all duration-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5 sm:gap-2 shrink-0"
         >
           <PlusIcon className="h-5 w-5" />
-          <span className="hidden sm:inline">Adicionar Simulado</span>
+          <span className="hidden sm:inline">Adicionar</span>
           <span className="sm:hidden">Novo</span>
         </button>
       </div>

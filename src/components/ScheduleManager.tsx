@@ -50,15 +50,15 @@ export default function ScheduleManager() {
 
     return (
         <div className="space-y-3">
-            <div className="flex flex-row justify-between items-center gap-2">
-                <h2 className="text-2xl font-bold dark:text-white">Cronogramas</h2>
+            <div className="flex flex-row justify-between items-center gap-2 mb-2 w-full min-w-0">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight shrink-0">Cronogramas</h2>
                 <button
                     id="tour-schedule-btn"
                     onClick={() => setShowCreateForm(true)}
-                    className="bg-primary-600 text-white px-4 py-1.5 sm:py-2 rounded-lg hover:bg-primary-700 flex items-center justify-center gap-1.5 sm:gap-2 text-sm font-medium shadow-sm transition-colors"
+                    className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md hover:shadow-primary-600/10 transition-all duration-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5 sm:gap-2 shrink-0"
                 >
                     <PlusIcon className="h-5 w-5" />
-                    Novo
+                    <span>Novo</span>
                 </button>
             </div>
 

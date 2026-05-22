@@ -576,14 +576,14 @@ export default function Stats() {
       <EditalProgressCard />
 
       {/* 3. Cabeçalho e Filtros */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 pt-0.5 w-full min-w-0">
-        <div className="flex items-center gap-2.5 min-w-0 w-full sm:w-auto">
-          <h2 className="text-lg font-bold dark:text-white shrink-0">Estatísticas</h2>
+      <div className="flex flex-row justify-between items-center gap-2 mb-2 w-full min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight shrink-0">Estatísticas</h2>
           {goals.length > 0 && (
             <select
               value={activeGoalId || ''}
               onChange={(e) => setActiveGoal(e.target.value)}
-              className="min-w-0 truncate flex-1 sm:flex-initial bg-gray-100/70 dark:bg-gray-800/70 border border-gray-200/20 dark:border-gray-700/20 text-xs rounded-lg p-1.5 text-gray-900 dark:text-white focus:ring-1 focus:ring-teal-500 font-semibold cursor-pointer"
+              className="min-w-0 truncate max-w-[120px] sm:max-w-none flex-1 sm:flex-initial bg-white/80 dark:bg-gray-950/60 backdrop-blur-md border border-gray-150/50 dark:border-gray-800/80 text-sm rounded-xl py-1.5 px-2.5 text-gray-900 dark:text-white focus:ring-1 focus:ring-primary-500/50 font-semibold cursor-pointer shadow-sm transition-all"
             >
               {goals.map(g => (
                 <option key={g.id} value={g.id}>{g.name}</option>
@@ -592,13 +592,13 @@ export default function Stats() {
           )}
         </div>
 
-        <div className="flex bg-gray-100 dark:bg-gray-800 p-0.5 rounded-lg overflow-x-auto max-w-full">
+        <div className="flex bg-gray-100/80 dark:bg-gray-900/60 backdrop-blur-sm p-0.5 rounded-xl border border-gray-150/30 dark:border-gray-800/60 overflow-x-auto max-w-full shrink-0">
           {(['today', 'week', 'month', 'annual', 'custom'] as const).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all whitespace-nowrap ${period === p
-                ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm border border-gray-200/10 dark:border-gray-600/10'
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap ${period === p
+                ? 'bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm border border-gray-150/30 dark:border-gray-750/30'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
             >

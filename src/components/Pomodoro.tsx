@@ -776,11 +776,11 @@ export default function Pomodoro() {
   return (
     <div className="max-w-md mx-auto space-y-3 pb-16">
       {/* Header Minimalista */}
-      <div className="flex items-center justify-between px-2">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Foco</h2>
-        <div className={`px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors ${currentState === 'focus'
-          ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-          : 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+      <div className="flex flex-row justify-between items-center gap-2 mb-2 w-full min-w-0">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight shrink-0">Foco</h2>
+        <div className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border shadow-sm transition-all ${currentState === 'focus'
+          ? 'bg-primary-50/80 text-primary-700 border-primary-150/50 dark:bg-primary-950/40 dark:text-primary-400 dark:border-primary-850/50'
+          : 'bg-green-50/80 text-green-700 border-green-150/50 dark:bg-green-950/40 dark:text-green-400 dark:border-green-850/50'
           }`}>
           <span className={`w-1.5 h-1.5 rounded-full ${currentState === 'focus' ? 'bg-primary-500' : 'bg-green-500'
             }`}></span>
