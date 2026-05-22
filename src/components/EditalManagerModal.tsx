@@ -126,7 +126,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
             <select
               value={activeGoalId || ''}
               onChange={(e) => setActiveGoal(e.target.value)}
-              className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm rounded-lg p-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="flex-1 min-w-0 truncate bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm rounded-lg p-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             >
               {goals.length === 0 && <option value="" disabled>Nenhum concurso criado</option>}
               {goals.map(g => (
@@ -136,7 +136,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
             <button
               onClick={handleNewGoal}
               disabled={goals.length >= 3}
-              className="px-3 py-2 bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 text-sm font-medium rounded-lg disabled:opacity-50 transition-colors whitespace-nowrap"
+              className="flex-shrink-0 px-3 py-2 bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 text-sm font-medium rounded-lg disabled:opacity-50 transition-colors whitespace-nowrap"
             >
               + Novo
             </button>
