@@ -229,31 +229,31 @@ export default function Home() {
       className="min-h-screen overflow-x-hidden"
       {...swipeHandlers}
     >
-      <div className={`max-w-6xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4 transition-all duration-300 ${isZenFocus ? 'pt-0 px-0 max-w-full' : ''}`}>
-        <header className={`flex items-center justify-between mb-3 sm:mb-4 transition-all duration-300 ${isZenFocus ? 'opacity-0 h-0 pointer-events-none mb-0 overflow-hidden py-0' : ''}`}>
+      <div className={`max-w-6xl mx-auto px-3 sm:px-4 pt-2 sm:pt-3.5 transition-all duration-300 ${isZenFocus ? 'pt-0 px-0 max-w-full' : ''}`}>
+        <header className={`flex items-center justify-between mb-2.5 sm:mb-3 transition-all duration-300 ${isZenFocus ? 'opacity-0 h-0 pointer-events-none mb-0 overflow-hidden py-0' : ''}`}>
           {/* Left: Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button 
               onClick={() => handleTabChange('stats')}
-              className="w-11 h-11 bg-gradient-to-br from-primary-500 via-primary-600 to-blue-600 rounded-2xl shadow-lg shadow-primary-500/25 flex items-center justify-center text-white font-bold text-xl transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+              className="w-10 h-10 bg-gradient-to-br from-primary-500 via-primary-600 to-blue-600 rounded-xl shadow-md shadow-primary-500/20 flex items-center justify-center text-white font-bold text-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer"
               title="Página Inicial (Estatísticas)"
             >
               S
             </button>
             <div className="hidden sm:block">
-              <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-gray-600 dark:from-white dark:via-gray-200 dark:to-gray-400">
+              <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-gray-600 dark:from-white dark:via-gray-200 dark:to-gray-400">
                 Studar
               </h1>
             </div>
           </div>
 
           {/* Right: Next Session + Settings */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             <StreakCounter />
             <NextSessionDisplay />
             <button
               onClick={() => setShowSettings(true)}
-              className="p-2.5 rounded-xl bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all duration-200 active:scale-95"
+              className="p-2 rounded-xl bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all duration-200 active:scale-95"
               title="Configurações"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -264,7 +264,7 @@ export default function Home() {
           </div>
         </header>
 
-        <div className={`hidden sm:block mb-2 transition-all duration-300 ${isZenFocus ? 'opacity-0 h-0 pointer-events-none mb-0 overflow-hidden' : ''}`}>
+        <div className={`hidden sm:block mb-1.5 transition-all duration-300 ${isZenFocus ? 'opacity-0 h-0 pointer-events-none mb-0 overflow-hidden' : ''}`}>
           <TabBar
             activeTab={activeTab}
             setActiveTab={handleTabChange}
@@ -272,7 +272,7 @@ export default function Home() {
         </div>
 
         {/* Componentes mantidos montados para preservar estado (display: none quando inativo) */}
-        <main className={`transition-all duration-300 ${isZenFocus ? 'pb-0' : 'pb-24 sm:pb-4'}`}>
+        <main className={`transition-all duration-300 ${isZenFocus ? 'pb-0' : 'pb-20 sm:pb-3'}`}>
           <div style={{ display: activeTab === 'stats' ? 'block' : 'none' }}>
             <Stats />
           </div>

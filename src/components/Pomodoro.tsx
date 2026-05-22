@@ -774,11 +774,11 @@ export default function Pomodoro() {
   }
 
   return (
-    <div className="max-w-md mx-auto space-y-5 pb-24">
+    <div className="max-w-md mx-auto space-y-3 pb-16">
       {/* Header Minimalista */}
       <div className="flex items-center justify-between px-2">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Foco</h2>
-        <div className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${currentState === 'focus'
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Foco</h2>
+        <div className={`px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors ${currentState === 'focus'
           ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
           : 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
           }`}>
@@ -789,7 +789,7 @@ export default function Pomodoro() {
       </div>
 
       {/* Timer Principal Circular */}
-      <div className="flex flex-col items-center justify-center py-6 select-none">
+      <div className="flex flex-col items-center justify-center py-3 select-none">
         <div className="relative flex items-center justify-center w-64 h-64 sm:w-72 sm:h-72">
           {/* Indicador de pulsação suave em volta quando rodando */}
           {isRunning && (
@@ -866,7 +866,7 @@ export default function Pomodoro() {
         {currentState !== 'idle' && (
           <button
             onClick={() => toggleZenMode(true)}
-            className="mt-6 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gray-100/80 dark:bg-gray-800/80 text-gray-600 dark:text-gray-300 hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-950/30 dark:hover:text-primary-400 transition-all duration-300 active:scale-95 border border-gray-200/40 dark:border-gray-700/50 shadow-sm"
+            className="mt-4 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gray-100/80 dark:bg-gray-800/80 text-gray-600 dark:text-gray-300 hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-950/30 dark:hover:text-primary-400 transition-all duration-300 active:scale-95 border border-gray-200/40 dark:border-gray-700/50 shadow-sm"
           >
             <SparklesIcon className="h-3.5 w-3.5" />
             Modo Zen

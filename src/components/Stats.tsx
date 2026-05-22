@@ -461,44 +461,47 @@ export default function Stats() {
   };
 
   return (
-    <div className="space-y-3 pb-20">
+    <div className="space-y-2.5 pb-16">
       {/* 1. Widget "Agora" - Command Center */}
       <div className="w-full" id="tour-pomodoro-widget">
         {nextSubject ? (
-          <div className="relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md group">
+          <div className="relative overflow-hidden bg-white/80 dark:bg-gray-900/60 backdrop-blur-md rounded-xl border border-gray-150/70 dark:border-gray-800/80 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.002] group">
             {/* Subtle Gradient Background */}
             <div
-              className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-br from-transparent to-current opacity-[0.03] dark:opacity-[0.08] rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"
+              className="absolute top-0 right-0 w-[260px] h-[260px] bg-gradient-to-br from-transparent to-current opacity-[0.03] dark:opacity-[0.08] rounded-full blur-2xl -translate-y-1/2 translate-x-1/3 pointer-events-none"
               style={{ color: nextSubject.color }}
             />
 
-            <div className="relative z-10 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="relative z-10 p-3 sm:p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex-1 min-w-0 w-full">
-                <div className="flex items-center justify-between sm:justify-start gap-3 mb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                <div className="flex items-center justify-between sm:justify-start gap-2.5 mb-1.5">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
                     Próxima Sessão
                   </span>
                   {nextItem?.startTime && (
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700">
-                      <ClockIcon className="w-3 h-3 text-gray-400" />
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300 tabular-nums">
+                    <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-50/70 dark:bg-gray-800/50 border border-gray-100/50 dark:border-gray-700/50">
+                      <ClockIcon className="w-2.5 h-2.5 text-gray-400" />
+                      <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 tabular-nums">
                         {nextItem.startTime} - {nextItem.endTime}
                       </span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-2.5">
                   <div
-                    className="mt-1.5 w-1 h-8 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: nextSubject.color }}
+                    className="mt-1 w-1 h-7 rounded-full flex-shrink-0"
+                    style={{ 
+                      backgroundColor: nextSubject.color,
+                      boxShadow: `0 0 8px ${nextSubject.color}80`
+                    }}
                   />
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight truncate">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight truncate">
                       {nextSubject.name}
                     </h2>
                     {nextTopic && (
-                      <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base mt-0.5 line-clamp-1">
+                      <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-0.5 line-clamp-1">
                         {nextTopic.title}
                       </p>
                     )}
@@ -508,17 +511,16 @@ export default function Stats() {
 
               <button
                 onClick={handleStartSession}
-                className="w-full sm:w-auto group/btn relative overflow-hidden bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-xl font-medium text-sm shadow-sm hover:shadow transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                className="w-full sm:w-auto bg-gradient-to-r from-primary-600 to-blue-600 hover:from-primary-500 hover:to-blue-500 text-white px-5 py-2.5 rounded-lg font-semibold text-xs shadow-md shadow-primary-500/20 hover:shadow-lg transition-all active:scale-[0.97] flex items-center justify-center gap-1.5"
               >
-                <div className="absolute inset-0 bg-white/10 dark:bg-black/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
-                <PlayIcon className="w-4 h-4 relative z-10" />
-                <span className="relative z-10">Iniciar Foco</span>
+                <PlayIcon className="w-3.5 h-3.5" />
+                <span>Iniciar Foco</span>
               </button>
             </div>
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center justify-center text-center gap-2 min-h-[140px]">
-            <div className="w-24 h-24 relative mb-1">
+          <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-md rounded-xl p-3 sm:p-4 shadow-sm border border-gray-150/70 dark:border-gray-800/80 flex flex-col items-center justify-center text-center gap-1.5 min-h-[120px]">
+            <div className="w-16 h-16 relative">
               <img
                 src="/dashboard-empty.gif"
                 alt="Sem planos"
@@ -527,40 +529,40 @@ export default function Stats() {
             </div>
             {subjects.length === 0 ? (
               <div>
-                <h3 className="text-base font-medium text-gray-900 dark:text-white">Comece sua jornada! 📚</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Crie sua primeira matéria para começar</p>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Comece sua jornada! 📚</h3>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Crie sua primeira matéria para começar</p>
                 <button
                   onClick={() => window.dispatchEvent(new CustomEvent('open-subject-manager'))}
-                  className="mt-3 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
+                  className="mt-2 px-3 py-1.5 bg-primary-600 text-white text-xs font-semibold rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
                 >
                   Criar Matéria
                 </button>
               </div>
             ) : schedules.filter(s => s.isActive).length === 0 ? (
               <div>
-                <h3 className="text-base font-medium text-gray-900 dark:text-white">Monte seu cronograma 📅</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Organize seus estudos da semana</p>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Monte seu cronograma 📅</h3>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Organize seus estudos da semana</p>
                 <button
                   onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-schedule'))}
-                  className="mt-3 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
+                  className="mt-2 px-3 py-1.5 bg-primary-600 text-white text-xs font-semibold rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
                 >
                   Criar Cronograma
                 </button>
               </div>
             ) : todayMinutes > 0 ? (
               <div>
-                <h3 className="text-base font-medium text-gray-900 dark:text-white">Mandou bem hoje! ✅</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Mandou bem hoje! ✅</h3>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
                   Você já estudou {Math.floor(todayMinutes / 60)}h {todayMinutes % 60}m
                 </p>
               </div>
             ) : (
               <div>
-                <h3 className="text-base font-medium text-gray-900 dark:text-white">Dia livre! 🎉</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Descanse ou inicie uma sessão avulsa</p>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Dia livre! 🎉</h3>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Descanse ou inicie uma sessão avulsa</p>
                 <button
                   onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-pomodoro'))}
-                  className="mt-3 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm"
+                  className="mt-2 px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm"
                 >
                   Iniciar Sessão
                 </button>
@@ -574,14 +576,14 @@ export default function Stats() {
       <EditalProgressCard />
 
       {/* 3. Cabeçalho e Filtros */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-1 w-full min-w-0">
-        <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
-          <h2 className="text-xl font-bold dark:text-white shrink-0">Estatísticas</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 pt-0.5 w-full min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0 w-full sm:w-auto">
+          <h2 className="text-lg font-bold dark:text-white shrink-0">Estatísticas</h2>
           {goals.length > 0 && (
             <select
               value={activeGoalId || ''}
               onChange={(e) => setActiveGoal(e.target.value)}
-              className="min-w-0 truncate flex-1 sm:flex-initial bg-gray-100 dark:bg-gray-800 border-none text-sm rounded-lg p-1.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 font-medium cursor-pointer"
+              className="min-w-0 truncate flex-1 sm:flex-initial bg-gray-100/70 dark:bg-gray-800/70 border border-gray-200/20 dark:border-gray-700/20 text-xs rounded-lg p-1.5 text-gray-900 dark:text-white focus:ring-1 focus:ring-teal-500 font-semibold cursor-pointer"
             >
               {goals.map(g => (
                 <option key={g.id} value={g.id}>{g.name}</option>
@@ -590,13 +592,13 @@ export default function Stats() {
           )}
         </div>
 
-        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto max-w-full">
+        <div className="flex bg-gray-100 dark:bg-gray-800 p-0.5 rounded-lg overflow-x-auto max-w-full">
           {(['today', 'week', 'month', 'annual', 'custom'] as const).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all whitespace-nowrap ${period === p
-                ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
+              className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all whitespace-nowrap ${period === p
+                ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm border border-gray-200/10 dark:border-gray-600/10'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
             >
@@ -611,23 +613,23 @@ export default function Stats() {
       </div>
 
       {period === 'custom' && (
-        <div className="flex gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
+        <div className="flex gap-3 bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-3 rounded-xl border border-gray-150/70 dark:border-gray-800/80 shadow-sm">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Início</label>
+            <label className="block text-[10px] text-gray-500 mb-0.5">Início</label>
             <input
               type="date"
               value={customStartDate}
               onChange={(e) => setCustomStartDate(e.target.value)}
-              className="p-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="p-1.5 border rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Fim</label>
+            <label className="block text-[10px] text-gray-500 mb-0.5">Fim</label>
             <input
               type="date"
               value={customEndDate}
               onChange={(e) => setCustomEndDate(e.target.value)}
-              className="p-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="p-1.5 border rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
         </div>
@@ -635,67 +637,67 @@ export default function Stats() {
 
       {/* 3. Cards de Resumo (KPIs) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2" id="tour-stats-kpi">
-        <div className="group bg-white dark:bg-gray-800/90 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800/50 transition-all duration-300">
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="p-1.5 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg group-hover:scale-105 transition-transform">
-              <ClockIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+        <div className="group bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-2.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800/50 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="p-1 bg-gradient-to-br from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 rounded-lg group-hover:scale-105 transition-transform">
+              <ClockIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Tempo Total</span>
+            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Tempo Total</span>
           </div>
           <div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums">
+            <span className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">
               {Math.floor(totalStudyTime / 60)}h {totalStudyTime % 60}m
             </span>
           </div>
         </div>
 
-        <div className="group bg-white dark:bg-gray-800/90 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800/50 transition-all duration-300">
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="p-1.5 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-lg group-hover:scale-105 transition-transform">
-              <CheckCircleIcon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+        <div className="group bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-2.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800/50 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="p-1 bg-gradient-to-br from-purple-500/10 to-purple-600/10 dark:from-purple-500/20 dark:to-purple-600/20 rounded-lg group-hover:scale-105 transition-transform">
+              <CheckCircleIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
             </div>
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Sessões</span>
+            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Sessões</span>
           </div>
           <div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums">
+            <span className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">
               {totalSessions}
             </span>
           </div>
         </div>
 
-        <div className="group bg-white dark:bg-gray-800/90 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800/50 transition-all duration-300">
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="p-1.5 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 rounded-lg group-hover:scale-105 transition-transform">
-              <ClipboardDocumentCheckIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+        <div className="group bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-2.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800/50 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="p-1 bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 dark:from-emerald-500/20 dark:to-emerald-600/20 rounded-lg group-hover:scale-105 transition-transform">
+              <ClipboardDocumentCheckIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Revisões</span>
+            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Revisões</span>
           </div>
           <div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums">
+            <span className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">
               {totalReviews}
             </span>
           </div>
         </div>
 
-        <div className="group bg-white dark:bg-gray-800/90 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-orange-200 dark:hover:border-orange-800/50 transition-all duration-300">
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="p-1.5 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-lg group-hover:scale-105 transition-transform">
-              <TrophyIcon className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+        <div className="group bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-2.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md hover:border-orange-200 dark:hover:border-orange-800/50 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="p-1 bg-gradient-to-br from-orange-500/10 to-orange-600/10 dark:from-orange-500/20 dark:to-orange-600/20 rounded-lg group-hover:scale-105 transition-transform">
+              <TrophyIcon className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
             </div>
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Meta Semanal</span>
+            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Meta Semanal</span>
           </div>
           <div>
-            <div className="flex items-end justify-between mb-1.5">
-              <span className={`text-xl font-bold tabular-nums ${weeklyProgress.percentage >= 100 ? 'text-amber-500' : 'text-gray-900 dark:text-white'}`}>
+            <div className="flex items-end justify-between mb-1">
+              <span className={`text-base font-bold tabular-nums ${weeklyProgress.percentage >= 100 ? 'text-amber-500' : 'text-gray-900 dark:text-white'}`}>
                 {Math.floor(weeklyProgress.percentage)}%
               </span>
-              <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">
-                {Math.floor(weeklyProgress.current / 60)}h{weeklyProgress.current % 60}m / {Math.floor(weeklyProgress.target / 60)}h{weeklyProgress.target % 60}m
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 tabular-nums">
+                {Math.floor(weeklyProgress.current / 60)}h / {Math.floor(weeklyProgress.target / 60)}h
               </span>
             </div>
-            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+            <div className="w-full bg-gray-100/70 dark:bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
               <div
-                className={`h-2.5 rounded-full animate-fill-bar ${
+                className={`h-1.5 rounded-full animate-fill-bar ${
                   weeklyProgress.percentage >= 100
                     ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 animate-shimmer'
                     : weeklyProgress.percentage >= 80
@@ -710,10 +712,10 @@ export default function Stats() {
       </div>
 
       {/* Heatmap Section */}
-      <div className="bg-white dark:bg-gray-800/90 p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-all duration-300" id="tour-heatmap">
-        <h3 className="text-lg font-semibold mb-2 dark:text-white flex items-center gap-2">
-          <div className="p-1.5 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-lg">
-            <FireIcon className="w-5 h-5 text-orange-500" />
+      <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-3.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md transition-all duration-300" id="tour-heatmap">
+        <h3 className="text-sm font-bold mb-1.5 dark:text-white flex items-center gap-1.5">
+          <div className="p-1 bg-gradient-to-br from-orange-500/10 to-orange-600/10 dark:from-orange-500/20 dark:to-orange-600/20 rounded-md">
+            <FireIcon className="w-4 h-4 text-orange-500" />
           </div>
           Consistência de Estudos
         </h3>
@@ -721,9 +723,9 @@ export default function Stats() {
       </div>
 
       {/* Gráfico Principal */}
-      <div className="bg-white dark:bg-gray-800/90 p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-all duration-300">
-        <h3 className="text-base font-semibold mb-3 dark:text-white">Evolução do Estudo</h3>
-        <div className="min-h-[200px]">
+      <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-3.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md transition-all duration-300">
+        <h3 className="text-sm font-bold mb-2 dark:text-white">Evolução do Estudo</h3>
+        <div className="min-h-[180px]">
           <Line data={lineChartData} options={chartOptions} />
         </div>
       </div>

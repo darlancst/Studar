@@ -56,37 +56,37 @@ export default function EditalProgressCard() {
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-800/90 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-all duration-300 overflow-hidden">
+      <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-md rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md transition-all duration-300 overflow-hidden">
         {/* Header (sempre visível) */}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="w-full p-4 flex items-center gap-3 text-left"
+          className="w-full p-3 flex items-center gap-2.5 text-left"
         >
-          <div className="p-2 bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-800/30 rounded-xl flex-shrink-0">
-            <ListBulletIcon className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+          <div className="p-1.5 bg-gradient-to-br from-teal-500/10 to-teal-600/10 dark:from-teal-500/20 dark:to-teal-600/20 rounded-lg flex-shrink-0">
+            <ListBulletIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Progresso do Edital</span>
-              <div className="flex items-center gap-2">
-                <span className={`text-lg font-bold tabular-nums ${globalPct >= 100 ? 'text-amber-500' : 'text-teal-600 dark:text-teal-400'}`}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Progresso do Edital</span>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-base font-bold tabular-nums ${globalPct >= 100 ? 'text-amber-500' : 'text-teal-600 dark:text-teal-400'}`}>
                   {globalPct}%
                 </span>
                 {expanded
-                  ? <ChevronUpIcon className="w-4 h-4 text-gray-400" />
-                  : <ChevronDownIcon className="w-4 h-4 text-gray-400" />
+                  ? <ChevronUpIcon className="w-3.5 h-3.5 text-gray-400" />
+                  : <ChevronDownIcon className="w-3.5 h-3.5 text-gray-400" />
                 }
               </div>
             </div>
             {/* Barra global */}
-            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+            <div className="w-full bg-gray-100/70 dark:bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
               <div
                 className="h-1.5 rounded-full animate-fill-bar bg-gradient-to-r from-teal-400 to-teal-500"
                 style={{ '--fill-width': `${globalPct}%` } as React.CSSProperties}
               />
             </div>
-            <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1 tabular-nums">
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 tabular-nums">
               {completedItems} de {totalItems} tópicos concluídos
             </p>
           </div>
@@ -94,16 +94,16 @@ export default function EditalProgressCard() {
 
         {/* Detalhes expandidos */}
         {expanded && (
-          <div className="px-4 pb-4 space-y-3 border-t border-gray-100 dark:border-gray-700/50 pt-3 animate-fade-in">
+          <div className="px-3 pb-3 space-y-2 border-t border-gray-150/30 dark:border-gray-800/40 pt-2.5 animate-fade-in">
             {subjectProgress.map(({ subject, done, total, pct }) => (
-              <div key={subject.id} className="flex items-center gap-3">
-                <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
+              <div key={subject.id} className="flex items-center gap-2.5">
+                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{subject.name}</span>
-                    <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums ml-2 flex-shrink-0">{done}/{total}</span>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[11px] font-semibold text-gray-750 dark:text-gray-300 truncate">{subject.name}</span>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 tabular-nums ml-2 flex-shrink-0">{done}/{total}</span>
                   </div>
-                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                  <div className="w-full bg-gray-100/70 dark:bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
                     <div
                       className="h-1.5 rounded-full animate-fill-bar transition-all"
                       style={{
@@ -114,7 +114,7 @@ export default function EditalProgressCard() {
                     />
                   </div>
                 </div>
-                <span className="text-xs font-semibold tabular-nums w-9 text-right flex-shrink-0" style={{ color: subject.color }}>
+                <span className="text-[11px] font-semibold tabular-nums w-8 text-right flex-shrink-0" style={{ color: subject.color }}>
                   {pct}%
                 </span>
               </div>
@@ -122,7 +122,7 @@ export default function EditalProgressCard() {
 
             <button
               onClick={() => setShowManager(true)}
-              className="w-full mt-1 text-xs font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 text-center py-1.5 rounded-lg hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
+              className="w-full mt-1.5 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 text-center py-1 rounded-lg hover:bg-teal-50 dark:hover:bg-teal-900/10 transition-colors"
             >
               Gerenciar Edital →
             </button>
