@@ -436,7 +436,7 @@ export default function Stats() {
   };
 
   return (
-    <div className="space-y-4 pb-20">
+    <div className="space-y-3 pb-20">
       {/* 1. Widget "Agora" - Command Center */}
       <div className="w-full" id="tour-pomodoro-widget">
         {nextSubject ? (
@@ -447,7 +447,7 @@ export default function Stats() {
               style={{ color: nextSubject.color }}
             />
 
-            <div className="relative z-10 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+            <div className="relative z-10 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex-1 min-w-0 w-full">
                 <div className="flex items-center justify-between sm:justify-start gap-3 mb-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
@@ -469,7 +469,7 @@ export default function Stats() {
                     style={{ backgroundColor: nextSubject.color }}
                   />
                   <div>
-                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white leading-tight truncate">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight truncate">
                       {nextSubject.name}
                     </h2>
                     {nextTopic && (
@@ -492,7 +492,7 @@ export default function Stats() {
             </div>
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center justify-center text-center gap-3 min-h-[160px]">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center justify-center text-center gap-2 min-h-[140px]">
             <div className="w-24 h-24 relative mb-1">
               <img
                 src="/dashboard-empty.gif"
@@ -596,59 +596,59 @@ export default function Stats() {
       )}
 
       {/* 3. Cards de Resumo (KPIs) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3" id="tour-stats-kpi">
-        <div className="group bg-white dark:bg-gray-800/90 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800/50 transition-all duration-300">
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="p-2 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-xl group-hover:scale-105 transition-transform">
-              <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2" id="tour-stats-kpi">
+        <div className="group bg-white dark:bg-gray-800/90 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800/50 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="p-1.5 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg group-hover:scale-105 transition-transform">
+              <ClockIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Tempo Total</span>
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Tempo Total</span>
           </div>
-          <div className="mt-1">
-            <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
+          <div>
+            <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums">
               {Math.floor(totalStudyTime / 60)}h {totalStudyTime % 60}m
             </span>
           </div>
         </div>
 
-        <div className="group bg-white dark:bg-gray-800/90 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800/50 transition-all duration-300">
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="p-2 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl group-hover:scale-105 transition-transform">
-              <CheckCircleIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+        <div className="group bg-white dark:bg-gray-800/90 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800/50 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="p-1.5 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-lg group-hover:scale-105 transition-transform">
+              <CheckCircleIcon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
             </div>
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Sessões</span>
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Sessões</span>
           </div>
-          <div className="mt-1">
-            <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
+          <div>
+            <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums">
               {totalSessions}
             </span>
           </div>
         </div>
 
-        <div className="group bg-white dark:bg-gray-800/90 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800/50 transition-all duration-300">
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="p-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 rounded-xl group-hover:scale-105 transition-transform">
-              <ClipboardDocumentCheckIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        <div className="group bg-white dark:bg-gray-800/90 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800/50 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="p-1.5 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 rounded-lg group-hover:scale-105 transition-transform">
+              <ClipboardDocumentCheckIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Revisões</span>
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Revisões</span>
           </div>
-          <div className="mt-1">
-            <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
+          <div>
+            <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums">
               {totalReviews}
             </span>
           </div>
         </div>
 
-        <div className="group bg-white dark:bg-gray-800/90 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-orange-200 dark:hover:border-orange-800/50 transition-all duration-300">
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="p-2 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-xl group-hover:scale-105 transition-transform">
-              <TrophyIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+        <div className="group bg-white dark:bg-gray-800/90 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-orange-200 dark:hover:border-orange-800/50 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="p-1.5 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-lg group-hover:scale-105 transition-transform">
+              <TrophyIcon className="w-4 h-4 text-orange-600 dark:text-orange-400" />
             </div>
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Meta Semanal</span>
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Meta Semanal</span>
           </div>
-          <div className="mt-1">
+          <div>
             <div className="flex items-end justify-between mb-1.5">
-              <span className={`text-2xl font-bold tabular-nums ${weeklyProgress.percentage >= 100 ? 'text-amber-500' : 'text-gray-900 dark:text-white'}`}>
+              <span className={`text-xl font-bold tabular-nums ${weeklyProgress.percentage >= 100 ? 'text-amber-500' : 'text-gray-900 dark:text-white'}`}>
                 {Math.floor(weeklyProgress.percentage)}%
               </span>
               <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">
