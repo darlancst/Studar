@@ -35,9 +35,8 @@ export function useRegisterModal(isOpen: boolean, onClose: () => void) {
 
     openModalCount++;
     if (openModalCount === 1) {
-      // Primeiro modal: salva estado atual e empilha sentinel
-      stateBeforeModals = window.history.state ?? { tab: 'stats' };
-      window.history.pushState({ ...window.history.state, _modalSentinel: true }, '', '');
+      // Primeiro modal: empilha sentinel usando hash para evitar Next.js
+      window.history.pushState(null, '', '#modal');
     }
     // Modais subsequentes não empilham mais entradas
 
@@ -51,7 +50,7 @@ export function useRegisterModal(isOpen: boolean, onClose: () => void) {
       }
       openModalCount--;
 
-      // Se fechado pelo botão voltar: o popstate handler já gerencia o sentinel
+      // Se fechado pelo botão voltar: o hashchange handler já gerencia o sentinel
       if (win._modalClosedByBack) {
         win._modalClosedByBack = false;
         return;
@@ -59,12 +58,10 @@ export function useRegisterModal(isOpen: boolean, onClose: () => void) {
 
       // Fechado manualmente (X, clique fora, etc.)
       if (openModalCount === 0) {
-        // Último modal fechado: remove o sentinel substituindo pelo estado anterior
-        const currState = window.history.state;
-        if (currState && currState._modalSentinel) {
-          window.history.replaceState({ ...stateBeforeModals }, '', '');
+        // Último modal fechado: remove o sentinel usando back() para voltar a hash limpa
+        if (window.location.hash.includes('modal')) {
+          window.history.back(); // Isso dispara hashchange, que limpa sem causar problemas
         }
-        stateBeforeModals = null;
       }
       // Se ainda há modais abertos, o sentinel permanece para o próximo "voltar"
     };

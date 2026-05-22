@@ -50,12 +50,10 @@ export default function Home() {
   const exitTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Cancela a intenção de sair se o usuário interagir com a tela
     const handleInteraction = () => {
       if (exitTimerRef.current) {
         clearTimeout(exitTimerRef.current);
         exitTimerRef.current = null;
-        window.history.pushState({ tab: 'stats', appInit: true }, '', '');
       }
     };
     window.addEventListener('click', handleInteraction, true);
@@ -66,78 +64,83 @@ export default function Home() {
     };
   }, []);
 
+  // Initialize hash on load
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const currentHash = window.location.hash;
+      if (!currentHash || currentHash === '#' || currentHash === '#stats') {
+        window.history.replaceState(null, '', window.location.pathname); // Entry 0 (dummy)
+        window.history.pushState(null, '', '#stats'); // Entry 1 (stats)
+      } else {
+        const hash = currentHash.substring(1) as TabName;
+        if (['stats', 'pomodoro', 'calendar', 'schedule'].includes(hash)) {
+          setActiveTab(hash);
+        }
+      }
+    }
+  }, []);
+
   const handleTabChange = useCallback((tab: TabName) => {
     if (tab === activeTab) return;
 
     if (tab === 'stats') {
       window.history.back(); // Volta para limpar a pilha do browser
     } else if (activeTab === 'stats') {
-      window.history.pushState({ tab, appInit: true }, '', '');
+      window.location.hash = tab; // Adiciona no histórico
     } else {
-      window.history.replaceState({ tab, appInit: true }, '', '');
+      window.history.replaceState(null, '', '#' + tab);
+      setActiveTab(tab); // replaceState não dispara hashchange
     }
-
-    setActiveTab(tab);
   }, [activeTab]);
 
   useEffect(() => {
-    // Inicialização da pilha de histórico
-    if (!window.history.state || !window.history.state.appInit) {
-      // Estado âncora ("dummy") para segurar a saída do app
-      window.history.replaceState({ dummy: true, appInit: true }, '', '');
-      // Estado real da página inicial
-      window.history.pushState({ tab: 'stats', appInit: true }, '', '');
-    }
-
-    const handlePopState = (e: PopStateEvent) => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.substring(1);
       const win = window as any;
-      const stack = win._modalCloseStack;
-
-      // 1. Fechar Modais
-      if (stack && stack.length > 0) {
+      const stack = win._modalCloseStack || [];
+      
+      // 1. Fechar modais se o hash não for modal e existirem modais abertos
+      if (!hash.startsWith('modal') && stack.length > 0) {
         win._modalClosedByBack = true;
         const handler = stack.pop();
         if (handler) handler();
-
+        
+        // Se ainda tem modais abertos na pilha, restaura o hash do modal
         if (stack.length > 0) {
-          window.history.pushState({ _modalSentinel: true }, '', '');
+          window.history.pushState(null, '', '#modal');
         }
         return;
       }
 
-      // 2. Intercepta saída na tela inicial
-      if (e.state && e.state.dummy) {
+      // Limpa o timer de saída se navegou
+      if (hash !== '' && exitTimerRef.current) {
+        clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = null;
+      }
+
+      // 2. Navegação normal
+      if (['stats', 'pomodoro', 'calendar', 'schedule'].includes(hash)) {
+        setActiveTab(hash as TabName);
+      } 
+      // 3. Intercepta saída na tela inicial (hash empty)
+      else if (hash === '') {
         if (exitTimerRef.current) {
-          // Confirmou a saída com clique duplo
           clearTimeout(exitTimerRef.current);
           exitTimerRef.current = null;
-          window.history.back();
+          // Deixa sair nativamente
         } else {
-          // Primeira tentativa de sair
           window.dispatchEvent(new CustomEvent('show-exit-toast'));
           
           exitTimerRef.current = setTimeout(() => {
-            // Se o tempo passou e o usuário não apertou de novo nem tocou na tela
-            window.history.pushState({ tab: 'stats', appInit: true }, '', '');
+            window.history.pushState(null, '', '#stats');
             exitTimerRef.current = null;
           }, 2000);
         }
-        return;
       }
-
-      // 3. Se cair num sentinel órfão, apenas pula ele
-      if (e.state && (e.state._modal || e.state._modalSentinel)) {
-        window.history.back();
-        return;
-      }
-
-      // 4. Navegação normal
-      const targetTab = (e.state && e.state.tab) ? e.state.tab : 'stats';
-      setActiveTab(targetTab);
     };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   const handleSwipeLeft = () => {
