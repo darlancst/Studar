@@ -37,25 +37,33 @@ export default function Home() {
   const tabsOrder: TabName[] = ['stats', 'calendar', 'schedule', 'pomodoro', 'simulados'];
 
   // --- Histórico de abas para o botão voltar do celular ---
-  const tabHistoryRef = useRef<TabName[]>(['stats']);
   const isPopStateNav = useRef(false);
 
   const handleTabChange = useCallback((tab: TabName) => {
     if (tab === activeTab) return;
 
     if (!isPopStateNav.current) {
-      // Navegação normal (clique/swipe): adiciona ao histórico do browser
-      tabHistoryRef.current.push(tab);
-      window.history.pushState({ ...window.history.state, tab }, '', '');
+      if (tab === 'stats') {
+        // Se indo para o Início por clique (ou evento), limpa a pilha do browser para não acumular
+        window.history.back();
+        setActiveTab('stats');
+        return;
+      } else if (activeTab === 'stats') {
+        // Saindo do Início: pushState
+        window.history.pushState({ ...window.history.state, tab }, '', '');
+      } else {
+        // Trocando entre abas secundárias: replaceState para manter pilha com apenas 2 itens
+        window.history.replaceState({ ...window.history.state, tab }, '', '');
+      }
     }
     isPopStateNav.current = false;
 
     setActiveTab(tab);
   }, [activeTab]);
 
-  // Botão voltar do celular: volta para a aba anterior
+  // Botão voltar do celular: volta sempre para o início (stats)
   useEffect(() => {
-    // Define o estado inicial preservando o estado do Next.js
+    // Define o estado inicial da pilha para 'stats'
     window.history.replaceState({ ...window.history.state, tab: 'stats' }, '', '');
 
     const handlePopState = (e: PopStateEvent) => {
@@ -75,26 +83,21 @@ export default function Home() {
         return;
       }
 
-      // Entrada órfã de modal (sem modal aberto mas state é sentinel): substituir pelo tab atual
+      // Entrada órfã de modal
       if (e.state && (e.state._modal || e.state._modalSentinel)) {
-        const currentTab = tabHistoryRef.current[tabHistoryRef.current.length - 1] ?? 'stats';
-        window.history.replaceState({ ...window.history.state, tab: currentTab }, '', '');
+        window.history.replaceState({ ...window.history.state, tab: 'stats' }, '', '');
         return;
       }
 
-      // Sem modais: navegação normal entre abas
-      if (tabHistoryRef.current.length > 1) {
-        tabHistoryRef.current.pop();
-        const previousTab = tabHistoryRef.current[tabHistoryRef.current.length - 1];
+      // Sem modais: o back sempre trará a stack de volta para 'stats' ou a aba atual
+      if (e.state && e.state.tab) {
         isPopStateNav.current = true;
-        setActiveTab(previousTab);
+        setActiveTab(e.state.tab);
       }
-      // Se histórico vazio, deixa o browser lidar (sai do app)
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSwipeLeft = () => {
