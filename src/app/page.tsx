@@ -229,12 +229,12 @@ export default function Home() {
           <div style={{ display: activeTab === 'calendar' ? 'block' : 'none' }}>
             <div className="pb-20 sm:pb-0">
               <div className="flex flex-row justify-between items-center gap-2 mb-2">
-                <h2 className="text-xl sm:text-2xl font-bold dark:text-white">Agenda</h2>
+                <h2 className="text-2xl font-bold dark:text-white">Agenda</h2>
                 <button
                   onClick={() => setShowSubjectManager(true)}
-                  className="bg-primary-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-primary-700 transition-colors text-xs sm:text-sm font-medium shadow-sm flex items-center justify-center gap-1.5 sm:gap-2 text-center"
+                  className="bg-primary-600 text-white px-4 py-1.5 sm:py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm flex items-center justify-center gap-1.5 sm:gap-2 text-center"
                 >
-                  <BookOpenIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <BookOpenIcon className="h-5 w-5" />
                   Matérias
                 </button>
               </div>

@@ -113,12 +113,12 @@ const SimuladosPage = () => {
       {/* Header */}
       <div className="flex flex-row justify-between items-center gap-2 mb-2 w-full min-w-0">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl font-bold shrink-0">Simulados</h1>
+          <h1 className="text-2xl font-bold shrink-0">Simulados</h1>
           {goals.length > 0 && (
             <select
               value={activeGoalId || ''}
               onChange={(e) => setActiveGoal(e.target.value)}
-              className="min-w-0 truncate flex-1 sm:flex-initial bg-gray-100 dark:bg-gray-800 border-none text-xs sm:text-sm rounded-lg p-1.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 font-medium cursor-pointer"
+              className="min-w-0 truncate max-w-[120px] sm:max-w-none flex-1 sm:flex-initial bg-gray-100 dark:bg-gray-800 border-none text-sm rounded-lg p-1.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 font-medium cursor-pointer"
             >
               {goals.map(g => (
                 <option key={g.id} value={g.id}>{g.name}</option>
@@ -128,9 +128,9 @@ const SimuladosPage = () => {
         </div>
         <button
           onClick={handleAddNew}
-          className="shrink-0 bg-primary-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-primary-700 transition-colors text-xs sm:text-sm font-medium shadow-sm flex items-center justify-center gap-1.5 sm:gap-2"
+          className="shrink-0 bg-primary-600 text-white px-4 py-1.5 sm:py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm flex items-center justify-center gap-1.5 sm:gap-2"
         >
-          <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+          <PlusIcon className="h-5 w-5" />
           <span className="hidden sm:inline">Adicionar Simulado</span>
           <span className="sm:hidden">Novo</span>
         </button>
