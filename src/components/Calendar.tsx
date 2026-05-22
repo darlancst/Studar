@@ -104,9 +104,9 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                 const linkedTopic = topics.find(t => t.linkedScheduleItemId === item.id);
 
                 return (
-                  <div key={idx} className={`group flex items-center justify-between p-3 border rounded-xl transition-all hover:shadow-sm ${isCompleted
-                    ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 opacity-75'
-                    : 'bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/30'
+                  <div key={idx} className={`group flex items-center justify-between p-2.5 border rounded-xl transition-all hover:shadow-sm ${isCompleted
+                    ? 'bg-gray-50/50 dark:bg-gray-900/30 border-gray-150/30 dark:border-gray-800/40 opacity-60'
+                    : 'bg-blue-50/60 dark:bg-blue-900/20 border-blue-150/40 dark:border-blue-900/40 backdrop-blur-md shadow-sm'
                     }`}>
                     <div className="flex items-center gap-3 overflow-hidden">
                       <div className={`w-1.5 h-8 rounded-full flex-shrink-0 ${isCompleted ? 'bg-gray-300 dark:bg-gray-600' : ''}`} style={{ backgroundColor: isCompleted ? undefined : subject.color }} />
@@ -126,7 +126,7 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
 
                         <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                           {item.startTime && (
-                            <span className="flex items-center gap-1 bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded border dark:border-gray-700">
+                            <span className="flex items-center gap-1 bg-white/70 dark:bg-gray-800/40 px-1.5 py-0.5 rounded border border-gray-150/50 dark:border-gray-800/50 backdrop-blur-sm">
                               <ClockIcon className="h-3 w-3" />
                               {item.startTime} - {item.endTime}
                             </span>
@@ -187,7 +187,7 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
               {unlinkedTopics.map(topic => {
                 const subject = subjects.find(s => s.id === topic.subjectId);
                 return (
-                  <div key={topic.id} className="p-3 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-sm flex items-center justify-between gap-3 group">
+                  <div key={topic.id} className="p-2.5 bg-white/60 dark:bg-gray-900/40 border border-gray-150/50 dark:border-gray-800/80 rounded-xl shadow-sm flex items-center justify-between gap-2.5 group hover:bg-white/80 dark:hover:bg-gray-900/60 transition-all duration-300">
                     <div className="flex items-start gap-3 overflow-hidden">
                       <div className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: subject?.color }} />
                       <div>
@@ -221,7 +221,7 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                 const isCompleted = review.completed;
 
                 return (
-                  <div key={review.id} className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${isCompleted ? 'bg-green-50 border-green-100 dark:bg-green-900/10 dark:border-green-900/30' : 'bg-yellow-50 border-yellow-100 dark:bg-yellow-900/10 dark:border-yellow-900/30'}`}>
+                  <div key={review.id} className={`flex items-center justify-between p-2.5 rounded-xl border transition-colors ${isCompleted ? 'bg-green-50/50 border-green-150/30 dark:bg-green-950/10 dark:border-green-900/20' : 'bg-yellow-50/50 border-yellow-150/40 dark:bg-yellow-950/10 dark:border-yellow-900/30'}`}>
                     <div className="flex items-center gap-3 overflow-hidden">
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${isCompleted ? 'bg-green-500 border-green-500 text-white' : 'border-yellow-500 text-transparent'}`}>
                         {isCompleted && <CheckCircleSolidIcon className="h-3 w-3" />}
@@ -354,12 +354,12 @@ export default function Calendar() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[700px] bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[600px] bg-white/80 dark:bg-gray-900/60 backdrop-blur-md rounded-2xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 overflow-hidden">
 
       {/* Left Side: Calendar Grid */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Calendar Header */}
-        <div className="flex items-center justify-between p-3 border-b dark:border-gray-700">
+        <div className="flex items-center justify-between p-3 border-b border-gray-150/30 dark:border-gray-800/50">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white capitalize">
             {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
           </h2>
@@ -377,7 +377,7 @@ export default function Calendar() {
         </div>
 
         {/* Week Days Header */}
-        <div className="grid grid-cols-7 border-b dark:border-gray-700">
+        <div className="grid grid-cols-7 border-b border-gray-150/30 dark:border-gray-800/50">
           {weekDays.map(day => (
             <div key={day} className="py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
               {day}
@@ -415,9 +415,9 @@ export default function Calendar() {
                 key={i}
                 onClick={() => handleDayClick(day)}
                 className={`
-                  relative border-b border-r dark:border-gray-700/50 p-1 transition-all cursor-pointer hover:bg-white dark:hover:bg-gray-800
-                  ${!isCurrentMonth ? 'opacity-40 bg-gray-100/50 dark:bg-gray-900' : ''}
-                  ${isSelected ? 'bg-white dark:bg-gray-800 ring-2 ring-inset ring-primary-500 z-10' : ''}
+                  relative border-b border-r border-gray-150/35 dark:border-gray-800/35 p-1 transition-all cursor-pointer hover:bg-white/80 dark:hover:bg-gray-850/60
+                  ${!isCurrentMonth ? 'opacity-30 bg-gray-100/30 dark:bg-gray-900/30' : ''}
+                  ${isSelected ? 'bg-white/90 dark:bg-gray-805/75 ring-2 ring-inset ring-primary-500/50 z-10' : ''}
                 `}
               >
                 <div className="flex flex-col h-full justify-between">
@@ -496,7 +496,7 @@ export default function Calendar() {
       </div>
 
       {/* Right Side: Agenda Panel (Desktop) */}
-      <div className="hidden md:block w-96 border-l dark:border-gray-700 bg-white dark:bg-gray-800 z-20">
+      <div className="hidden md:block w-96 border-l border-gray-150/50 dark:border-gray-800/80 bg-white/90 dark:bg-gray-950/40 backdrop-blur-md z-20">
         <AgendaPanel
           date={selectedDate}
           topics={dayTopics}
@@ -512,7 +512,7 @@ export default function Calendar() {
       {/* Mobile Agenda Modal */}
       {showMobileAgenda && (
         <div className="md:hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white dark:bg-gray-800 w-full h-[85vh] sm:h-[600px] sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+          <div className="bg-white dark:bg-gray-900 w-full h-[85vh] sm:h-[600px] sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-slide-up border border-gray-150/50 dark:border-gray-800/80">
             <AgendaPanel
               date={selectedDate}
               topics={dayTopics}

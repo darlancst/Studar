@@ -235,10 +235,15 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <button 
               onClick={() => handleTabChange('stats')}
-              className="w-10 h-10 bg-gradient-to-br from-primary-500 via-primary-600 to-blue-600 rounded-xl shadow-md shadow-primary-500/20 flex items-center justify-center text-white font-bold text-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+              className="group relative w-10 h-10 bg-white/80 dark:bg-gray-900/60 backdrop-blur-md border border-gray-150/70 dark:border-gray-800/80 rounded-xl shadow-sm flex items-center justify-center transition-all duration-300 hover:scale-[1.05] hover:shadow-md hover:border-primary-300 dark:hover:border-primary-850 active:scale-95 cursor-pointer overflow-hidden"
               title="Página Inicial (Estatísticas)"
             >
-              S
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-primary-600/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <svg className="w-5.5 h-5.5 text-primary-600 dark:text-primary-400 drop-shadow-[0_0_6px_rgba(99,102,241,0.35)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
             </button>
             <div className="hidden sm:block">
               <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-gray-600 dark:from-white dark:via-gray-200 dark:to-gray-400">

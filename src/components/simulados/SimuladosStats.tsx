@@ -101,14 +101,14 @@ export default function SimuladosStats({ simulados, onAnalyze }: SimuladosStatsP
 
   if (stats.totalSimulados === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 text-center">
+      <div className="bg-white/80 dark:bg-gray-950/60 backdrop-blur-md rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 p-3 text-center">
         <p className="text-gray-500 dark:text-gray-400 text-sm">Nenhuma estatística para exibir. Realize um simulado!</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+    <div className="bg-white/80 dark:bg-gray-950/60 backdrop-blur-md rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80">
       <div className="p-3">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-sm font-bold">Análise de Performance</h2>
@@ -125,41 +125,41 @@ export default function SimuladosStats({ simulados, onAnalyze }: SimuladosStatsP
 
         {/* Cards Resumo - Layout Compacto */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2 mb-3">
-          <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-2 text-center">
+          <div className="bg-white/40 dark:bg-gray-950/30 backdrop-blur-sm border border-gray-150/20 dark:border-gray-800/40 rounded-xl p-2 text-center shadow-sm">
             <p className="text-xs text-gray-600 dark:text-gray-400">Total</p>
             <p className="text-lg font-bold">{stats.totalSimulados}</p>
           </div>
-          <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-2 text-center">
+          <div className="bg-white/40 dark:bg-gray-950/30 backdrop-blur-sm border border-gray-150/20 dark:border-gray-800/40 rounded-xl p-2 text-center shadow-sm">
             <p className="text-xs text-gray-600 dark:text-gray-400">Média Geral</p>
-            <p className="text-lg font-bold">{stats.mediaGeral.toFixed(1)}%</p>
+            <p className="text-lg font-bold text-primary-600 dark:text-primary-405">{stats.mediaGeral.toFixed(1)}%</p>
           </div>
         </div>
 
         {/* Seções de Insights - Compactas */}
         {stats.topicosEmQueda.length > 0 && (
           <div className="mb-3">
-            <h3 className="text-xs font-semibold mb-1.5 text-orange-600 dark:text-orange-400">⚠️ Em Queda</h3>
+            <h3 className="text-xs font-semibold mb-1.5 text-orange-600 dark:text-orange-450 uppercase tracking-wider text-[10px]">⚠️ Em Queda</h3>
             <div className="space-y-1.5">
               {stats.topicosEmQueda.map((p) => (
-                <div key={p.id} className="flex items-center justify-between p-1.5 bg-orange-50 dark:bg-orange-900/20 rounded text-xs">
+                <div key={p.id} className="flex items-center justify-between p-2 bg-orange-50/65 dark:bg-orange-950/20 rounded-lg border border-orange-100/30 dark:border-orange-900/30 text-xs">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{p.name}</p>
-                    <p className="text-orange-600 dark:text-orange-400">{p.media.toFixed(0)}% • {p.count} sim.</p>
+                    <p className="font-semibold truncate text-gray-850 dark:text-gray-150">{p.name}</p>
+                    <p className="text-orange-600 dark:text-orange-450 font-medium">{p.media.toFixed(0)}% • {p.count} sim.</p>
                   </div>
-                  <div className="flex space-x-0.5 ml-1.5">
+                  <div className="flex space-x-1 ml-1.5">
                     <button
                       onClick={() => onAnalyze(p.type, p.id)}
-                      className="p-0.5 hover:bg-orange-200 dark:hover:bg-orange-800 rounded"
+                      className="p-1 hover:bg-orange-100 dark:hover:bg-orange-900/40 rounded-lg transition-colors"
                       title="Analisar"
                     >
-                      <ChartBarIcon className="h-3 w-3" />
+                      <ChartBarIcon className="h-3.5 w-3.5" />
                     </button>
                     <button
                       onClick={() => handleScheduleReview(p.id, p.name)}
-                      className="p-0.5 hover:bg-orange-200 dark:hover:bg-orange-800 rounded"
+                      className="p-1 hover:bg-orange-100 dark:hover:bg-orange-900/40 rounded-lg transition-colors"
                       title="Revisar"
                     >
-                      <CalendarDaysIcon className="h-3 w-3" />
+                      <CalendarDaysIcon className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
@@ -170,29 +170,29 @@ export default function SimuladosStats({ simulados, onAnalyze }: SimuladosStatsP
 
         {stats.pontosFracos.length > 0 && (
           <div className="mb-3">
-            <h3 className="text-xs font-semibold mb-1.5 text-gray-800 dark:text-gray-200">📉 Pontos Fracos</h3>
+            <h3 className="text-xs font-semibold mb-1.5 text-gray-400 dark:text-gray-500 uppercase tracking-wider text-[10px]">📉 Pontos Fracos</h3>
             <div className="space-y-1.5">
               {stats.pontosFracos.map((p) => (
-                <div key={p.id} className="flex items-center justify-between p-1.5 bg-gray-50 dark:bg-gray-700/50 rounded text-xs">
+                <div key={p.id} className="flex items-center justify-between p-2 bg-white/40 dark:bg-gray-900/30 rounded-lg border border-gray-150/30 dark:border-gray-800/30 text-xs">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{p.name}</p>
-                    <p className={getPerformanceColor(p.media)}>{p.media.toFixed(0)}% • {p.count} sim.</p>
+                    <p className="font-semibold truncate text-gray-850 dark:text-gray-150">{p.name}</p>
+                    <p className={`${getPerformanceColor(p.media)} font-medium`}>{p.media.toFixed(0)}% • {p.count} sim.</p>
                   </div>
-                  <div className="flex space-x-0.5 ml-1.5">
+                  <div className="flex space-x-1 ml-1.5">
                     <button
                       onClick={() => onAnalyze(p.type, p.id)}
-                      className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                       title="Analisar"
                     >
-                      <ChartBarIcon className="h-3 w-3" />
+                      <ChartBarIcon className="h-3.5 w-3.5" />
                     </button>
                     {p.type === 'topico' && (
                       <button
                         onClick={() => handleScheduleReview(p.id, p.name)}
-                        className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                         title="Revisar"
                       >
-                        <CalendarDaysIcon className="h-3 w-3" />
+                        <CalendarDaysIcon className="h-3.5 w-3.5" />
                       </button>
                     )}
                   </div>
@@ -204,13 +204,13 @@ export default function SimuladosStats({ simulados, onAnalyze }: SimuladosStatsP
 
         {stats.pontosFortes.length > 0 && (
           <div>
-            <h3 className="text-xs font-semibold mb-1.5 text-green-600 dark:text-green-400">📈 Pontos Fortes</h3>
+            <h3 className="text-xs font-semibold mb-1.5 text-green-600 dark:text-green-450 uppercase tracking-wider text-[10px]">📈 Pontos Fortes</h3>
             <div className="space-y-1.5">
               {stats.pontosFortes.map((p) => (
-                <div key={p.id} className="flex items-center justify-between p-1.5 bg-green-50 dark:bg-green-900/20 rounded text-xs">
+                <div key={p.id} className="flex items-center justify-between p-2 bg-green-50/65 dark:bg-green-950/20 rounded-lg border border-green-100/30 dark:border-green-900/30 text-xs">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{p.name}</p>
-                      <p className="text-green-600 dark:text-green-400">{p.media.toFixed(0)}% • {p.count} sim.</p>
+                      <p className="font-semibold truncate text-gray-850 dark:text-gray-150">{p.name}</p>
+                      <p className="text-green-600 dark:text-green-450 font-medium">{p.media.toFixed(0)}% • {p.count} sim.</p>
                     </div>
                 </div>
               ))}

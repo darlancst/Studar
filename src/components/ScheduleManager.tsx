@@ -76,10 +76,10 @@ export default function ScheduleManager() {
                             key={schedule.id}
                             onClick={() => setActiveSchedule(schedule.id)}
                             className={`
-                flex-shrink-0 cursor-pointer p-3 rounded-lg border transition-all min-w-[200px] group relative
+                flex-shrink-0 cursor-pointer p-2.5 rounded-xl border transition-all min-w-[190px] group relative backdrop-blur-md
                 ${activeScheduleId === schedule.id
-                                    ? 'bg-primary-50 border-primary-200 dark:bg-primary-900/30 dark:border-primary-800 ring-2 ring-primary-500'
-                                    : 'bg-white border-gray-200 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600'
+                                    ? 'bg-gradient-to-tr from-primary-500/10 to-primary-600/10 dark:from-primary-500/20 dark:to-primary-600/20 border-primary-500/30 dark:border-primary-500/50 shadow-md ring-1 ring-primary-500/30'
+                                    : 'bg-white/80 border-gray-150/50 hover:border-gray-350 dark:bg-gray-900/60 dark:border-gray-850/80 dark:hover:border-gray-700'
                                 }
               `}
                         >
@@ -88,8 +88,8 @@ export default function ScheduleManager() {
                                     {schedule.name}
                                 </h3>
                                 {activeScheduleId === schedule.id && (
-                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">
-                                        Selecionado
+                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary-100/70 text-primary-850 dark:bg-primary-950 dark:text-primary-300">
+                                        Ativo
                                     </span>
                                 )}
                                 <button
@@ -99,14 +99,8 @@ export default function ScheduleManager() {
                                     <TrashIcon className="h-4 w-4" />
                                 </button>
                             </div>
-                            <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400 gap-1">
-                                <CalendarDaysIcon className="h-3 w-3" />
-                                <span>
-                                    {format(parseISO(schedule.startDate), 'dd/MM/yy')} - {format(parseISO(schedule.endDate), 'dd/MM/yy')}
-                                </span>
-                            </div>
-                            <div className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                {schedule.mode === 'weekly' ? 'Ciclo Semanal' : 'Blocos'}
+                            <div className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+                                {format(parseISO(schedule.startDate), 'dd/MM/yy', { locale: ptBR })} - {format(parseISO(schedule.endDate), 'dd/MM/yy', { locale: ptBR })}
                             </div>
                         </div>
                     ))}
@@ -115,18 +109,18 @@ export default function ScheduleManager() {
 
             {/* Formulário de Criação */}
             {showCreateForm && typeof document !== 'undefined' && createPortal(
-                <div className="fixed inset-0 z-[60] bg-gray-700 bg-opacity-50 dark:bg-black dark:bg-opacity-60 overflow-y-auto flex justify-center items-center">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md m-4">
-                        <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                            <h2 className="text-xl font-semibold dark:text-white">Criar Novo Cronograma</h2>
+                <div className="fixed inset-0 z-[60] bg-gray-750/60 backdrop-blur-sm overflow-y-auto flex justify-center items-center p-4">
+                    <div className="bg-white dark:bg-gray-900 border border-gray-150/50 dark:border-gray-800/80 rounded-2xl shadow-xl w-full max-w-md animate-scale-in">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-150/30 dark:border-gray-800/50">
+                            <h2 className="text-lg font-bold dark:text-white">Criar Novo Cronograma</h2>
                             <button
                                 onClick={() => setShowCreateForm(false)}
-                                className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                                className="p-1 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                             >
-                                <XMarkIcon className="h-6 w-6" />
+                                <XMarkIcon className="h-5 w-5" />
                             </button>
                         </div>
-                        <div className="p-6">
+                        <div className="p-5">
                             <form onSubmit={handleCreateSchedule} className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>

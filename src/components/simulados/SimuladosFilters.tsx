@@ -39,13 +39,13 @@ export default function SimuladosFilters({
   const hasActiveFilters = selectedSubject || selectedTopic || startDate || endDate;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 mb-3">
+    <div className="bg-white/80 dark:bg-gray-950/60 backdrop-blur-md rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 p-3 mb-3">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">Filtros</h3>
+        <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Filtros</h3>
         {hasActiveFilters && (
           <button
             onClick={onClearFilters}
-            className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+            className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-semibold"
           >
             Limpar tudo
           </button>
@@ -54,13 +54,13 @@ export default function SimuladosFilters({
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
         <div>
-          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+          <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1">
             Matéria
           </label>
           <select
             value={selectedSubject}
             onChange={(e) => handleSubjectChange(e.target.value)}
-            className="w-full text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary-500 focus:ring-primary-500 py-1.5"
+            className="w-full text-xs rounded-lg border-gray-250/70 dark:border-gray-800 dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500/30 py-1.5 transition-all"
           >
             <option value="">Todas</option>
             {subjects.map(subject => (
@@ -71,14 +71,14 @@ export default function SimuladosFilters({
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+          <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1">
             Tópico
           </label>
           <select
             value={selectedTopic}
             onChange={(e) => setSelectedTopic(e.target.value)}
             disabled={!selectedSubject || selectedSubject === '__general__'}
-            className="w-full text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 py-1.5"
+            className="w-full text-xs rounded-lg border-gray-250/70 dark:border-gray-800 dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500/30 disabled:opacity-50 py-1.5 transition-all"
           >
             <option value="">Todos</option>
             {availableTopics.map(topic => (
@@ -88,26 +88,26 @@ export default function SimuladosFilters({
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+          <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1">
             Data inicial
           </label>
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary-500 focus:ring-primary-500 py-1.5"
+            className="w-full text-xs rounded-lg border-gray-250/70 dark:border-gray-800 dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500/30 py-1.5 transition-all"
           />
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+          <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1">
             Data final
           </label>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary-500 focus:ring-primary-500 py-1.5"
+            className="w-full text-xs rounded-lg border-gray-250/70 dark:border-gray-800 dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500/30 py-1.5 transition-all"
           />
         </div>
       </div>

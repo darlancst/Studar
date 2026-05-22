@@ -47,12 +47,12 @@ export default function SimuladosList({ simulados, onEdit, onRemove }: Simulados
       {simulados.map((simulado) => {
         const percentage = (simulado.hits / simulado.questions) * 100;
         return (
-          <div key={simulado.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+          <div key={simulado.id} className="border border-gray-150/50 dark:border-gray-800/80 bg-white/40 dark:bg-gray-950/20 backdrop-blur-sm rounded-xl p-2.5 hover:bg-white/80 dark:hover:bg-gray-900/60 hover:border-primary-350 dark:hover:border-primary-800 transition-all duration-300 shadow-sm">
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 {/* Header do Simulado */}
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-xs font-semibold text-gray-900 dark:text-white truncate mr-2">
+                  <h3 className="text-xs font-bold text-gray-900 dark:text-white truncate mr-2">
                     {simulado.name || `Simulado de ${new Date(simulado.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}`}
                   </h3>
                   <div className="flex space-x-1">
@@ -94,7 +94,7 @@ export default function SimuladosList({ simulados, onEdit, onRemove }: Simulados
                 {/* Resultado */}
                 <div className="mt-1 flex items-center justify-between">
                   <div className="flex items-baseline space-x-1.5">
-                    <span className={`text-base font-bold ${getPerformanceColor(percentage)}`}>
+                    <span className={`text-base font-extrabold ${getPerformanceColor(percentage)}`}>
                       {percentage.toFixed(1)}%
                     </span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -103,15 +103,15 @@ export default function SimuladosList({ simulados, onEdit, onRemove }: Simulados
                   </div>
                   
                   {/* Badge de Performance */}
-                  <span className={`px-1.5 py-0.5 text-xs font-medium rounded-full ${
-                    percentage >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
-                    percentage >= 70 ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
-                    percentage >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
-                    'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                  <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded-lg uppercase tracking-wide ${
+                    percentage >= 80 ? 'bg-green-100/70 text-green-800 dark:bg-green-950 dark:text-green-400 border border-green-200/30' :
+                    percentage >= 70 ? 'bg-blue-100/70 text-blue-800 dark:bg-blue-950 dark:text-blue-400 border border-blue-200/30' :
+                    percentage >= 60 ? 'bg-yellow-100/70 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-400 border border-yellow-200/30' :
+                    'bg-red-100/70 text-red-800 dark:bg-red-950 dark:text-red-400 border border-red-200/30'
                   }`}>
                     {percentage >= 80 ? 'Ótimo' :
                      percentage >= 70 ? 'Bom' :
-                     percentage >= 60 ? 'Regular' : 'Precisa Melhorar'}
+                     percentage >= 60 ? 'Regular' : 'Ajustar'}
                   </span>
                 </div>
               </div>

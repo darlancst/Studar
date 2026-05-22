@@ -118,7 +118,7 @@ const SimuladosPage = () => {
             <select
               value={activeGoalId || ''}
               onChange={(e) => setActiveGoal(e.target.value)}
-              className="min-w-0 truncate max-w-[120px] sm:max-w-none flex-1 sm:flex-initial bg-gray-100 dark:bg-gray-800 border-none text-sm rounded-lg p-1.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 font-medium cursor-pointer"
+              className="min-w-0 truncate max-w-[120px] sm:max-w-none flex-1 sm:flex-initial bg-white/80 dark:bg-gray-950/60 backdrop-blur-md border border-gray-150/50 dark:border-gray-800/80 text-sm rounded-xl py-1.5 px-2.5 text-gray-900 dark:text-white focus:ring-1 focus:ring-primary-500/50 font-semibold cursor-pointer shadow-sm transition-all"
             >
               {goals.map(g => (
                 <option key={g.id} value={g.id}>{g.name}</option>
@@ -153,9 +153,9 @@ const SimuladosPage = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
         {/* Coluna Principal - Lista de Simulados */}
         <div className="xl:col-span-2">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3">
+          <div className="bg-white/80 dark:bg-gray-950/60 backdrop-blur-md rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 p-3.5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-semibold">Lista de Simulados</h2>
+              <h2 className="text-base font-bold">Lista de Simulados</h2>
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {filteredSimulados.length} simulado(s)
               </span>

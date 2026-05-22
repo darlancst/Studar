@@ -71,9 +71,9 @@ export default function BlockScheduleEditor() {
     return (
         <div className="space-y-4">
             {/* Header with Add Button */}
-            <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex justify-between items-center bg-white/80 dark:bg-gray-950/60 backdrop-blur-md p-3.5 sm:p-4 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80">
                 <div>
-                    <h3 className="text-lg font-semibold dark:text-white">Blocos de Estudo</h3>
+                    <h3 className="text-lg font-bold dark:text-white">Blocos de Estudo</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Organize seu estudo por períodos dedicados.</p>
                 </div>
                 <button
@@ -88,10 +88,10 @@ export default function BlockScheduleEditor() {
             {/* List of Blocks */}
             <div className="space-y-3">
                 {sortedItems.length === 0 ? (
-                    <div className="p-12 text-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
-                        <CalendarIcon className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+                    <div className="p-10 text-center bg-white/40 dark:bg-gray-950/30 backdrop-blur-sm rounded-xl border border-dashed border-gray-200/60 dark:border-gray-800/60">
+                        <CalendarIcon className="h-10 w-10 mx-auto text-gray-400 mb-3" />
                         <p className="text-gray-500 dark:text-gray-400 font-medium">Nenhum bloco planejado</p>
-                        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Clique em "Adicionar Bloco" para começar.</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Clique em "Adicionar Bloco" para começar.</p>
                     </div>
                 ) : (
                     <div className="grid gap-3">
@@ -100,7 +100,7 @@ export default function BlockScheduleEditor() {
                             return (
                                 <div
                                     key={item.id}
-                                    className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group"
+                                    className="bg-white/80 dark:bg-gray-950/60 backdrop-blur-md rounded-xl p-3.5 shadow-sm border border-gray-150/50 dark:border-gray-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-primary-350 dark:hover:border-primary-800 transition-all duration-300 group"
                                 >
                                     <div className="flex items-start gap-4">
                                         <div
@@ -160,15 +160,15 @@ export default function BlockScheduleEditor() {
 
             {/* Modal */}
             {isModalOpen && typeof document !== 'undefined' && createPortal(
-                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-scale-up">
-                        <div className="flex items-center justify-between p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <div className="fixed inset-0 z-[60] bg-gray-750/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white dark:bg-gray-900 border border-gray-150/50 dark:border-gray-800/80 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-scale-up">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-150/30 dark:border-gray-800/50">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                                 Novo Bloco de Estudo
                             </h3>
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                className="p-1 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                             >
                                 <XMarkIcon className="h-5 w-5" />
                             </button>

@@ -114,10 +114,10 @@ export default function WeeklyScheduleEditor() {
                             key={day}
                             onClick={() => handleDayClick(dayIndex)}
                             className={`
-                                rounded-xl p-2 min-h-[120px] flex flex-col cursor-pointer transition-all border
+                                rounded-xl p-2 min-h-[110px] flex flex-col cursor-pointer transition-all border backdrop-blur-sm
                                 ${isToday
-                                    ? 'bg-white dark:bg-gray-800 border-primary-200 dark:border-primary-800 ring-1 ring-primary-500/30'
-                                    : 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 hover:border-primary-200 dark:hover:border-primary-700'
+                                    ? 'bg-white/95 dark:bg-gray-900/80 border-primary-300 dark:border-primary-800 ring-1 ring-primary-500/30 shadow-md scale-[1.01]'
+                                    : 'bg-white/40 dark:bg-gray-900/30 border-gray-150/40 dark:border-gray-800/40 hover:bg-white/80 dark:hover:bg-gray-900/60 hover:border-primary-200 dark:hover:border-primary-700 hover:shadow-sm'
                                 }
                             `}
                         >
@@ -175,8 +175,8 @@ export default function WeeklyScheduleEditor() {
             {/* Modal */}
             {isModalOpen && typeof document !== 'undefined' && createPortal(
                 <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-scale-up">
-                        <div className="flex items-center justify-between p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                    <div className="bg-white dark:bg-gray-900 border border-gray-150/50 dark:border-gray-800/80 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-scale-up">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-150/30 dark:border-gray-800/50 bg-gray-50/50 dark:bg-gray-900/30">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                                 Adicionar à {weekDays[selectedDay]}
                             </h3>

@@ -95,20 +95,29 @@ export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimulado
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] bg-gray-700 bg-opacity-50 dark:bg-black dark:bg-opacity-60 overflow-y-auto flex justify-center items-center">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md m-4">
-        <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-          <h2 className="text-xl font-semibold dark:text-white">{simuladoToEdit ? 'Editar Simulado' : 'Adicionar Simulado'}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
-            <XMarkIcon className="h-6 w-6" />
+    <div className="fixed inset-0 z-[60] bg-gray-750/60 backdrop-blur-sm overflow-y-auto flex justify-center items-center p-4 animate-fade-in">
+      <div className="bg-white dark:bg-gray-900 border border-gray-150/50 dark:border-gray-800/80 rounded-2xl shadow-xl w-full max-w-md animate-scale-in">
+        <div className="flex items-center justify-between p-4 border-b border-gray-150/30 dark:border-gray-800/50">
+          <h2 className="text-lg font-bold dark:text-white">{simuladoToEdit ? 'Editar Simulado' : 'Adicionar Simulado'}</h2>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
-        <div className="p-6">
+        <div className="p-5">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Matéria</label>
-                <select id="subject" value={subjectId} onChange={(e) => { setSubjectId(e.target.value); setTopicId(''); }} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500" required>
+                <label htmlFor="subject" className="block text-xs font-bold text-gray-450 dark:text-gray-400">Matéria</label>
+                <select 
+                  id="subject" 
+                  value={subjectId} 
+                  onChange={(e) => { setSubjectId(e.target.value); setTopicId(''); }} 
+                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-850 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
+                  required
+                >
                   <option value="">Selecione</option>
                   {subjects.map(subject => (
                     <option key={subject.id} value={subject.id}>{subject.name}</option>
@@ -116,8 +125,14 @@ export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimulado
                 </select>
               </div>
               <div>
-                <label htmlFor="topic" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tópico (Opcional)</label>
-                <select id="topic" value={topicId} onChange={(e) => setTopicId(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500" disabled={!subjectId}>
+                <label htmlFor="topic" className="block text-xs font-bold text-gray-455 dark:text-gray-400">Tópico (Opcional)</label>
+                <select 
+                  id="topic" 
+                  value={topicId} 
+                  onChange={(e) => setTopicId(e.target.value)} 
+                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-850 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all disabled:opacity-50" 
+                  disabled={!subjectId}
+                >
                   <option value="">Selecione</option>
                   {availableTopics.map(topic => (
                     <option key={topic.id} value={topic.id}>{topic.title}</option>
@@ -126,26 +141,64 @@ export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimulado
               </div>
             </div>
             <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Data</label>
-              <input type="date" id="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500" required />
+              <label htmlFor="date" className="block text-xs font-bold text-gray-450 dark:text-gray-400">Data</label>
+              <input 
+                type="date" 
+                id="date" 
+                value={date} 
+                onChange={(e) => setDate(e.target.value)} 
+                className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-850 bg-white dark:bg-gray-955 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
+                required 
+              />
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label htmlFor="questions" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nº Questões</label>
-                <input type="number" id="questions" value={questions} onChange={(e) => setQuestions(Number(e.target.value))} min="1" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500" required />
+                <label htmlFor="questions" className="block text-[11px] font-bold text-gray-450 dark:text-gray-400">Questões</label>
+                <input 
+                  type="number" 
+                  id="questions" 
+                  value={questions} 
+                  onChange={(e) => setQuestions(Number(e.target.value))} 
+                  min="1" 
+                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-850 bg-white dark:bg-gray-955 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
+                  required 
+                />
               </div>
               <div>
-                <label htmlFor="hits" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nº Acertos</label>
-                <input type="number" id="hits" value={hits} onChange={(e) => setHits(Number(e.target.value))} min="0" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500" />
+                <label htmlFor="hits" className="block text-[11px] font-bold text-gray-450 dark:text-gray-400">Acertos</label>
+                <input 
+                  type="number" 
+                  id="hits" 
+                  value={hits} 
+                  onChange={(e) => setHits(Number(e.target.value))} 
+                  min="0" 
+                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-850 bg-white dark:bg-gray-955 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
+                />
               </div>
               <div>
-                <label htmlFor="timeSpent" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tempo (min)</label>
-                <input type="number" id="timeSpent" value={timeSpent} onChange={(e) => setTimeSpent(Number(e.target.value))} min="0" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500" />
+                <label htmlFor="timeSpent" className="block text-[11px] font-bold text-gray-450 dark:text-gray-400">Tempo (min)</label>
+                <input 
+                  type="number" 
+                  id="timeSpent" 
+                  value={timeSpent} 
+                  onChange={(e) => setTimeSpent(Number(e.target.value))} 
+                  min="0" 
+                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-850 bg-white dark:bg-gray-955 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
+                />
               </div>
             </div>
-            <div className="flex justify-end gap-2 mt-4">
-              <button type="button" onClick={onClose} className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700">Cancelar</button>
-              <button type="submit" className="px-4 py-2 rounded bg-primary-600 text-white hover:bg-primary-700">
+            <div className="flex justify-end gap-2 pt-2">
+              <button 
+                type="button" 
+                onClick={onClose} 
+                className="px-4 py-2 text-xs font-semibold rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-750 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                className="px-4 py-2 text-xs font-semibold rounded-xl bg-primary-600 text-white hover:bg-primary-700 shadow-md shadow-primary-500/10 transition-colors"
+              >
                 {simuladoToEdit ? 'Salvar Alterações' : 'Salvar'}
               </button>
             </div>
