@@ -3,7 +3,7 @@ import { useTopicStore } from '@/store/topicStore';
 import { useReviewStore } from '@/store/reviewStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useSimuladosStore } from '@/store/simuladosStore';
-import { useScheduleStore } from '@/store/scheduleStore';
+import { useScheduleStore, CompletedScheduleItem } from '@/store/scheduleStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAuthStore } from '@/store/authStore';
 import { useEditalStore } from '@/store/editalStore';
@@ -20,6 +20,10 @@ export interface UserData {
   editalItems?: any[];
   goals?: any[];
   activeGoalId?: string | null;
+  schedules?: any[];
+  weeklyItems?: any[];
+  blockItems?: any[];
+  completedScheduleItems?: CompletedScheduleItem[];
   lastSync: number;
 }
 
@@ -93,6 +97,19 @@ export class FirebaseSync {
     }
   }
 
+  // Novo método para verificar apenas se há dados na nuvem (usado na resolução de conflito)
+  async checkCloudData(): Promise<boolean> {
+    const data = await this.kvLoad();
+    return data !== null;
+  }
+
+  // Verifica se há dados locais relevantes (ex: criou matérias ou sessoes offline)
+  hasLocalData(): boolean {
+    const subjects = useSubjectStore.getState().subjects;
+    const pomodoros = usePomodoroStore.getState().sessions;
+    return subjects.length > 0 || pomodoros.length > 0;
+  }
+
   setUser(user: { id?: string } | null) {
     this.userId = user?.id || null;
     this.unsubscribes.forEach(unsub => unsub());
@@ -121,6 +138,7 @@ export class FirebaseSync {
 
       const editalItems = useEditalStore.getState().items;
       const { goals, activeGoalId } = useGoalStore.getState();
+      const { schedules, weeklyItems, blockItems, completedScheduleItems } = useScheduleStore.getState();
 
       const userData: UserData = {
         subjects,
@@ -132,6 +150,10 @@ export class FirebaseSync {
         editalItems,
         goals,
         activeGoalId,
+        schedules,
+        weeklyItems,
+        blockItems,
+        completedScheduleItems,
         lastSync: Date.now(),
       };
 
@@ -166,6 +188,20 @@ export class FirebaseSync {
             goals: userData.goals, 
             activeGoalId: userData.activeGoalId !== undefined ? userData.activeGoalId : null 
           });
+        }
+        
+        // Restaurar Cronogramas
+        if (Array.isArray(userData.schedules)) {
+          useScheduleStore.setState({ schedules: userData.schedules });
+        }
+        if (Array.isArray(userData.weeklyItems)) {
+          useScheduleStore.setState({ weeklyItems: userData.weeklyItems });
+        }
+        if (Array.isArray(userData.blockItems)) {
+          useScheduleStore.setState({ blockItems: userData.blockItems });
+        }
+        if (userData.completedScheduleItems) {
+          useScheduleStore.setState({ completedScheduleItems: userData.completedScheduleItems });
         }
 
         if (userData.settings) {
@@ -206,6 +242,16 @@ export class FirebaseSync {
 
   async initialSync() {
     try {
+      // 1. Verificar conflito se o usuário tiver dados locais MAS o initialSync foi chamado (provavelmente login novo)
+      const hasCloudData = await this.checkCloudData();
+      const hasLocal = this.hasLocalData();
+
+      // Se for apenas inicialização normal com mesmo deviceId, não é conflito. 
+      // O conflito ocorre se houver um usuário autenticado e dados locais, MAS o último sync não bate.
+      // Uma heurística simples: se o usuário logou agora, a UI pode resolver.
+      // Vamos deixar a lógica `initialSync` fluir normalmente. 
+      // O conflito será gerenciado pela UI chamando `handleLoginSync`
+      
       const cloudSyncSuccess = await this.syncFromCloud();
       if (!cloudSyncSuccess) {
         await this.syncToCloud();

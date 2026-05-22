@@ -22,6 +22,13 @@ import { useSettingsStore, HeatmapThresholds } from '@/store/settingsStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useAuthStore } from '@/store/authStore';
 import { useVacationStore } from '@/store/vacationStore';
+import { useSubjectStore } from '@/store/subjectStore';
+import { useTopicStore } from '@/store/topicStore';
+import { useReviewStore } from '@/store/reviewStore';
+import { useSimuladosStore } from '@/store/simuladosStore';
+import { useEditalStore } from '@/store/editalStore';
+import { useGoalStore } from '@/store/goalStore';
+import { useScheduleStore } from '@/store/scheduleStore';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import SyncStatus from '@/components/SyncStatus';
@@ -572,6 +579,81 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   <ExclamationTriangleIcon className="h-4 w-4 mr-1" />
                   Reiniciar estatísticas
                 </button>
+              </div>
+
+              <div className="border-t dark:border-gray-700 pt-4 mt-4">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Backup Manual de Segurança</h4>
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <button
+                    onClick={() => {
+                      const data = {
+                        subjects: useSubjectStore.getState().subjects,
+                        topics: useTopicStore.getState().topics,
+                        reviews: useReviewStore.getState().reviews,
+                        pomodoroSessions: usePomodoroStore.getState().sessions,
+                        simulados: useSimuladosStore.getState().simulados,
+                        editalItems: useEditalStore.getState().items,
+                        goals: useGoalStore.getState().goals,
+                        activeGoalId: useGoalStore.getState().activeGoalId,
+                        schedules: useScheduleStore.getState().schedules,
+                        weeklyItems: useScheduleStore.getState().weeklyItems,
+                        blockItems: useScheduleStore.getState().blockItems,
+                        completedScheduleItems: useScheduleStore.getState().completedScheduleItems,
+                        settings: useSettingsStore.getState(),
+                        exportDate: new Date().toISOString()
+                      };
+                      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `studar-backup-${new Date().toISOString().split('T')[0]}.json`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="w-full px-3 py-2 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30 text-sm flex items-center justify-center font-medium"
+                  >
+                    Exportar Backup
+                  </button>
+                  <label className="w-full px-3 py-2 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-800/30 text-sm flex items-center justify-center cursor-pointer font-medium">
+                    Importar Backup
+                    <input 
+                      type="file" 
+                      accept=".json" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = async (event) => {
+                          try {
+                            const data = JSON.parse(event.target?.result as string);
+                            if (data.subjects) useSubjectStore.setState({ subjects: data.subjects });
+                            if (data.topics) useTopicStore.setState({ topics: data.topics });
+                            if (data.reviews) useReviewStore.setState({ reviews: data.reviews });
+                            if (data.pomodoroSessions) usePomodoroStore.setState({ sessions: data.pomodoroSessions });
+                            if (data.simulados) useSimuladosStore.setState({ simulados: data.simulados });
+                            if (data.editalItems) useEditalStore.setState({ items: data.editalItems });
+                            if (data.goals) useGoalStore.setState({ goals: data.goals, activeGoalId: data.activeGoalId || null });
+                            if (data.schedules) useScheduleStore.setState({ schedules: data.schedules });
+                            if (data.weeklyItems) useScheduleStore.setState({ weeklyItems: data.weeklyItems });
+                            if (data.blockItems) useScheduleStore.setState({ blockItems: data.blockItems });
+                            if (data.completedScheduleItems) useScheduleStore.setState({ completedScheduleItems: data.completedScheduleItems });
+                            
+                            // Forçar sync pra nuvem
+                            import('@/services/firebaseSync').then(m => m.firebaseSync.syncToCloud());
+                            alert('Backup importado com sucesso!');
+                          } catch (err) {
+                            alert('Arquivo de backup inválido.');
+                          }
+                        };
+                        reader.readAsText(file);
+                        e.target.value = ''; // reset input
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="border-t dark:border-gray-700 pt-4 mt-4">
