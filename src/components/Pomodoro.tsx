@@ -6,6 +6,7 @@ import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useReviewStore } from '@/store/reviewStore';
 import { PlayIcon, PauseIcon, ArrowPathIcon, ForwardIcon, CheckCircleIcon, SparklesIcon } from '@heroicons/react/24/solid';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } from 'date-fns';
 import confetti from 'canvas-confetti';
 import { playAlarmSound } from '@/utils/sounds';
@@ -41,6 +42,7 @@ export default function Pomodoro() {
   const { schedules, weeklyItems, blockItems, isItemCompletedForDate, toggleScheduleItemCompletion } = useScheduleStore();
 
   const [selectedItemId, setSelectedItemId] = useState<string>('');
+  const [zenMode, setZenMode] = useState(false);
   const [selectedTopicOverrides, setSelectedTopicOverrides] = useState<Record<string, string>>({});
   // Rastreia os tópicos já estudados para cada item de cronograma (bloco/semanal)
   // Formato: { itemId: [topicId1, topicId2, ...] }
@@ -479,18 +481,61 @@ export default function Pomodoro() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isRunning, isStartDisabled]);
 
+  // --- Zen Mode helpers ---
+  const zenTotalSeconds = (() => {
+    const s = usePomodoroStore.getState().settings;
+    if (currentState === 'focus') return s.focusDuration * 60;
+    if (currentState === 'shortBreak') return s.shortBreakDuration * 60;
+    return s.longBreakDuration * 60;
+  })();
+
+  // Active item info for Zen overlay
+  const zenSelectedPlan = todayPlannedItems.find(p => p.item.id === selectedItemId);
+  const zenSubject = zenSelectedPlan ? subjects.find(s => s.id === zenSelectedPlan.item.subjectId) : null;
+  const zenLinkedTopic = zenSelectedPlan ? topics.find(t => t.linkedScheduleItemId === zenSelectedPlan.item.id) : null;
+  const zenTopicById = zenSelectedPlan?.item.topicId ? topics.find(t => t.id === zenSelectedPlan.item.topicId) : null;
+  const zenTopic = zenLinkedTopic || zenTopicById;
+
+  // Ring progress (0 → 1, full → empty as time passes)
+  const zenProgress = zenTotalSeconds > 0 ? timeRemaining / zenTotalSeconds : 1;
+
+  // Ring colours per state
+  const zenRingColor = currentState === 'focus'
+    ? '#0ea5e9'   // primary cyan
+    : currentState === 'shortBreak'
+      ? '#10b981'  // green
+      : '#6366f1'; // indigo (long break)
+
+  const zenGlowColor = currentState === 'focus'
+    ? 'rgba(14,165,233,0.35)'
+    : currentState === 'shortBreak'
+      ? 'rgba(16,185,129,0.35)'
+      : 'rgba(99,102,241,0.35)';
+
   return (
     <div className="max-w-md mx-auto space-y-5 pb-24">
       {/* Header Minimalista */}
       <div className="flex items-center justify-between px-2">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Foco</h2>
-        <div className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${currentState === 'focus'
-          ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-          : 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+        <div className="flex items-center gap-2">
+          {/* Botão Modo Zen */}
+          <button
+            onClick={() => setZenMode(true)}
+            title="Modo Zen"
+            className="p-1.5 rounded-full text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+            </svg>
+          </button>
+          <div className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${
+            currentState === 'focus'
+              ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
+              : 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
           }`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${currentState === 'focus' ? 'bg-primary-500' : 'bg-green-500'
-            }`}></span>
-          {getStatusText()}
+            <span className={`w-1.5 h-1.5 rounded-full ${currentState === 'focus' ? 'bg-primary-500' : 'bg-green-500'}`}></span>
+            {getStatusText()}
+          </div>
         </div>
       </div>
 
@@ -763,6 +808,137 @@ export default function Pomodoro() {
         <span>{completedPomodoros}</span>
         <span>sessões hoje</span>
       </div>
+
+      {/* ===== MODO ZEN ===== */}
+      {zenMode && (
+        <div
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
+          style={{ background: 'radial-gradient(ellipse at 50% 40%, #0d1a2a 0%, #060b12 100%)' }}
+        >
+          {/* Botão sair */}
+          <button
+            onClick={() => setZenMode(false)}
+            className="absolute top-6 right-6 p-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/80 transition-all"
+          >
+            <XMarkIcon className="h-5 w-5" />
+          </button>
+
+          {/* Estado do timer (foco / pausa) */}
+          <p className="absolute top-6 left-6 text-xs font-semibold tracking-[0.2em] uppercase" style={{ color: zenRingColor }}>
+            {getStatusText()}
+          </p>
+
+          {/* Matéria + Tópico */}
+          <div className="mb-10 text-center px-8">
+            {zenSubject && (
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <span
+                  className="inline-block w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: zenSubject.color }}
+                />
+                <span className="text-sm font-medium text-white/50 tracking-wide">
+                  {zenSubject.name}
+                </span>
+              </div>
+            )}
+            {zenTopic && (
+              <p className="text-lg font-semibold text-white/80">{zenTopic.title}</p>
+            )}
+            {!zenSubject && (
+              <p className="text-sm text-white/30">Nenhuma tarefa selecionada</p>
+            )}
+          </div>
+
+          {/* Anel SVG animado */}
+          <div className="relative flex items-center justify-center">
+            {/* Brilho externo */}
+            <div
+              className="absolute rounded-full blur-2xl opacity-40"
+              style={{
+                width: 220,
+                height: 220,
+                background: zenGlowColor,
+                transform: 'scale(1.15)',
+              }}
+            />
+            <svg width="220" height="220" viewBox="0 0 220 220" style={{ transform: 'rotate(-90deg)' }}>
+              {/* Trilha de fundo */}
+              <circle
+                cx="110" cy="110" r="96"
+                fill="none"
+                stroke="rgba(255,255,255,0.06)"
+                strokeWidth="10"
+              />
+              {/* Arco de progresso */}
+              <circle
+                cx="110" cy="110" r="96"
+                fill="none"
+                stroke={zenRingColor}
+                strokeWidth="10"
+                strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 96}`}
+                strokeDashoffset={`${2 * Math.PI * 96 * (1 - zenProgress)}`}
+                style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.5s ease', filter: `drop-shadow(0 0 8px ${zenRingColor})` }}
+              />
+            </svg>
+            {/* Tempo no centro */}
+            <div className="absolute flex flex-col items-center">
+              <span
+                className="text-6xl font-light tabular-nums tracking-tighter"
+                style={{ color: 'rgba(255,255,255,0.92)', fontVariantNumeric: 'tabular-nums' }}
+              >
+                {formatTime(timeRemaining)}
+              </span>
+              <span className="text-xs text-white/25 mt-1 tracking-widest uppercase">
+                {completedPomodoros} sessões hoje
+              </span>
+            </div>
+          </div>
+
+          {/* Controles */}
+          <div className="flex items-center gap-8 mt-12">
+            <button
+              onClick={resetTimer}
+              className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/70 transition-all"
+              title="Reiniciar"
+            >
+              <ArrowPathIcon className="h-6 w-6" />
+            </button>
+
+            {!isRunning ? (
+              <button
+                onClick={handleStart}
+                disabled={isStartDisabled}
+                className="flex items-center justify-center w-16 h-16 rounded-full text-white shadow-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40"
+                style={{ background: zenRingColor, boxShadow: `0 0 32px ${zenGlowColor}` }}
+              >
+                <PlayIcon className="h-7 w-7 pl-1" />
+              </button>
+            ) : (
+              <button
+                onClick={pauseTimer}
+                className="flex items-center justify-center w-16 h-16 rounded-full text-white shadow-xl transition-all hover:scale-105 active:scale-95"
+                style={{ background: zenRingColor, boxShadow: `0 0 32px ${zenGlowColor}` }}
+              >
+                <PauseIcon className="h-7 w-7" />
+              </button>
+            )}
+
+            <button
+              onClick={() => skipToNext(false)}
+              className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/70 transition-all"
+              title="Pular"
+            >
+              <ForwardIcon className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Dica discreta */}
+          <p className="absolute bottom-8 text-[11px] text-white/15 tracking-widest uppercase">
+            Pressione ✕ para sair do Modo Zen
+          </p>
+        </div>
+      )}
     </div>
   );
 }
