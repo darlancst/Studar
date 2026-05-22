@@ -60,7 +60,7 @@ export default function SimuladosFilters({
           <select
             value={selectedSubject}
             onChange={(e) => handleSubjectChange(e.target.value)}
-            className="w-full text-xs rounded-lg border-gray-250/70 dark:border-gray-800 dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500/30 py-1.5 transition-all"
+            className="w-full text-xs rounded-lg border-gray-250/70 dark:border-gray-700 dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500/30 py-1.5 transition-all"
           >
             <option value="">Todas</option>
             {subjects.map(subject => (
@@ -78,7 +78,7 @@ export default function SimuladosFilters({
             value={selectedTopic}
             onChange={(e) => setSelectedTopic(e.target.value)}
             disabled={!selectedSubject || selectedSubject === '__general__'}
-            className="w-full text-xs rounded-lg border-gray-250/70 dark:border-gray-800 dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500/30 disabled:opacity-50 py-1.5 transition-all"
+            className="w-full text-xs rounded-lg border-gray-250/70 dark:border-gray-700 dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500/30 disabled:opacity-50 py-1.5 transition-all"
           >
             <option value="">Todos</option>
             {availableTopics.map(topic => (
@@ -95,7 +95,7 @@ export default function SimuladosFilters({
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full text-xs rounded-lg border-gray-250/70 dark:border-gray-800 dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500/30 py-1.5 transition-all"
+            className="w-full text-xs rounded-lg border-gray-250/70 dark:border-gray-700 dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500/30 py-1.5 transition-all"
           />
         </div>
         
@@ -107,7 +107,7 @@ export default function SimuladosFilters({
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full text-xs rounded-lg border-gray-250/70 dark:border-gray-800 dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500/30 py-1.5 transition-all"
+            className="w-full text-xs rounded-lg border-gray-250/70 dark:border-gray-700 dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500/30 py-1.5 transition-all"
           />
         </div>
       </div>

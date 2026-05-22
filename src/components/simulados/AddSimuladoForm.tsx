@@ -115,7 +115,7 @@ export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimulado
                   id="subject" 
                   value={subjectId} 
                   onChange={(e) => { setSubjectId(e.target.value); setTopicId(''); }} 
-                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-850 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
+                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-700 bg-white dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
                   required
                 >
                   <option value="">Selecione</option>
@@ -130,7 +130,7 @@ export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimulado
                   id="topic" 
                   value={topicId} 
                   onChange={(e) => setTopicId(e.target.value)} 
-                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-850 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all disabled:opacity-50" 
+                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-700 bg-white dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all disabled:opacity-50" 
                   disabled={!subjectId}
                 >
                   <option value="">Selecione</option>
@@ -147,7 +147,7 @@ export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimulado
                 id="date" 
                 value={date} 
                 onChange={(e) => setDate(e.target.value)} 
-                className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-850 bg-white dark:bg-gray-955 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
+                className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-700 bg-white dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
                 required 
               />
             </div>
@@ -160,7 +160,7 @@ export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimulado
                   value={questions} 
                   onChange={(e) => setQuestions(Number(e.target.value))} 
                   min="1" 
-                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-850 bg-white dark:bg-gray-955 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
+                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-700 bg-white dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
                   required 
                 />
               </div>
@@ -172,7 +172,7 @@ export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimulado
                   value={hits} 
                   onChange={(e) => setHits(Number(e.target.value))} 
                   min="0" 
-                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-850 bg-white dark:bg-gray-955 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
+                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-700 bg-white dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
                 />
               </div>
               <div>
@@ -183,7 +183,7 @@ export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimulado
                   value={timeSpent} 
                   onChange={(e) => setTimeSpent(Number(e.target.value))} 
                   min="0" 
-                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-850 bg-white dark:bg-gray-955 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
+                  className="mt-1 block w-full p-2 text-xs rounded-xl border border-gray-250/70 dark:border-gray-700 bg-white dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-500/50 focus:border-transparent transition-all" 
                 />
               </div>
             </div>

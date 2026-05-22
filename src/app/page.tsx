@@ -240,9 +240,12 @@ export default function Home() {
             >
               <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-primary-600/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <svg className="w-5.5 h-5.5 text-primary-600 dark:text-primary-400 drop-shadow-[0_0_6px_rgba(99,102,241,0.35)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5" />
-                <path d="M2 12l10 5 10-5" />
+                <rect x="6" y="3" width="14" height="18" rx="2" />
+                <path d="M3 6h3" />
+                <path d="M3 10h3" />
+                <path d="M3 14h3" />
+                <path d="M3 18h3" />
+                <path d="M16 8.5a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v1.5a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v1.5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2" />
               </svg>
             </button>
             <div className="hidden sm:block">

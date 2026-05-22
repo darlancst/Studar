@@ -396,20 +396,6 @@ export default function Calendar() {
             const dayReviewsList = getReviewsForDay(day);
             const dayPlannedList = getPlannedItemsForDay(day);
 
-            // Combine items for indicators
-            const indicators = [
-              ...dayPlannedList.map(item => ({ type: 'planned', subjectId: item.subjectId })),
-              ...dayReviewsList.map(review => {
-                const topic = topics.find(t => t.id === review.topicId);
-                return { type: 'review', subjectId: topic?.subjectId };
-              }),
-              ...dayTopicsList.map(topic => ({ type: 'topic', subjectId: topic.subjectId }))
-            ];
-
-            // Limit indicators to avoid clutter
-            const displayIndicators = indicators.slice(0, 12);
-            const hasMore = indicators.length > 12;
-
             return (
               <div
                 key={i}
@@ -417,7 +403,7 @@ export default function Calendar() {
                 className={`
                   relative border-b border-r border-gray-150/35 dark:border-gray-800/35 p-1 transition-all cursor-pointer hover:bg-white/80 dark:hover:bg-gray-850/60
                   ${!isCurrentMonth ? 'opacity-30 bg-gray-100/30 dark:bg-gray-900/30' : ''}
-                  ${isSelected ? 'bg-white/90 dark:bg-gray-805/75 ring-2 ring-inset ring-primary-500/50 z-10' : ''}
+                  ${isSelected ? 'bg-white/90 dark:bg-gray-800/80 ring-2 ring-inset ring-primary-500/50 z-10' : ''}
                 `}
               >
                 <div className="flex flex-col h-full justify-between">
@@ -430,37 +416,34 @@ export default function Calendar() {
                     </span>
                   </div>
 
-                  {/* Indicators */}
-                  <div className="flex flex-wrap gap-0.5 mt-1 content-end">
-                    {displayIndicators.map((ind, idx) => {
-                      const subject = subjects.find(s => s.id === ind.subjectId);
-                      if (!subject) return null;
-
-                      let shapeClass = "rounded-full"; // Default circle (Topic)
-                      let style: React.CSSProperties = { backgroundColor: subject.color };
-
-                      if (ind.type === 'planned') {
-                        shapeClass = "rounded-sm"; // Square for planned
-                      } else if (ind.type === 'review') {
-                        shapeClass = ""; // Triangle for review
-                        style = {
-                          ...style,
-                          clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
-                          borderRadius: 0
-                        };
-                      }
-
-                      return (
-                        <div
-                          key={idx}
-                          className={`h-2 w-2 ${shapeClass}`}
-                          style={style}
-                          title={`${ind.type === 'planned' ? 'Planejado' : ind.type === 'review' ? 'Revisão' : 'Estudado'}: ${subject.name}`}
-                        />
-                      );
-                    })}
-                    {hasMore && (
-                      <span className="text-[10px] text-gray-400 leading-none">+</span>
+                  {/* Grouped and Compact Indicators */}
+                  <div className="flex flex-wrap gap-1 mt-1 content-end">
+                    {dayPlannedList.length > 0 && (
+                      <div 
+                        className="px-1 py-0.5 rounded bg-gray-100/80 dark:bg-gray-800/80 text-[10px] font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1 border border-gray-200/50 dark:border-gray-700/30" 
+                        title={`${dayPlannedList.length} Planejado(s)`}
+                      >
+                        <div className="w-1.5 h-1.5 rounded-sm bg-gray-400 dark:bg-gray-500" />
+                        <span>{dayPlannedList.length}</span>
+                      </div>
+                    )}
+                    {dayTopicsList.length > 0 && (
+                      <div 
+                        className="px-1 py-0.5 rounded bg-green-50 dark:bg-green-950/30 text-[10px] font-bold text-green-700 dark:text-green-400 flex items-center gap-1 border border-green-200/30 dark:border-green-900/20" 
+                        title={`${dayTopicsList.length} Estudado(s)`}
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        <span>{dayTopicsList.length}</span>
+                      </div>
+                    )}
+                    {dayReviewsList.length > 0 && (
+                      <div 
+                        className="px-1 py-0.5 rounded bg-yellow-50 dark:bg-yellow-950/30 text-[10px] font-bold text-yellow-700 dark:text-yellow-400 flex items-center gap-1 border border-yellow-200/30 dark:border-yellow-900/20" 
+                        title={`${dayReviewsList.length} Revisão/Revisões`}
+                      >
+                        <div className="w-1.5 h-1.5 bg-yellow-500" style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
+                        <span>{dayReviewsList.length}</span>
+                      </div>
                     )}
                   </div>
                 </div>

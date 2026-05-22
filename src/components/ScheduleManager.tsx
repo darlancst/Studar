@@ -88,7 +88,7 @@ export default function ScheduleManager() {
                                     {schedule.name}
                                 </h3>
                                 {activeScheduleId === schedule.id && (
-                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary-100/70 text-primary-850 dark:bg-primary-950 dark:text-primary-300">
+                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold bg-primary-600 text-white dark:bg-primary-500 dark:text-gray-950 shadow-sm">
                                         Ativo
                                     </span>
                                 )}
