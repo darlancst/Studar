@@ -35,7 +35,8 @@ export default function SubjectTopicManager({ onClose }: SubjectTopicManagerProp
     const allColors = [
         '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
         '#EC4899', '#06B6D4', '#F97316', '#6366F1', '#84CC16',
-        '#9333EA', '#2563EB', '#059669', '#B91C1C', '#FB7185'
+        '#9333EA', '#2563EB', '#059669', '#B91C1C', '#FB7185',
+        '#14B8A6', '#64748B', '#D946EF', '#EAB308', '#0EA5E9', '#F43F5E'
     ];
 
     // Obtém as cores já utilizadas por OUTRAS matérias
