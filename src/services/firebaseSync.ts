@@ -21,6 +21,7 @@ export interface UserData {
   goals?: any[];
   activeGoalId?: string | null;
   schedules?: any[];
+  activeScheduleId?: string | null;
   weeklyItems?: any[];
   blockItems?: any[];
   completedScheduleItems?: CompletedScheduleItem[];
@@ -138,7 +139,7 @@ export class FirebaseSync {
 
       const editalItems = useEditalStore.getState().items;
       const { goals, activeGoalId } = useGoalStore.getState();
-      const { schedules, weeklyItems, blockItems, completedScheduleItems } = useScheduleStore.getState();
+      const { schedules, activeScheduleId, weeklyItems, blockItems, completedScheduleItems } = useScheduleStore.getState();
 
       const userData: UserData = {
         subjects,
@@ -151,6 +152,7 @@ export class FirebaseSync {
         goals,
         activeGoalId,
         schedules,
+        activeScheduleId,
         weeklyItems,
         blockItems,
         completedScheduleItems,
@@ -193,6 +195,9 @@ export class FirebaseSync {
         // Restaurar Cronogramas
         if (Array.isArray(userData.schedules)) {
           useScheduleStore.setState({ schedules: userData.schedules });
+        }
+        if (userData.activeScheduleId !== undefined) {
+          useScheduleStore.setState({ activeScheduleId: userData.activeScheduleId });
         }
         if (Array.isArray(userData.weeklyItems)) {
           useScheduleStore.setState({ weeklyItems: userData.weeklyItems });
