@@ -282,10 +282,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   type="number"
                   min="1"
                   max="60"
-                  value={pomodoroSettings.focusDuration}
+                  value={pomodoroSettings.focusDuration || ''}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (!isNaN(val) && val > 0) updatePomodoroSettings({ focusDuration: val });
+                    const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    if (!isNaN(val)) updatePomodoroSettings({ focusDuration: val });
+                  }}
+                  onBlur={() => {
+                    if (!pomodoroSettings.focusDuration || pomodoroSettings.focusDuration < 1) {
+                      updatePomodoroSettings({ focusDuration: 25 });
+                    }
                   }}
                   className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
                 />
@@ -298,10 +303,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   type="number"
                   min="1"
                   max="30"
-                  value={pomodoroSettings.shortBreakDuration}
+                  value={pomodoroSettings.shortBreakDuration || ''}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (!isNaN(val) && val > 0) updatePomodoroSettings({ shortBreakDuration: val });
+                    const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    if (!isNaN(val)) updatePomodoroSettings({ shortBreakDuration: val });
+                  }}
+                  onBlur={() => {
+                    if (!pomodoroSettings.shortBreakDuration || pomodoroSettings.shortBreakDuration < 1) {
+                      updatePomodoroSettings({ shortBreakDuration: 5 });
+                    }
                   }}
                   className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
                 />
@@ -314,10 +324,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   type="number"
                   min="1"
                   max="60"
-                  value={pomodoroSettings.longBreakDuration}
+                  value={pomodoroSettings.longBreakDuration || ''}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (!isNaN(val) && val > 0) updatePomodoroSettings({ longBreakDuration: val });
+                    const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    if (!isNaN(val)) updatePomodoroSettings({ longBreakDuration: val });
+                  }}
+                  onBlur={() => {
+                    if (!pomodoroSettings.longBreakDuration || pomodoroSettings.longBreakDuration < 1) {
+                      updatePomodoroSettings({ longBreakDuration: 15 });
+                    }
                   }}
                   className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
                 />
@@ -330,10 +345,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   type="number"
                   min="1"
                   max="10"
-                  value={pomodoroSettings.longBreakInterval}
+                  value={pomodoroSettings.longBreakInterval || ''}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (!isNaN(val) && val > 0) updatePomodoroSettings({ longBreakInterval: val });
+                    const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    if (!isNaN(val)) updatePomodoroSettings({ longBreakInterval: val });
+                  }}
+                  onBlur={() => {
+                    if (!pomodoroSettings.longBreakInterval || pomodoroSettings.longBreakInterval < 1) {
+                      updatePomodoroSettings({ longBreakInterval: 4 });
+                    }
                   }}
                   className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
                 />
