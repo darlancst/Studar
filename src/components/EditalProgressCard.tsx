@@ -1,0 +1,132 @@
+'use client';
+
+import { useState } from 'react';
+import { useSubjectStore } from '@/store/subjectStore';
+import { useEditalStore } from '@/store/editalStore';
+import { ChevronDownIcon, ChevronUpIcon, ListBulletIcon } from '@heroicons/react/24/outline';
+import EditalManagerModal from './EditalManagerModal';
+
+export default function EditalProgressCard() {
+  const [expanded, setExpanded] = useState(false);
+  const [showManager, setShowManager] = useState(false);
+  const { subjects } = useSubjectStore();
+  const { items } = useEditalStore();
+
+  // Se não houver itens, não renderiza o card
+  if (items.length === 0) {
+    return (
+      <>
+        <div
+          className="group bg-white dark:bg-gray-800/90 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-all duration-300 cursor-pointer"
+          onClick={() => setShowManager(true)}
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-800/30 rounded-xl group-hover:scale-105 transition-transform">
+              <ListBulletIcon className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">Progresso do Edital</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Clique para importar seu edital</p>
+            </div>
+          </div>
+        </div>
+        {showManager && <EditalManagerModal onClose={() => setShowManager(false)} />}
+      </>
+    );
+  }
+
+  // Cálculos de progresso
+  const totalItems = items.length;
+  const completedItems = items.filter(i => i.completed).length;
+  const globalPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+  const subjectProgress = subjects
+    .map(subject => {
+      const subjectItems = items.filter(i => i.subjectId === subject.id);
+      if (subjectItems.length === 0) return null;
+      const done = subjectItems.filter(i => i.completed).length;
+      const pct = Math.round((done / subjectItems.length) * 100);
+      return { subject, done, total: subjectItems.length, pct };
+    })
+    .filter(Boolean) as { subject: typeof subjects[0]; done: number; total: number; pct: number }[];
+
+  return (
+    <>
+      <div className="bg-white dark:bg-gray-800/90 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-all duration-300 overflow-hidden">
+        {/* Header (sempre visível) */}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full p-4 flex items-center gap-3 text-left"
+        >
+          <div className="p-2 bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-800/30 rounded-xl flex-shrink-0">
+            <ListBulletIcon className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Progresso do Edital</span>
+              <div className="flex items-center gap-2">
+                <span className={`text-lg font-bold tabular-nums ${globalPct >= 100 ? 'text-amber-500' : 'text-teal-600 dark:text-teal-400'}`}>
+                  {globalPct}%
+                </span>
+                {expanded
+                  ? <ChevronUpIcon className="w-4 h-4 text-gray-400" />
+                  : <ChevronDownIcon className="w-4 h-4 text-gray-400" />
+                }
+              </div>
+            </div>
+            {/* Barra global */}
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+              <div
+                className="h-1.5 rounded-full animate-fill-bar bg-gradient-to-r from-teal-400 to-teal-500"
+                style={{ '--fill-width': `${globalPct}%` } as React.CSSProperties}
+              />
+            </div>
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1 tabular-nums">
+              {completedItems} de {totalItems} tópicos concluídos
+            </p>
+          </div>
+        </button>
+
+        {/* Detalhes expandidos */}
+        {expanded && (
+          <div className="px-4 pb-4 space-y-3 border-t border-gray-100 dark:border-gray-700/50 pt-3 animate-fade-in">
+            {subjectProgress.map(({ subject, done, total, pct }) => (
+              <div key={subject.id} className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{subject.name}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums ml-2 flex-shrink-0">{done}/{total}</span>
+                  </div>
+                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="h-1.5 rounded-full animate-fill-bar transition-all"
+                      style={{
+                        backgroundColor: subject.color,
+                        '--fill-width': `${pct}%`,
+                        opacity: pct === 0 ? 0.3 : 1
+                      } as React.CSSProperties}
+                    />
+                  </div>
+                </div>
+                <span className="text-xs font-semibold tabular-nums w-9 text-right flex-shrink-0" style={{ color: subject.color }}>
+                  {pct}%
+                </span>
+              </div>
+            ))}
+
+            <button
+              onClick={() => setShowManager(true)}
+              className="w-full mt-1 text-xs font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 text-center py-1.5 rounded-lg hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
+            >
+              Gerenciar Edital →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {showManager && <EditalManagerModal onClose={() => setShowManager(false)} />}
+    </>
+  );
+}

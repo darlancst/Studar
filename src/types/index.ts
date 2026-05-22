@@ -59,4 +59,12 @@ export interface Simulado {
   timeSpent?: number; // Tempo gasto em minutos (opcional)
   questions: number;
   hits: number;
-} 
+}
+
+export interface EditalItem {
+  id: string;
+  subjectId: string; // liga à matéria existente
+  title: string;
+  completed: boolean;
+  order: number;
+}

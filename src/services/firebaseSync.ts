@@ -6,6 +6,7 @@ import { useSimuladosStore } from '@/store/simuladosStore';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAuthStore } from '@/store/authStore';
+import { useEditalStore } from '@/store/editalStore';
 import { supabase } from '@/lib/supabaseClient';
 
 export interface UserData {
@@ -15,6 +16,7 @@ export interface UserData {
   pomodoroSessions: any[];
   simulados: any[];
   settings: any;
+  editalItems?: any[];
   lastSync: number;
 }
 
@@ -114,6 +116,8 @@ export class FirebaseSync {
         heatmapThresholds: settingsState.heatmapThresholds,
       };
 
+      const editalItems = useEditalStore.getState().items;
+
       const userData: UserData = {
         subjects,
         topics,
@@ -121,6 +125,7 @@ export class FirebaseSync {
         pomodoroSessions,
         simulados,
         settings,
+        editalItems,
         lastSync: Date.now(),
       };
 
@@ -147,6 +152,9 @@ export class FirebaseSync {
         useReviewStore.setState({ reviews: userData.reviews || [] });
         usePomodoroStore.setState({ sessions: userData.pomodoroSessions || [] });
         useSimuladosStore.setState({ simulados: userData.simulados || [] });
+        if (Array.isArray(userData.editalItems)) {
+          useEditalStore.setState({ items: userData.editalItems });
+        }
 
         if (userData.settings) {
           const s = useSettingsStore.getState();

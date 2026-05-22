@@ -48,6 +48,7 @@ import { ptBR } from 'date-fns/locale';
 import { Subject, Review, PomodoroSession, Topic } from '@/types';
 import { useDarkMode } from '@/hooks/useDarkMode';
 import Heatmap from './Heatmap';
+import EditalProgressCard from './EditalProgressCard';
 import {
   ChartBarIcon,
   ClockIcon,
@@ -544,25 +545,28 @@ export default function Stats() {
         )}
       </div>
 
-      {/* 2. Cabeçalho e Filtros */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
-        <h2 className="text-2xl font-bold dark:text-white">Estatísticas</h2>
+      {/* 2. Progresso do Edital */}
+      <EditalProgressCard />
+
+      {/* 3. Cabeçalho e Filtros */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-1">
+        <h2 className="text-xl font-bold dark:text-white">Estatísticas</h2>
 
         <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto max-w-full">
           {(['today', 'week', 'month', 'annual', 'custom'] as const).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap ${period === p
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all whitespace-nowrap ${period === p
                 ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
             >
               {p === 'today' && 'Hoje'}
-              {p === 'week' && '7 Dias'}
-              {p === 'month' && '30 Dias'}
+              {p === 'week' && '7d'}
+              {p === 'month' && '30d'}
               {p === 'annual' && 'Ano'}
-              {p === 'custom' && 'Personalizado'}
+              {p === 'custom' && 'Custom'}
             </button>
           ))}
         </div>
@@ -678,20 +682,11 @@ export default function Stats() {
         <Heatmap />
       </div>
 
-      {/* Gráficos Principais */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-gray-800/90 p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-all duration-300 flex flex-col">
-          <h3 className="text-lg font-semibold mb-4 dark:text-white">Evolução do Estudo</h3>
-          <div className="flex-1 min-h-[250px]">
-            <Line data={lineChartData} options={chartOptions} />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800/90 p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-all duration-300 flex flex-col">
-          <h3 className="text-lg font-semibold mb-4 dark:text-white">Distribuição por Matéria</h3>
-          <div className="flex-1 min-h-[250px] flex items-center justify-center">
-            <Doughnut data={pieChartData} options={pieOptions} />
-          </div>
+      {/* Gráfico Principal */}
+      <div className="bg-white dark:bg-gray-800/90 p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-all duration-300">
+        <h3 className="text-base font-semibold mb-3 dark:text-white">Evolução do Estudo</h3>
+        <div className="min-h-[200px]">
+          <Line data={lineChartData} options={chartOptions} />
         </div>
       </div>
     </div>
