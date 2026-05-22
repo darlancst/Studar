@@ -629,7 +629,7 @@ export default function Pomodoro() {
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-50 dark:bg-primary-950/30 text-primary-700 dark:text-primary-300 text-xs font-semibold border border-primary-100 dark:border-primary-900/30">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-xs font-semibold border border-gray-200/50 dark:border-gray-800/50 shadow-sm">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
@@ -690,10 +690,10 @@ export default function Pomodoro() {
               </span>
               
               <div className="mt-4 flex flex-col items-center">
-                <span className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full ${
+                <span className={`text-xs font-extrabold uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm ${
                   currentState === 'focus'
-                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-950/40 dark:text-primary-300'
-                    : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                    ? 'bg-primary-600 text-white dark:bg-primary-500 dark:text-gray-950'
+                    : 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-gray-950'
                 }`}>
                   {getStatusText()}
                 </span>
