@@ -7,7 +7,7 @@ import { firebaseSync } from '@/services/firebaseSync';
 
 interface SubjectState {
   subjects: Subject[];
-  addSubject: (name: string, color: string) => void;
+  addSubject: (name: string, color: string) => Subject;
   updateSubject: (id: string, data: Partial<Subject>) => void;
   deleteSubject: (id: string) => void;
   getSubjectById: (id: string) => Subject | undefined;

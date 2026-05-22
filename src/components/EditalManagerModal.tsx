@@ -17,7 +17,7 @@ interface JsonImportEntry {
 }
 
 export default function EditalManagerModal({ onClose }: EditalManagerModalProps) {
-  const { subjects } = useSubjectStore();
+  const { subjects, addSubject } = useSubjectStore();
   const { items, addItems, toggleItem, deleteItemsBySubjectAndGoal, deleteItemsByGoal, deleteLegacyItems } = useEditalStore();
   const { goals, activeGoalId, setActiveGoal, addGoal, deleteGoal } = useGoalStore();
   const [jsonInput, setJsonInput] = useState('');
@@ -51,13 +51,15 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
       const notFound: string[] = [];
 
       parsed.forEach((entry) => {
-        const subject = subjects.find(
+        let subject = subjects.find(
           s => s.name.toLowerCase().trim() === entry.materia.toLowerCase().trim()
         );
 
         if (!subject) {
-          notFound.push(entry.materia);
-          return;
+          // Auto-create missing subjects
+          const randomColors = ['#14b8a6', '#f43f5e', '#8b5cf6', '#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#f97316'];
+          const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+          subject = addSubject(entry.materia.trim(), randomColor);
         }
 
         const existingOrderMax = currentItems
@@ -77,11 +79,11 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
       });
 
       if (totalImported > 0) {
-        setImportSuccess(`${totalImported} tópico(s) importado(s)!${notFound.length > 0 ? ` Não encontradas: ${notFound.join(', ')}.` : ''}`);
+        setImportSuccess(`${totalImported} tópico(s) importado(s)!`);
         setJsonInput('');
         setTimeout(() => setShowImport(false), 1500);
       } else {
-        setImportError(`Nenhum tópico importado. Matérias não encontradas: ${notFound.join(', ')}.`);
+        setImportError(`Nenhum tópico importado.`);
       }
     } catch (e: any) {
       setImportError(`Erro ao processar JSON: ${e.message}`);
