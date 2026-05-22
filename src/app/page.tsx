@@ -177,7 +177,7 @@ export default function Home() {
 
   return (
     <div
-      className="min-h-screen pb-24 sm:pb-4"
+      className="min-h-screen"
       {...swipeHandlers}
     >
       <div className="max-w-6xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4">
@@ -219,7 +219,7 @@ export default function Home() {
         </div>
 
         {/* Componentes mantidos montados para preservar estado (display: none quando inativo) */}
-        <main>
+        <main className="pb-24 sm:pb-4">
           <div style={{ display: activeTab === 'stats' ? 'block' : 'none' }}>
             <Stats />
           </div>
@@ -249,13 +249,6 @@ export default function Home() {
           </div>
         </main>
 
-        <div className="sm:hidden">
-          <TabBar
-            activeTab={activeTab}
-            setActiveTab={handleTabChange}
-          />
-        </div>
-
         {showSubjectManager && (
           <SubjectTopicManager onClose={() => setShowSubjectManager(false)} />
         )}
@@ -266,6 +259,14 @@ export default function Home() {
 
         <PWAInstallPrompt />
         <PWADebug />
+      </div>
+
+      {/* Mobile TabBar fora do container para fixed funcionar corretamente */}
+      <div className="sm:hidden">
+        <TabBar
+          activeTab={activeTab}
+          setActiveTab={handleTabChange}
+        />
       </div>
     </div>
   );
