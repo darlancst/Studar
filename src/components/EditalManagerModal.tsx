@@ -151,7 +151,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
               </div>
 
               {/* Tabs de matérias */}
-              <div className="flex gap-2 overflow-x-auto pb-3 mb-3 scrollbar-hide snap-x">
+              <div className="flex gap-2 flex-wrap pb-3 mb-3">
                 {subjectsWithItems.map(s => {
                   const sItems = items.filter(i => i.subjectId === s.id);
                   const sDone = sItems.filter(i => i.completed).length;
@@ -159,7 +159,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
                     <button
                       key={s.id}
                       onClick={() => setActiveSubjectId(s.id)}
-                      className={`flex-shrink-0 snap-start flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${activeSubjectId === s.id
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${activeSubjectId === s.id
                         ? 'text-white shadow-sm'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
@@ -175,7 +175,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
               </div>
 
               {/* Lista de tópicos da matéria ativa */}
-              <div className="space-y-1 max-h-60 overflow-y-auto">
+              <div className="space-y-1">
                 {activeItems.map(item => (
                   <button
                     key={item.id}
