@@ -9,6 +9,7 @@ interface SimuladosState {
   addSimulado: (simulado: Omit<Simulado, 'id'>) => void;
   updateSimulado: (simulado: Simulado) => void;
   removeSimulado: (id: string) => void;
+  deleteSimuladosByGoal: (goalId: string) => void;
   getSimuladosBySubject: (subjectId: string) => Simulado[];
 }
 
@@ -37,6 +38,14 @@ export const useSimuladosStore = create<SimuladosState>()(
       removeSimulado: (id) =>
         set((state) => {
           const newState = state.simulados.filter((s) => s.id !== id);
+          if (typeof window !== 'undefined') {
+            setTimeout(() => firebaseSync.syncToCloud(), 100);
+          }
+          return { simulados: newState };
+        }),
+      deleteSimuladosByGoal: (goalId) =>
+        set((state) => {
+          const newState = state.simulados.filter((s) => s.goalId !== goalId);
           if (typeof window !== 'undefined') {
             setTimeout(() => firebaseSync.syncToCloud(), 100);
           }

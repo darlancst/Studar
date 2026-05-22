@@ -17,6 +17,8 @@ import { Pie, Bar, Doughnut, Line } from 'react-chartjs-2';
 import { useSubjectStore } from '@/store/subjectStore';
 import { useTopicStore } from '@/store/topicStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
+import { useGoalStore } from '@/store/goalStore';
+import { useEditalStore } from '@/store/editalStore';
 import { useReviewStore } from '@/store/reviewStore';
 import { useDatesStore } from '@/store/datesStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -80,7 +82,9 @@ type StatsPeriod = 'today' | 'week' | 'month' | 'annual' | 'custom';
 export default function Stats() {
   const { subjects } = useSubjectStore();
   const { topics } = useTopicStore();
-  const { sessions, startSession } = usePomodoroStore();
+  const { sessions: allSessions, startSession } = usePomodoroStore();
+  const { goals, activeGoalId, setActiveGoal } = useGoalStore();
+  const { items: editalItems } = useEditalStore();
   const { reviews } = useReviewStore();
   const { studyDates: dates } = useDatesStore();
   const { weeklyGoal } = useSettingsStore();
@@ -91,6 +95,27 @@ export default function Stats() {
   const [period, setPeriod] = useState<StatsPeriod>('week');
   const [customStartDate, setCustomStartDate] = useState(subDays(new Date(), 30).toISOString().split('T')[0]);
   const [customEndDate, setCustomEndDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // Filtragem Mágica de Sessões Baseada no Concurso Ativo
+  const activeSubjectIds = useMemo(() => {
+    if (!activeGoalId) return null;
+    const items = editalItems.filter(i => i.goalId === activeGoalId);
+    return new Set(items.map(i => i.subjectId));
+  }, [activeGoalId, editalItems]);
+
+  const getSubjectIdForSession = (session: PomodoroSession) => {
+    const topic = topics.find(t => t.id === session.topicId);
+    if (topic) return topic.subjectId;
+    return session.topicId; // fallback
+  };
+
+  const sessions = useMemo(() => {
+    if (!activeSubjectIds) return allSessions;
+    return allSessions.filter(s => {
+      const sId = getSubjectIdForSession(s);
+      return activeSubjectIds.has(sId);
+    });
+  }, [allSessions, activeSubjectIds, topics]);
 
   // Calcular Meta de Hoje (Horas Planejadas)
   const getTodayPlannedMinutes = () => {
@@ -550,7 +575,20 @@ export default function Stats() {
 
       {/* 3. Cabeçalho e Filtros */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-1">
-        <h2 className="text-xl font-bold dark:text-white">Estatísticas</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold dark:text-white">Estatísticas</h2>
+          {goals.length > 0 && (
+            <select
+              value={activeGoalId || ''}
+              onChange={(e) => setActiveGoal(e.target.value)}
+              className="bg-gray-100 dark:bg-gray-800 border-none text-sm rounded-lg p-1.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 font-medium cursor-pointer"
+            >
+              {goals.map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
 
         <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto max-w-full">
           {(['today', 'week', 'month', 'annual', 'custom'] as const).map((p) => (

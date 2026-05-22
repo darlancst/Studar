@@ -10,6 +10,7 @@ import { useSimuladosStore } from '@/store/simuladosStore';
 import SimuladosChart from '@/components/simulados/SimuladosChart';
 import Pagination from '@/components/Pagination';
 import { useTopicStore } from '@/store/topicStore';
+import { useGoalStore } from '@/store/goalStore';
 
 import { PlusIcon } from '@heroicons/react/24/outline';
 
@@ -25,9 +26,14 @@ const SimuladosPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const { simulados, removeSimulado } = useSimuladosStore();
+  const { goals, activeGoalId, setActiveGoal } = useGoalStore();
 
   const filteredSimulados = useMemo(() => {
     return simulados.filter(s => {
+      // Filtrar por concurso ativo
+      if (activeGoalId && s.goalId && s.goalId !== activeGoalId) return false;
+      if (activeGoalId && !s.goalId) return false; // Hide legacy/general if a goal is active, or we could show them. Let's hide them to be strict.
+      
       const simuladoDate = new Date(s.date);
       const start = startDate ? new Date(startDate) : null;
       const end = endDate ? new Date(endDate) : null;
@@ -106,7 +112,20 @@ const SimuladosPage = () => {
     <div className="min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
-        <h1 className="text-2xl font-bold">Meus Simulados</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Meus Simulados</h1>
+          {goals.length > 0 && (
+            <select
+              value={activeGoalId || ''}
+              onChange={(e) => setActiveGoal(e.target.value)}
+              className="bg-gray-100 dark:bg-gray-800 border-none text-sm rounded-lg p-1.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 font-medium cursor-pointer"
+            >
+              {goals.map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
         <button
           onClick={handleAddNew}
           className="w-full sm:w-auto bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm flex items-center justify-center gap-2 text-center"

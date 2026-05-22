@@ -10,6 +10,7 @@ interface EditalStore {
   addItems: (newItems: Omit<EditalItem, 'id'>[]) => void;
   toggleItem: (id: string) => void;
   deleteItemsBySubject: (subjectId: string) => void;
+  deleteItemsByGoal: (goalId: string) => void;
   resetEdital: () => void;
 }
 
@@ -45,6 +46,15 @@ export const useEditalStore = create<EditalStore>()(
           setTimeout(() => firebaseSync.syncToCloud(), 100);
           return {
             items: state.items.filter((item) => item.subjectId !== subjectId),
+          };
+        });
+      },
+
+      deleteItemsByGoal: (goalId) => {
+        set((state) => {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+          return {
+            items: state.items.filter((item) => item.goalId !== goalId),
           };
         });
       },

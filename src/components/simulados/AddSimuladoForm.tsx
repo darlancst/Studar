@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import { useSimuladosStore } from '@/store/simuladosStore';
 import { useSubjectStore } from '@/store/subjectStore';
 import { useTopicStore } from '@/store/topicStore';
+import { useGoalStore } from '@/store/goalStore';
 import { Simulado } from '@/types';
 import { useReviewStore } from '@/store/reviewStore';
 import { XMarkIcon } from '@heroicons/react/24/outline';
@@ -29,6 +30,7 @@ export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimulado
   const { addSimulado, updateSimulado } = useSimuladosStore();
   const subjects = useSubjectStore((state) => state.subjects);
   const topics = useTopicStore((state) => state.topics);
+  const { activeGoalId } = useGoalStore();
   const scheduleReviewsForTopic = useReviewStore((state) => state.scheduleReviewsForTopic);
 
   const availableTopics = topics.filter(t => t.subjectId === subjectId);
@@ -55,7 +57,16 @@ export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimulado
     const formattedDate = new Date(date).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
     const generatedName = `Simulado de ${subject?.name || 'Matéria'} - ${formattedDate}`;
 
-    const simuladoData = { name: generatedName, date, subjectId, topicId, questions, hits, timeSpent };
+    const simuladoData = { 
+      name: generatedName, 
+      date, 
+      subjectId, 
+      topicId, 
+      questions, 
+      hits, 
+      timeSpent,
+      goalId: activeGoalId || undefined
+    };
 
     if (simuladoToEdit) {
       updateSimulado({ ...simuladoToEdit, ...simuladoData, name: simuladoToEdit.name || generatedName });

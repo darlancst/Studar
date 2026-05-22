@@ -59,6 +59,7 @@ export interface Simulado {
   timeSpent?: number; // Tempo gasto em minutos (opcional)
   questions: number;
   hits: number;
+  goalId?: string; // Vincula ao concurso/meta
 }
 
 export interface EditalItem {
@@ -67,4 +68,5 @@ export interface EditalItem {
   title: string;
   completed: boolean;
   order: number;
+  goalId?: string; // Vincula ao concurso/meta
 }

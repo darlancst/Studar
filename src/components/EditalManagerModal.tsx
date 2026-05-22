@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { XMarkIcon, TrashIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useSubjectStore } from '@/store/subjectStore';
 import { useEditalStore } from '@/store/editalStore';
+import { useGoalStore } from '@/store/goalStore';
 import { useRegisterModal } from '@/hooks/useRegisterModal';
 
 interface EditalManagerModalProps {
@@ -17,11 +18,14 @@ interface JsonImportEntry {
 
 export default function EditalManagerModal({ onClose }: EditalManagerModalProps) {
   const { subjects } = useSubjectStore();
-  const { items, addItems, toggleItem, deleteItemsBySubject, resetEdital } = useEditalStore();
+  const { items, addItems, toggleItem, deleteItemsBySubject, resetEdital, deleteItemsByGoal } = useEditalStore();
+  const { goals, activeGoalId, setActiveGoal, addGoal, deleteGoal } = useGoalStore();
   const [jsonInput, setJsonInput] = useState('');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
-  const [showImport, setShowImport] = useState(items.length === 0);
+  
+  const currentItems = items.filter(i => i.goalId === activeGoalId);
+  const [showImport, setShowImport] = useState(currentItems.length === 0);
   const [activeSubjectId, setActiveSubjectId] = useState<string>(subjects[0]?.id || '');
 
   useRegisterModal(true, onClose);
@@ -29,6 +33,12 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
   const handleImport = () => {
     setImportError('');
     setImportSuccess('');
+    
+    if (!activeGoalId) {
+      setImportError('Crie e selecione um concurso primeiro.');
+      return;
+    }
+
     try {
       const parsed: JsonImportEntry[] = JSON.parse(jsonInput);
       if (!Array.isArray(parsed)) throw new Error('O JSON deve ser uma lista (array).');
@@ -46,7 +56,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
           return;
         }
 
-        const existingOrderMax = items
+        const existingOrderMax = currentItems
           .filter(i => i.subjectId === subject.id)
           .reduce((max, i) => Math.max(max, i.order), -1);
 
@@ -55,6 +65,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
           title,
           completed: false,
           order: existingOrderMax + idx + 1,
+          goalId: activeGoalId,
         }));
 
         addItems(newItems);
@@ -73,8 +84,19 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
     }
   };
 
-  const subjectsWithItems = subjects.filter(s => items.some(i => i.subjectId === s.id));
-  const activeItems = items
+  const handleNewGoal = () => {
+    if (goals.length >= 3) {
+      alert('Você atingiu o limite de 3 concursos.');
+      return;
+    }
+    const name = prompt('Nome do Concurso (ex: Banco do Brasil):');
+    if (name?.trim()) {
+      addGoal(name.trim(), '#14b8a6');
+    }
+  };
+
+  const subjectsWithItems = subjects.filter(s => currentItems.some(i => i.subjectId === s.id));
+  const activeItems = currentItems
     .filter(i => i.subjectId === activeSubjectId)
     .sort((a, b) => a.order - b.order);
 
@@ -86,12 +108,34 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
       onTouchEnd={e => e.stopPropagation()}
     >
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Gerenciar Edital</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
-            <XMarkIcon className="h-5 w-5" />
-          </button>
+        {/* Header com Seletor de Concurso */}
+        <div className="flex flex-col gap-2 p-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Gerenciar Edital</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <select
+              value={activeGoalId || ''}
+              onChange={(e) => setActiveGoal(e.target.value)}
+              className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm rounded-lg p-2 text-gray-900 dark:text-white focus:ring-teal-500 focus:border-teal-500"
+            >
+              {goals.length === 0 && <option value="" disabled>Nenhum concurso criado</option>}
+              {goals.map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={handleNewGoal}
+              disabled={goals.length >= 3}
+              className="px-3 py-2 bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 text-sm font-medium rounded-lg disabled:opacity-50 transition-colors"
+            >
+              + Novo
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto">
@@ -100,7 +144,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
             <div className="p-3 border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Importar via JSON</h3>
-                {items.length > 0 && (
+                {currentItems.length > 0 && (
                   <button onClick={() => setShowImport(false)} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                     Ocultar
                   </button>
@@ -141,19 +185,25 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
             <div className="p-3 sm:p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Tópicos do Edital</h3>
-                <button
-                  onClick={() => { if (confirm('Apagar TODO o edital?')) resetEdital(); }}
-                  className="text-xs text-red-400 hover:text-red-500 transition-colors flex items-center gap-1"
-                >
-                  <TrashIcon className="w-3.5 h-3.5" />
-                  Limpar tudo
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      if (confirm('Apagar TODO o edital deste concurso?')) {
+                        if (activeGoalId) deleteItemsByGoal(activeGoalId);
+                      }
+                    }}
+                    className="text-xs text-red-400 hover:text-red-500 transition-colors flex items-center gap-1"
+                  >
+                    <TrashIcon className="w-3.5 h-3.5" />
+                    Limpar
+                  </button>
+                </div>
               </div>
 
               {/* Tabs de matérias */}
               <div className="flex gap-2 flex-wrap pb-3 mb-3">
                 {subjectsWithItems.map(s => {
-                  const sItems = items.filter(i => i.subjectId === s.id);
+                  const sItems = currentItems.filter(i => i.subjectId === s.id);
                   const sDone = sItems.filter(i => i.completed).length;
                   return (
                     <button

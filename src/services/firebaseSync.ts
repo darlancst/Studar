@@ -7,6 +7,7 @@ import { useScheduleStore } from '@/store/scheduleStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAuthStore } from '@/store/authStore';
 import { useEditalStore } from '@/store/editalStore';
+import { useGoalStore } from '@/store/goalStore';
 import { supabase } from '@/lib/supabaseClient';
 
 export interface UserData {
@@ -17,6 +18,8 @@ export interface UserData {
   simulados: any[];
   settings: any;
   editalItems?: any[];
+  goals?: any[];
+  activeGoalId?: string | null;
   lastSync: number;
 }
 
@@ -117,6 +120,7 @@ export class FirebaseSync {
       };
 
       const editalItems = useEditalStore.getState().items;
+      const { goals, activeGoalId } = useGoalStore.getState();
 
       const userData: UserData = {
         subjects,
@@ -126,6 +130,8 @@ export class FirebaseSync {
         simulados,
         settings,
         editalItems,
+        goals,
+        activeGoalId,
         lastSync: Date.now(),
       };
 
@@ -154,6 +160,12 @@ export class FirebaseSync {
         useSimuladosStore.setState({ simulados: userData.simulados || [] });
         if (Array.isArray(userData.editalItems)) {
           useEditalStore.setState({ items: userData.editalItems });
+        }
+        if (Array.isArray(userData.goals)) {
+          useGoalStore.setState({ 
+            goals: userData.goals, 
+            activeGoalId: userData.activeGoalId !== undefined ? userData.activeGoalId : null 
+          });
         }
 
         if (userData.settings) {
