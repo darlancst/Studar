@@ -14,6 +14,7 @@ import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import PWADebug from '@/components/PWADebug';
 import ScheduleManager from '@/components/ScheduleManager';
 import StreakCounter from '@/components/StreakCounter';
+import { usePomodoroStore } from '@/store/pomodoroStore';
 
 
 import NextSessionDisplay from '@/components/NextSessionDisplay';
@@ -29,6 +30,8 @@ export default function Home() {
   const [showSettings, setShowSettings] = useState(false);
   const [showExitToast, setShowExitToast] = useState(false);
   const isDarkMode = useSettingsStore((state) => state.darkMode);
+  const zenMode = usePomodoroStore((state) => state.zenMode);
+  const isZenFocus = activeTab === 'pomodoro' && zenMode;
 
   // Register main modals with back button handler
   useRegisterModal(showSubjectManager, () => setShowSubjectManager(false));
@@ -226,8 +229,8 @@ export default function Home() {
       className="min-h-screen overflow-x-hidden"
       {...swipeHandlers}
     >
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4">
-        <header className="flex items-center justify-between mb-3 sm:mb-4">
+      <div className={`max-w-6xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4 transition-all duration-300 ${isZenFocus ? 'pt-0 px-0 max-w-full' : ''}`}>
+        <header className={`flex items-center justify-between mb-3 sm:mb-4 transition-all duration-300 ${isZenFocus ? 'opacity-0 h-0 pointer-events-none mb-0 overflow-hidden py-0' : ''}`}>
           {/* Left: Logo */}
           <div className="flex items-center gap-3">
             <button 
@@ -261,7 +264,7 @@ export default function Home() {
           </div>
         </header>
 
-        <div className="hidden sm:block mb-2">
+        <div className={`hidden sm:block mb-2 transition-all duration-300 ${isZenFocus ? 'opacity-0 h-0 pointer-events-none mb-0 overflow-hidden' : ''}`}>
           <TabBar
             activeTab={activeTab}
             setActiveTab={handleTabChange}
@@ -269,7 +272,7 @@ export default function Home() {
         </div>
 
         {/* Componentes mantidos montados para preservar estado (display: none quando inativo) */}
-        <main className="pb-24 sm:pb-4">
+        <main className={`transition-all duration-300 ${isZenFocus ? 'pb-0' : 'pb-24 sm:pb-4'}`}>
           <div style={{ display: activeTab === 'stats' ? 'block' : 'none' }}>
             <Stats />
           </div>
@@ -312,7 +315,7 @@ export default function Home() {
       </div>
 
       {/* Mobile TabBar fora do container para fixed funcionar corretamente */}
-      <div className="sm:hidden">
+      <div className={`sm:hidden transition-all duration-300 ${isZenFocus ? 'opacity-0 h-0 pointer-events-none translate-y-10 overflow-hidden' : ''}`}>
         <TabBar
           activeTab={activeTab}
           setActiveTab={handleTabChange}

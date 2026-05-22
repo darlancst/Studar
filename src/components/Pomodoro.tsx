@@ -6,7 +6,6 @@ import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useReviewStore } from '@/store/reviewStore';
 import { PlayIcon, PauseIcon, ArrowPathIcon, ForwardIcon, CheckCircleIcon, SparklesIcon } from '@heroicons/react/24/solid';
-import { XMarkIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline';
 import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } from 'date-fns';
 import confetti from 'canvas-confetti';
 import { playAlarmSound } from '@/utils/sounds';
@@ -34,8 +33,13 @@ export default function Pomodoro() {
     pauseTimer,
     resetTimer,
     skipToNext,
-    incrementElapsedTime
+    incrementElapsedTime,
+    zenMode,
+    toggleZenMode,
+    settings
   } = usePomodoroStore();
+
+  const isDarkMode = useSettingsStore((state) => state.darkMode);
 
   const { generateReviewsForTopic } = useReviewStore();
 
@@ -48,8 +52,6 @@ export default function Pomodoro() {
   const [completedTopicsPerItem, setCompletedTopicsPerItem] = useState<Record<string, string[]>>({});
   // Rastreia qual item está no modo "O que você estudou?" (após clicar ✓)
   const [finishingItemId, setFinishingItemId] = useState<string>('');
-  const [isZenMode, setIsZenMode] = useState<boolean>(false);
-
 
   // Wake Lock: impede a tela do celular de desligar enquanto o timer roda
   useWakeLock(isRunning);
@@ -75,7 +77,6 @@ export default function Pomodoro() {
     if (newTimeRemaining <= 0) {
       // Timer terminou (pode ter terminado enquanto a tela estava desligada)
       usePomodoroStore.setState({ timeRemaining: 0 });
-      setIsZenMode(false);
 
       // Atualiza o tempo de estudo decorrido
       const totalFocusElapsed = timeRemainingAtStartRef.current; // todo o tempo restante foi consumido
@@ -211,6 +212,122 @@ export default function Pomodoro() {
     });
   }, [schedules, weeklyItems, blockItems, topics, isItemCompletedForDate]);
 
+  // Obter o item selecionado ou ativo no momento
+  const activePlan = useMemo(() => {
+    if (selectedItemId) {
+      const found = todayPlannedItems.find(p => p.item.id === selectedItemId);
+      if (found) return found;
+    }
+    if (activeScheduleItemId) {
+      const found = todayPlannedItems.find(p => p.item.id === activeScheduleItemId);
+      if (found) return found;
+    }
+    return null;
+  }, [selectedItemId, activeScheduleItemId, todayPlannedItems]);
+
+  const activeSubject = useMemo(() => {
+    if (activePlan) {
+      return subjects.find(s => s.id === activePlan.item.subjectId);
+    }
+    if (currentTopicId) {
+      const sub = subjects.find(s => s.id === currentTopicId);
+      if (sub) return sub;
+      const top = topics.find(t => t.id === currentTopicId);
+      if (top) {
+        return subjects.find(s => s.id === top.subjectId);
+      }
+    }
+    return null;
+  }, [activePlan, currentTopicId, subjects, topics]);
+
+  const activeTopic = useMemo(() => {
+    if (activePlan) {
+      const { item } = activePlan;
+      const overrideText = selectedTopicOverrides[item.id];
+      const linkedTopic = topics.find(t => t.linkedScheduleItemId === item.id);
+      let effectiveTopic = linkedTopic;
+      if (!effectiveTopic && item.topicId) {
+        effectiveTopic = topics.find(t => t.id === item.topicId);
+      }
+      if (!effectiveTopic && overrideText) {
+        effectiveTopic = topics.find(t => t.title.toLowerCase() === overrideText.toLowerCase() && t.subjectId === item.subjectId);
+      }
+      return effectiveTopic;
+    }
+    if (currentTopicId) {
+      const top = topics.find(t => t.id === currentTopicId);
+      if (top) return top;
+    }
+    return null;
+  }, [activePlan, currentTopicId, topics, selectedTopicOverrides]);
+
+  // Obter o tempo total da etapa atual em segundos
+  const currentStageDuration = useMemo(() => {
+    if (currentState === 'focus') {
+      return (settings.focusDuration || 25) * 60;
+    } else if (currentState === 'shortBreak') {
+      return (settings.shortBreakDuration || 5) * 60;
+    } else if (currentState === 'longBreak') {
+      return (settings.longBreakDuration || 15) * 60;
+    }
+    return (settings.focusDuration || 25) * 60;
+  }, [currentState, settings]);
+
+  const progressPercentage = useMemo(() => {
+    if (currentStageDuration <= 0) return 1;
+    return timeRemaining / currentStageDuration;
+  }, [timeRemaining, currentStageDuration]);
+
+  // Circunferência do círculo (raio = 100)
+  const circumference = 2 * Math.PI * 100;
+  const strokeDashoffset = circumference * (1 - progressPercentage);
+
+  // Determinar cores e gradientes com base no estado do Pomodoro
+  const themeColorClass = useMemo(() => {
+    switch (currentState) {
+      case 'focus':
+        return {
+          gradientId: 'focus-gradient',
+          gradientStart: '#0ea5e9', // primary-500
+          gradientEnd: '#2563eb', // blue-600
+          glow: 'rgba(14, 165, 233, 0.25)',
+          bgTrack: 'text-gray-100 dark:text-gray-800/40',
+          textColor: 'text-gray-900 dark:text-white',
+          pulseColor: 'bg-primary-500/10'
+        };
+      case 'shortBreak':
+        return {
+          gradientId: 'short-break-gradient',
+          gradientStart: '#10b981', // emerald-500
+          gradientEnd: '#059669', // emerald-600
+          glow: 'rgba(16, 185, 129, 0.25)',
+          bgTrack: 'text-emerald-50 dark:text-emerald-950/20',
+          textColor: 'text-emerald-600 dark:text-emerald-400',
+          pulseColor: 'bg-emerald-500/10'
+        };
+      case 'longBreak':
+        return {
+          gradientId: 'long-break-gradient',
+          gradientStart: '#6366f1', // indigo-500
+          gradientEnd: '#4f46e5', // indigo-600
+          glow: 'rgba(99, 102, 241, 0.25)',
+          bgTrack: 'text-indigo-50 dark:text-indigo-950/20',
+          textColor: 'text-indigo-600 dark:text-indigo-400',
+          pulseColor: 'bg-indigo-500/10'
+        };
+      default:
+        return {
+          gradientId: 'focus-gradient',
+          gradientStart: '#0ea5e9',
+          gradientEnd: '#2563eb',
+          glow: 'rgba(14, 165, 233, 0.25)',
+          bgTrack: 'text-gray-100 dark:text-gray-800/40',
+          textColor: 'text-gray-900 dark:text-white',
+          pulseColor: 'bg-primary-500/10'
+        };
+    }
+  }, [currentState]);
+
   // Sync with active session from store (Context API)
   useEffect(() => {
     // 1. Prioritize explicit schedule item ID (Disambiguation for multiple items of same subject)
@@ -299,7 +416,6 @@ export default function Pomodoro() {
 
     if (subjectIdToStart) {
       startTimer(subjectIdToStart);
-      setIsZenMode(true);
     }
   };
 
@@ -483,42 +599,279 @@ export default function Pomodoro() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isRunning, isStartDisabled]);
 
+  if (zenMode) {
+    return (
+      <div 
+        className="fixed inset-0 z-50 flex flex-col justify-between items-center p-6 sm:p-10 select-none animate-fade-in bg-gray-50 dark:bg-black"
+        style={{
+          backgroundImage: !isDarkMode
+            ? `radial-gradient(at 0% 0%, ${themeColorClass.gradientStart}08 0px, transparent 50%),
+               radial-gradient(at 100% 0%, ${themeColorClass.gradientEnd}05 0px, transparent 50%)`
+            : 'none'
+        }}
+      >
+        {/* TOP BAR ZEN */}
+        <div className="w-full max-w-4xl flex items-center justify-between">
+          <button
+            onClick={() => toggleZenMode(false)}
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm hover:scale-105 active:scale-95 text-sm font-medium"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+            </svg>
+            Sair do Foco
+          </button>
+
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${isRunning ? 'bg-primary-500 animate-pulse' : 'bg-gray-400'}`} />
+            <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+              {isRunning ? 'Sessão Ativa' : 'Pausado'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-50 dark:bg-primary-950/30 text-primary-700 dark:text-primary-300 text-xs font-semibold border border-primary-100 dark:border-primary-900/30">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
+            </span>
+            Tela Ativa
+          </div>
+        </div>
+
+        {/* MIDDLE SECTION - BIG CIRCULAR TIMER */}
+        <div className="flex flex-col items-center justify-center my-auto py-10">
+          <div className="relative flex items-center justify-center w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
+            {/* Indicador de pulsação suave em volta quando rodando */}
+            {isRunning && (
+              <div className={`absolute inset-0 rounded-full animate-ping opacity-15 duration-1000 ${themeColorClass.pulseColor}`} style={{ animationDuration: '4s' }} />
+            )}
+
+            {/* SVG Progress Ring */}
+            <svg className="absolute w-full h-full -rotate-90 transform" viewBox="0 0 240 240">
+              <defs>
+                <linearGradient id={`zen-${themeColorClass.gradientId}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor={themeColorClass.gradientStart} />
+                  <stop offset="100%" stopColor={themeColorClass.gradientEnd} />
+                </linearGradient>
+              </defs>
+
+              {/* Track Circle (Fundo) */}
+              <circle
+                cx="120"
+                cy="120"
+                r="100"
+                className={`transition-colors duration-500 ${themeColorClass.bgTrack}`}
+                strokeWidth="6"
+                fill="transparent"
+              />
+
+              {/* Progress Circle (Frente) */}
+              <circle
+                cx="120"
+                cy="120"
+                r="100"
+                stroke={`url(#zen-${themeColorClass.gradientId})`}
+                strokeWidth="7"
+                fill="transparent"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                className="transition-all duration-300 ease-out"
+                style={{
+                  filter: isRunning ? `drop-shadow(0 0 8px ${themeColorClass.gradientStart})` : 'none'
+                }}
+              />
+            </svg>
+
+            {/* Conteúdo Central do Círculo */}
+            <div className="absolute flex flex-col items-center justify-center text-center px-8">
+              <span className="text-6xl sm:text-7xl md:text-8xl font-light tracking-tighter text-gray-900 dark:text-white font-mono tabular-nums select-none">
+                {formatTime(timeRemaining)}
+              </span>
+              
+              <div className="mt-4 flex flex-col items-center">
+                <span className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full ${
+                  currentState === 'focus'
+                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-950/40 dark:text-primary-300'
+                    : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                }`}>
+                  {getStatusText()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ACTIVE SUBJECT AND TOPIC DETAILS */}
+          <div className="flex flex-col items-center text-center gap-3 mt-10 max-w-sm sm:max-w-md animate-fade-in-up">
+            {activeSubject && (
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: activeSubject.color }} />
+                <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 tracking-wide uppercase">
+                  {activeSubject.name}
+                </span>
+              </div>
+            )}
+            
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-tight px-4">
+              {activeTopic ? activeTopic.title : (activeSubject ? 'Estudo Geral' : 'Sem tarefa selecionada')}
+            </h3>
+            
+            {activeTopic?.description && (
+              <p className="text-sm text-gray-400 dark:text-gray-500 max-w-xs truncate">
+                {activeTopic.description}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* BOTTOM CONTROLS */}
+        <div className="w-full max-w-md flex flex-col items-center gap-8 pb-4">
+          <div className="flex items-center justify-center gap-8">
+            {/* Reset */}
+            <button
+              onClick={resetTimer}
+              className="group p-4 rounded-2xl bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-850 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all shadow-sm active:scale-95"
+              title="Reiniciar"
+            >
+              <ArrowPathIcon className="h-6 w-6 transition-transform group-hover:rotate-45" />
+            </button>
+
+            {/* Play / Pause */}
+            {!isRunning ? (
+              <button
+                onClick={handleStart}
+                disabled={isStartDisabled}
+                className="bg-primary-600 hover:bg-primary-700 text-white rounded-3xl p-6 shadow-xl shadow-primary-600/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center"
+              >
+                <PlayIcon className="h-9 w-9 pl-1" />
+              </button>
+            ) : (
+              <button
+                onClick={pauseTimer}
+                className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-3xl p-6 shadow-xl shadow-gray-900/30 dark:shadow-white/20 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center"
+              >
+                <PauseIcon className="h-9 w-9" />
+              </button>
+            )}
+
+            {/* Skip */}
+            <button
+              onClick={() => skipToNext(false)}
+              className="group p-4 rounded-2xl bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-850 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all shadow-sm active:scale-95"
+              title="Pular"
+            >
+              <ForwardIcon className="h-6 w-6 transition-transform group-hover:translate-x-0.5" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+            <span>{completedPomodoros}</span>
+            <span>sessões hoje</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-md mx-auto space-y-5 pb-24">
       {/* Header Minimalista */}
       <div className="flex items-center justify-between px-2">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Foco</h2>
-        <div className="flex items-center gap-2">
-          <div className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${currentState === 'focus'
-            ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-            : 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-            }`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${currentState === 'focus' ? 'bg-primary-500' : 'bg-green-500'
-              }`}></span>
-            {getStatusText()}
-          </div>
-          <button
-            onClick={() => setIsZenMode(true)}
-            className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-            title="Modo Zen"
-          >
-            <ArrowsPointingOutIcon className="h-5 w-5" />
-          </button>
+        <div className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${currentState === 'focus'
+          ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
+          : 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+          }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${currentState === 'focus' ? 'bg-primary-500' : 'bg-green-500'
+            }`}></span>
+          {getStatusText()}
         </div>
       </div>
 
-      {/* Timer Principal */}
-      <div className="flex flex-col items-center justify-center py-2">
-        <div className="relative">
-          <div className="text-7xl sm:text-8xl font-light tracking-tighter text-gray-900 dark:text-white font-mono tabular-nums select-none">
-            {formatTime(timeRemaining)}
+      {/* Timer Principal Circular */}
+      <div className="flex flex-col items-center justify-center py-6 select-none">
+        <div className="relative flex items-center justify-center w-64 h-64 sm:w-72 sm:h-72">
+          {/* Indicador de pulsação suave em volta quando rodando */}
+          {isRunning && (
+            <div className={`absolute inset-0 rounded-full animate-ping opacity-20 duration-1000 ${themeColorClass.pulseColor}`} style={{ animationDuration: '3s' }} />
+          )}
+
+          {/* SVG Progress Ring */}
+          <svg className="absolute w-full h-full -rotate-90 transform" viewBox="0 0 240 240">
+            <defs>
+              <linearGradient id={themeColorClass.gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={themeColorClass.gradientStart} />
+                <stop offset="100%" stopColor={themeColorClass.gradientEnd} />
+              </linearGradient>
+            </defs>
+
+            {/* Track Circle (Fundo) */}
+            <circle
+              cx="120"
+              cy="120"
+              r="100"
+              className={`transition-colors duration-500 ${themeColorClass.bgTrack}`}
+              strokeWidth="7"
+              fill="transparent"
+            />
+
+            {/* Progress Circle (Frente) */}
+            <circle
+              cx="120"
+              cy="120"
+              r="100"
+              stroke={`url(#${themeColorClass.gradientId})`}
+              strokeWidth="8"
+              fill="transparent"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              className="transition-all duration-300 ease-out"
+              style={{
+                filter: isRunning ? `drop-shadow(0 0 6px ${themeColorClass.gradientStart})` : 'none'
+              }}
+            />
+          </svg>
+
+          {/* Conteúdo Central do Círculo */}
+          <div className="absolute flex flex-col items-center justify-center text-center px-6">
+            <span className="text-5xl sm:text-6xl font-light tracking-tighter text-gray-900 dark:text-white font-mono tabular-nums select-none">
+              {formatTime(timeRemaining)}
+            </span>
+            
+            {/* Tag/Nome da Matéria/Tópico no centro */}
+            <div className="mt-2 max-w-[160px] sm:max-w-[180px] flex flex-col items-center">
+              {activeSubject ? (
+                <span 
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white tracking-wide uppercase truncate block max-w-full"
+                  style={{ backgroundColor: activeSubject.color }}
+                >
+                  {activeSubject.name}
+                </span>
+              ) : (
+                <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                  {currentState === 'focus' ? 'Foco' : 'Pausa'}
+                </span>
+              )}
+              {activeTopic && (
+                <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mt-1 truncate max-w-full" title={activeTopic.title}>
+                  {activeTopic.title}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-4 font-medium">
-          {currentState === 'focus' && !isRunning ? 'Selecione uma tarefa para começar' :
-            currentState === 'focus' ? 'Mantenha o foco' : 'Hora de relaxar'}
-        </p>
+        {/* Botão para ativar Modo Zen abaixo do círculo */}
+        {currentState !== 'idle' && (
+          <button
+            onClick={() => toggleZenMode(true)}
+            className="mt-6 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gray-100/80 dark:bg-gray-800/80 text-gray-600 dark:text-gray-300 hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-950/30 dark:hover:text-primary-400 transition-all duration-300 active:scale-95 border border-gray-200/40 dark:border-gray-700/50 shadow-sm"
+          >
+            <SparklesIcon className="h-3.5 w-3.5" />
+            Modo Zen
+          </button>
+        )}
       </div>
 
       {/* Controles Minimalistas */}
@@ -776,76 +1129,6 @@ export default function Pomodoro() {
         <span>{completedPomodoros}</span>
         <span>sessões hoje</span>
       </div>
-
-      {/* M O D O   Z E N */}
-      {isZenMode && typeof document !== 'undefined' && (
-        <div className="fixed inset-0 z-[100] bg-black text-white flex flex-col items-center justify-center animate-fade-in select-none">
-          {/* Close Button */}
-          <button
-            onClick={() => setIsZenMode(false)}
-            className="absolute top-6 right-6 p-3 rounded-full text-gray-500 hover:text-white hover:bg-white/10 transition-all"
-            title="Sair do Modo Zen"
-          >
-            <XMarkIcon className="h-8 w-8" />
-          </button>
-
-          {/* Context Info */}
-          <div className="absolute top-12 left-0 right-0 flex flex-col items-center opacity-70">
-            {currentTopicId || activeSubjectId ? (
-              <>
-                <p className="text-gray-400 font-medium tracking-wider uppercase text-sm mb-2">
-                  {topics.find(t => t.id === currentTopicId)?.title || subjects.find(s => s.id === activeSubjectId)?.name || 'Modo Foco'}
-                </p>
-                {currentTopicId && (
-                  <p className="text-gray-600 text-xs">
-                    {subjects.find(s => s.id === topics.find(t => t.id === currentTopicId)?.subjectId)?.name}
-                  </p>
-                )}
-              </>
-            ) : (
-              <p className="text-gray-400 font-medium tracking-wider uppercase text-sm">Modo Foco</p>
-            )}
-            <div className={`mt-4 px-4 py-1 rounded-full text-xs font-medium border ${currentState === 'focus' ? 'text-primary-400 border-primary-900/50 bg-primary-900/20' : 'text-green-400 border-green-900/50 bg-green-900/20'}`}>
-              {getStatusText()}
-            </div>
-          </div>
-
-          {/* Giant Timer */}
-          <div className="text-[25vw] sm:text-[15rem] font-light tracking-tighter font-mono tabular-nums leading-none">
-            {formatTime(timeRemaining)}
-          </div>
-
-          {/* Controls */}
-          <div className="absolute bottom-16 flex items-center gap-8 opacity-50 hover:opacity-100 transition-opacity duration-300">
-            {!isRunning ? (
-              <button
-                onClick={handleStart}
-                className="bg-primary-600 hover:bg-primary-500 text-white rounded-full p-6 shadow-xl transition-all transform hover:scale-105 active:scale-95"
-              >
-                <PlayIcon className="h-10 w-10 pl-1" />
-              </button>
-            ) : (
-              <button
-                onClick={pauseTimer}
-                className="bg-white hover:bg-gray-200 text-black rounded-full p-6 shadow-xl transition-all transform hover:scale-105 active:scale-95"
-              >
-                <PauseIcon className="h-10 w-10" />
-              </button>
-            )}
-
-            <button
-              onClick={() => {
-                skipToNext(false);
-                setIsZenMode(false);
-              }}
-              className="group p-4 rounded-full hover:bg-white/10 transition-colors"
-              title="Pular"
-            >
-              <ForwardIcon className="h-8 w-8 text-gray-500 group-hover:text-white transition-colors" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

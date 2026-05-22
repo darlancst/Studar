@@ -18,6 +18,7 @@ interface PomodoroStore {
   elapsedSeconds: number; // segundos decorridos na sessão atual
   lastMinuteUpdate: number; // timestamp da última atualização de minuto
   tempSessionIds: string[]; // IDs das sessões temporárias (criadas em pausas) para rollback
+  zenMode: boolean;
 
   // Sessões (do Pomodoro, não do estudo geral)
   sessions: PomodoroSession[];
@@ -34,6 +35,7 @@ interface PomodoroStore {
   skipToNext: (completed?: boolean) => void;
   updateSettings: (settings: Partial<PomodoroSettings>) => void;
   incrementElapsedTime: (seconds: number) => void;
+  toggleZenMode: (val?: boolean) => void;
 
   // Sessões Pomodoro
   addSession: (topicId: string, duration: number) => string | null; // Retorna ID da sessão criada
@@ -72,6 +74,7 @@ export const usePomodoroStore = create<PomodoroStore>()(
       elapsedSeconds: 0,
       lastMinuteUpdate: 0,
       tempSessionIds: [],
+      zenMode: false,
 
       sessions: [],
       settings: DEFAULT_SETTINGS,
@@ -265,6 +268,8 @@ export const usePomodoroStore = create<PomodoroStore>()(
 
         set({ elapsedSeconds: newElapsedSeconds });
       },
+
+      toggleZenMode: (val) => set((state) => ({ zenMode: val !== undefined ? val : !state.zenMode })),
 
       addSession: (topicId, duration) => {
         if (duration <= 0) return null;
