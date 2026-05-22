@@ -480,7 +480,7 @@ export default function Pomodoro() {
   }, [isRunning, isStartDisabled]);
 
   return (
-    <div className="max-w-md mx-auto space-y-8 pb-24">
+    <div className="max-w-md mx-auto space-y-5 pb-24">
       {/* Header Minimalista */}
       <div className="flex items-center justify-between px-2">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Foco</h2>
@@ -495,9 +495,9 @@ export default function Pomodoro() {
       </div>
 
       {/* Timer Principal */}
-      <div className="flex flex-col items-center justify-center py-4">
+      <div className="flex flex-col items-center justify-center py-2">
         <div className="relative">
-          <div className="text-8xl font-light tracking-tighter text-gray-900 dark:text-white font-mono tabular-nums select-none">
+          <div className="text-7xl sm:text-8xl font-light tracking-tighter text-gray-900 dark:text-white font-mono tabular-nums select-none">
             {formatTime(timeRemaining)}
           </div>
         </div>
@@ -509,10 +509,10 @@ export default function Pomodoro() {
       </div>
 
       {/* Controles Minimalistas */}
-      <div className="flex items-center justify-center gap-8">
+      <div className="flex items-center justify-center gap-6">
         <button
           onClick={resetTimer}
-          className="group p-4 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          className="group p-3 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           title="Reiniciar"
         >
           <ArrowPathIcon className="h-6 w-6 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
@@ -522,22 +522,22 @@ export default function Pomodoro() {
           <button
             onClick={handleStart}
             disabled={isStartDisabled}
-            className="bg-primary-600 hover:bg-primary-700 text-white rounded-2xl p-6 shadow-xl shadow-primary-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95"
+            className="bg-primary-600 hover:bg-primary-700 text-white rounded-2xl p-5 shadow-xl shadow-primary-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95"
           >
-            <PlayIcon className="h-10 w-10 pl-1" />
+            <PlayIcon className="h-8 w-8 pl-1" />
           </button>
         ) : (
           <button
             onClick={pauseTimer}
-            className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-2xl p-6 shadow-xl transition-all transform hover:scale-105 active:scale-95"
+            className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-2xl p-5 shadow-xl transition-all transform hover:scale-105 active:scale-95"
           >
-            <PauseIcon className="h-10 w-10" />
+            <PauseIcon className="h-8 w-8" />
           </button>
         )}
 
         <button
           onClick={() => skipToNext(false)}
-          className="group p-4 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          className="group p-3 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           title="Pular"
         >
           <ForwardIcon className="h-6 w-6 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
@@ -553,11 +553,11 @@ export default function Pomodoro() {
 
       {/* Seção de Itens Planejados para Hoje */}
       {todayPlannedItems.length > 0 && (
-        <div className="space-y-4 px-2">
+        <div className="space-y-3 px-2">
           <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center">
             Planejado para Hoje
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {todayPlannedItems.map((plannedItem, index) => {
               const { item, status } = plannedItem;
               const subject = subjects.find(s => s.id === item.subjectId);
