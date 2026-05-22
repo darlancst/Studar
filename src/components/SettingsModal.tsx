@@ -25,7 +25,7 @@ import { useVacationStore } from '@/store/vacationStore';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import SyncStatus from '@/components/SyncStatus';
-
+import { ALARM_OPTIONS, playAlarmSound } from '@/utils/sounds';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -333,11 +333,11 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               </div>
 
               {/* Configuração de Som do Alarme */}
-              <div className="flex flex-col justify-center">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Som do Alarme
-                </label>
-                <div className="flex items-center">
+              <div className="col-span-2 mt-2 pt-2 border-t dark:border-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Som do Alarme
+                  </label>
                   <button
                     type="button"
                     onClick={() => updatePomodoroSettings({ soundEnabled: !pomodoroSettings.soundEnabled })}
@@ -352,6 +352,34 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     />
                   </button>
                 </div>
+
+                {pomodoroSettings.soundEnabled && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {ALARM_OPTIONS.map(sound => {
+                      const isSelected = (pomodoroSettings.selectedSound || 'digital') === sound.value;
+                      return (
+                        <button
+                          key={sound.value}
+                          type="button"
+                          onClick={() => {
+                            updatePomodoroSettings({ selectedSound: sound.value });
+                            playAlarmSound(sound.value);
+                          }}
+                          className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-center ${
+                            isSelected
+                              ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                          }`}
+                        >
+                          <span className="text-xl">{sound.emoji}</span>
+                          <span className={`text-xs font-medium ${isSelected ? 'text-primary-700 dark:text-primary-300' : 'text-gray-600 dark:text-gray-400'}`}>
+                            {sound.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>

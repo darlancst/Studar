@@ -23,8 +23,6 @@ function getAudioContext(): AudioContext {
  * Opções de alarme disponíveis
  */
 export const ALARM_OPTIONS = [
-    { value: 'ding', label: 'Ding', emoji: '🔔' },
-    { value: 'sino', label: 'Sino', emoji: '🔊' },
     { value: 'digital', label: 'Digital', emoji: '⏰' },
     { value: 'marimba', label: 'Marimba', emoji: '🎵' },
     { value: 'suave', label: 'Suave', emoji: '✨' },
@@ -168,15 +166,14 @@ function playSuave(): void {
 /**
  * Toca o som de alarme selecionado
  */
-export function playAlarmSound(type: string = 'ding'): void {
+export function playAlarmSound(type: string = 'digital'): void {
     try {
         switch (type) {
             case 'sino': playSino(); break;
-            case 'digital': playDigital(); break;
             case 'marimba': playMarimba(); break;
             case 'suave': playSuave(); break;
-            case 'ding':
-            default: playDing(); break;
+            case 'digital':
+            default: playDigital(); break;
         }
     } catch (error) {
         console.log('Falha ao tocar som de alarme:', error);
