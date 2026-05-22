@@ -21,6 +21,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
   const [jsonInput, setJsonInput] = useState('');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
+  const [showImport, setShowImport] = useState(items.length === 0);
   const [activeSubjectId, setActiveSubjectId] = useState<string>(subjects[0]?.id || '');
 
   useRegisterModal(true, onClose);
@@ -63,6 +64,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
       if (totalImported > 0) {
         setImportSuccess(`${totalImported} tópico(s) importado(s) com sucesso!${notFound.length > 0 ? ` Matérias não encontradas: ${notFound.join(', ')}.` : ''}`);
         setJsonInput('');
+        setTimeout(() => setShowImport(false), 1500);
       } else {
         setImportError(`Nenhum tópico importado. Matérias não encontradas: ${notFound.join(', ')}. Verifique se os nomes correspondem às suas matérias cadastradas.`);
       }
@@ -78,12 +80,12 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       onTouchStart={e => e.stopPropagation()}
       onTouchMove={e => e.stopPropagation()}
       onTouchEnd={e => e.stopPropagation()}
     >
-      <div className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Gerenciar Edital</h2>
@@ -94,27 +96,42 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
 
         <div className="flex-1 overflow-y-auto">
           {/* Importação JSON */}
-          <div className="p-3 border-b border-gray-100 dark:border-gray-800">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Importar via JSON</h3>
-            <textarea
-              value={jsonInput}
-              onChange={e => { setJsonInput(e.target.value); setImportError(''); setImportSuccess(''); }}
-              placeholder='Cole o JSON gerado aqui... Ex: [{ "materia": "...", "topicos": ["..."] }]'
-              rows={2}
-              className="w-full text-xs font-mono border border-gray-200 dark:border-gray-700 rounded-lg p-2.5 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 resize-none mt-1"
-            />
-            {importError && <p className="text-xs text-red-500 mt-2">{importError}</p>}
-            {importSuccess && <p className="text-xs text-teal-600 dark:text-teal-400 mt-2">{importSuccess}</p>}
-          </div>
-
-          {/* Botão Importar - sempre visível */}
-          {jsonInput.trim() && (
+          {showImport ? (
             <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Importar via JSON</h3>
+                {items.length > 0 && (
+                  <button onClick={() => setShowImport(false)} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    Ocultar
+                  </button>
+                )}
+              </div>
+              <textarea
+                value={jsonInput}
+                onChange={e => { setJsonInput(e.target.value); setImportError(''); setImportSuccess(''); }}
+                placeholder='Cole o JSON gerado aqui... Ex: [{ "materia": "...", "topicos": ["..."] }]'
+                rows={2}
+                className="w-full text-xs font-mono border border-gray-200 dark:border-gray-700 rounded-lg p-2.5 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 resize-none"
+              />
+              {importError && <p className="text-xs text-red-500 mt-2">{importError}</p>}
+              {importSuccess && <p className="text-xs text-teal-600 dark:text-teal-400 mt-2">{importSuccess}</p>}
+              
+              {jsonInput.trim() && (
+                <button
+                  onClick={handleImport}
+                  className="mt-3 w-full py-2.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors shadow-sm"
+                >
+                  ✓ Importar tópicos
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="p-3 border-b border-gray-100 dark:border-gray-800 flex justify-end">
               <button
-                onClick={handleImport}
-                className="w-full py-2.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors shadow-sm"
+                onClick={() => setShowImport(true)}
+                className="text-xs text-teal-600 dark:text-teal-400 font-medium hover:underline flex items-center gap-1"
               >
-                ✓ Importar tópicos
+                + Importar mais tópicos
               </button>
             </div>
           )}
