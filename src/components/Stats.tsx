@@ -574,14 +574,14 @@ export default function Stats() {
       <EditalProgressCard />
 
       {/* 3. Cabeçalho e Filtros */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-1">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold dark:text-white">Estatísticas</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-1 w-full min-w-0">
+        <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
+          <h2 className="text-xl font-bold dark:text-white shrink-0">Estatísticas</h2>
           {goals.length > 0 && (
             <select
               value={activeGoalId || ''}
               onChange={(e) => setActiveGoal(e.target.value)}
-              className="bg-gray-100 dark:bg-gray-800 border-none text-sm rounded-lg p-1.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 font-medium cursor-pointer"
+              className="min-w-0 truncate flex-1 sm:flex-initial bg-gray-100 dark:bg-gray-800 border-none text-sm rounded-lg p-1.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 font-medium cursor-pointer"
             >
               {goals.map(g => (
                 <option key={g.id} value={g.id}>{g.name}</option>
