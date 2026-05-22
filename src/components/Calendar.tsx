@@ -401,7 +401,7 @@ export default function Calendar() {
                 key={i}
                 onClick={() => handleDayClick(day)}
                 className={`
-                  relative border-b border-r border-gray-150/35 dark:border-gray-800/35 p-1 transition-all cursor-pointer hover:bg-white/80 dark:hover:bg-gray-850/60
+                  relative border-b border-r border-gray-150/35 dark:border-gray-700/30 p-1 transition-all cursor-pointer hover:bg-white/80 dark:hover:bg-gray-750/50
                   ${!isCurrentMonth ? 'opacity-30 bg-gray-100/30 dark:bg-gray-900/30' : ''}
                   ${isSelected ? 'bg-white/90 dark:bg-gray-800/80 ring-2 ring-inset ring-primary-500/50 z-10' : ''}
                 `}

@@ -26,10 +26,18 @@
     --radius: 0.75rem;
 
     /* Default Tailwind Grays for Light Mode */
+    --gray-150: 243 244 246;
+    --gray-250: 209 213 219;
+    --gray-350: 156 163 175;
+    --gray-450: 107 114 128;
+    --gray-455: 107 114 128;
     --gray-700: 55 65 81;
+    --gray-750: 55 65 81;
     --gray-800: 31 41 55;
+    --gray-850: 31 41 55;
     --gray-900: 17 24 39;
     --gray-950: 3 7 18;
+    --gray-955: 3 7 18;
   }
 
   .dark {
@@ -54,10 +62,18 @@
     --ring: 199 89% 48%;
 
     /* OLED optimized grays */
-    --gray-700: 24 24 24;    /* Subtle borders/text #181818 */
-    --gray-800: 10 10 10;    /* Card overlay surfaces #0a0a0a */
+    --gray-150: 229 231 235;
+    --gray-250: 156 163 175;
+    --gray-350: 107 114 128;
+    --gray-450: 156 163 175;
+    --gray-455: 156 163 175;
+    --gray-700: 38 38 38;    /* Visible borders/text #262626 */
+    --gray-750: 28 28 28;    /* Lighter border/hover #1c1c1c */
+    --gray-800: 18 18 18;    /* Card overlay surfaces #121212 */
+    --gray-850: 12 12 12;    /* Inputs/insets #0c0c0c */
     --gray-900: 0 0 0;       /* Main surfaces #000000 */
     --gray-950: 0 0 0;       /* Base background #000000 */
+    --gray-955: 0 0 0;       /* Base background #000000 */
   }
 }
 

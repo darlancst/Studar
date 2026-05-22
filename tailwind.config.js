@@ -37,10 +37,18 @@ module.exports = {
         foreground: 'hsl(var(--foreground))',
         border: 'hsl(var(--border))',
         gray: {
+          150: 'rgb(var(--gray-150) / <alpha-value>)',
+          250: 'rgb(var(--gray-250) / <alpha-value>)',
+          350: 'rgb(var(--gray-350) / <alpha-value>)',
+          450: 'rgb(var(--gray-450) / <alpha-value>)',
+          455: 'rgb(var(--gray-455) / <alpha-value>)',
           700: 'rgb(var(--gray-700) / <alpha-value>)',
+          750: 'rgb(var(--gray-750) / <alpha-value>)',
           800: 'rgb(var(--gray-800) / <alpha-value>)',
+          850: 'rgb(var(--gray-850) / <alpha-value>)',
           900: 'rgb(var(--gray-900) / <alpha-value>)',
           950: 'rgb(var(--gray-950) / <alpha-value>)',
+          955: 'rgb(var(--gray-955) / <alpha-value>)',
         },
       },
       fontFamily: {
