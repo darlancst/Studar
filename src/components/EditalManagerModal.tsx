@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { XMarkIcon, TrashIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { useState } from 'react';
+import { XMarkIcon, TrashIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useSubjectStore } from '@/store/subjectStore';
 import { useEditalStore } from '@/store/editalStore';
 import { useGoalStore } from '@/store/goalStore';
@@ -18,30 +18,26 @@ interface JsonImportEntry {
 
 export default function EditalManagerModal({ onClose }: EditalManagerModalProps) {
   const { subjects } = useSubjectStore();
-  const { items, addItems, toggleItem, deleteItemsBySubject, resetEdital, deleteItemsByGoal, purgeOrphanItems } = useEditalStore();
-  const { goals, activeGoalId, setActiveGoal, addGoal, deleteGoal } = useGoalStore();
+  const { items, addItems, toggleItem, deleteItemsBySubjectAndGoal, deleteItemsByGoal, deleteLegacyItems } = useEditalStore();
+  const { goals, activeGoalId, setActiveGoal, addGoal } = useGoalStore();
   const [jsonInput, setJsonInput] = useState('');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
-  
-  const orphanCount = items.filter(i => !i.goalId).length;
-  const currentItems = items.filter(i => i.goalId === activeGoalId);
-  const [showImport, setShowImport] = useState(currentItems.length === 0);
   const [activeSubjectId, setActiveSubjectId] = useState<string>(subjects[0]?.id || '');
 
-  // Auto-limpar itens sem concurso quando a modal abre (se houver concursos)
-  useEffect(() => {
-    if (goals.length > 0) {
-      purgeOrphanItems();
-    }
-  }, []);
+  // Items belonging to active goal
+  const currentItems = items.filter(i => i.goalId === activeGoalId);
+  // Legacy items (no goalId at all) — these are the "stuck" ones the user can't delete
+  const legacyItems = items.filter(i => !i.goalId);
+
+  const [showImport, setShowImport] = useState(currentItems.length === 0);
 
   useRegisterModal(true, onClose);
 
   const handleImport = () => {
     setImportError('');
     setImportSuccess('');
-    
+
     if (!activeGoalId) {
       setImportError('Crie e selecione um concurso primeiro.');
       return;
@@ -81,11 +77,11 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
       });
 
       if (totalImported > 0) {
-        setImportSuccess(`${totalImported} tópico(s) importado(s) com sucesso!${notFound.length > 0 ? ` Matérias não encontradas: ${notFound.join(', ')}.` : ''}`);
+        setImportSuccess(`${totalImported} tópico(s) importado(s)!${notFound.length > 0 ? ` Não encontradas: ${notFound.join(', ')}.` : ''}`);
         setJsonInput('');
         setTimeout(() => setShowImport(false), 1500);
       } else {
-        setImportError(`Nenhum tópico importado. Matérias não encontradas: ${notFound.join(', ')}. Verifique se os nomes correspondem às suas matérias cadastradas.`);
+        setImportError(`Nenhum tópico importado. Matérias não encontradas: ${notFound.join(', ')}.`);
       }
     } catch (e: any) {
       setImportError(`Erro ao processar JSON: ${e.message}`);
@@ -103,7 +99,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
     }
   };
 
-  const subjectsWithItems = subjects.filter(s => currentItems.some(i => i.subjectId === s.id));
+  const subjectsWithCurrentItems = subjects.filter(s => currentItems.some(i => i.subjectId === s.id));
   const activeItems = currentItems
     .filter(i => i.subjectId === activeSubjectId)
     .sort((a, b) => a.order - b.order);
@@ -114,8 +110,9 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
       onTouchStart={e => e.stopPropagation()}
       onTouchMove={e => e.stopPropagation()}
       onTouchEnd={e => e.stopPropagation()}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[85vh] flex flex-col my-auto">
         {/* Header com Seletor de Concurso */}
         <div className="flex flex-col gap-2 p-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -124,12 +121,12 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
               <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <select
               value={activeGoalId || ''}
               onChange={(e) => setActiveGoal(e.target.value)}
-              className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm rounded-lg p-2 text-gray-900 dark:text-white focus:ring-teal-500 focus:border-teal-500"
+              className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm rounded-lg p-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             >
               {goals.length === 0 && <option value="" disabled>Nenhum concurso criado</option>}
               {goals.map(g => (
@@ -139,7 +136,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
             <button
               onClick={handleNewGoal}
               disabled={goals.length >= 3}
-              className="px-3 py-2 bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 text-sm font-medium rounded-lg disabled:opacity-50 transition-colors"
+              className="px-3 py-2 bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 text-sm font-medium rounded-lg disabled:opacity-50 transition-colors whitespace-nowrap"
             >
               + Novo
             </button>
@@ -147,9 +144,30 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
         </div>
 
         <div className="flex-1 overflow-y-auto">
+          {/* Aviso de itens legados (sem concurso) */}
+          {legacyItems.length > 0 && (
+            <div className="mx-3 mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl flex items-start gap-2">
+              <ExclamationTriangleIcon className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                  {legacyItems.length} tópico(s) sem concurso vinculado
+                </p>
+                <p className="text-xs text-amber-600 dark:text-amber-500 mt-0.5">
+                  Estes são de importações anteriores ao sistema de concursos.
+                </p>
+              </div>
+              <button
+                onClick={() => { if (confirm(`Apagar os ${legacyItems.length} tópicos antigos (sem concurso)?`)) deleteLegacyItems(); }}
+                className="text-xs text-red-500 hover:text-red-600 font-medium whitespace-nowrap flex-shrink-0"
+              >
+                Apagar
+              </button>
+            </div>
+          )}
+
           {/* Importação JSON */}
           {showImport ? (
-            <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+            <div className="p-3 border-b border-gray-100 dark:border-gray-800 mt-2">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Importar via JSON</h3>
                 {currentItems.length > 0 && (
@@ -161,17 +179,17 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
               <textarea
                 value={jsonInput}
                 onChange={e => { setJsonInput(e.target.value); setImportError(''); setImportSuccess(''); }}
-                placeholder='Cole o JSON gerado aqui... Ex: [{ "materia": "...", "topicos": ["..."] }]'
+                placeholder='Cole o JSON aqui... Ex: [{ "materia": "...", "topicos": ["..."] }]'
                 rows={2}
                 className="w-full text-xs font-mono border border-gray-200 dark:border-gray-700 rounded-lg p-2.5 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 resize-none"
               />
-              {importError && <p className="text-xs text-red-500 mt-2">{importError}</p>}
-              {importSuccess && <p className="text-xs text-teal-600 dark:text-teal-400 mt-2">{importSuccess}</p>}
-              
+              {importError && <p className="text-xs text-red-500 mt-1">{importError}</p>}
+              {importSuccess && <p className="text-xs text-teal-600 dark:text-teal-400 mt-1">{importSuccess}</p>}
+
               {jsonInput.trim() && (
                 <button
                   onClick={handleImport}
-                  className="mt-3 w-full py-2.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors shadow-sm"
+                  className="mt-2 w-full py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors"
                 >
                   ✓ Importar tópicos
                 </button>
@@ -181,7 +199,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
             <div className="p-3 border-b border-gray-100 dark:border-gray-800 flex justify-end">
               <button
                 onClick={() => setShowImport(true)}
-                className="text-xs text-teal-600 dark:text-teal-400 font-medium hover:underline flex items-center gap-1"
+                className="text-xs text-teal-600 dark:text-teal-400 font-medium hover:underline"
               >
                 + Importar mais tópicos
               </button>
@@ -189,35 +207,33 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
           )}
 
           {/* Lista de tópicos por matéria */}
-          {subjectsWithItems.length > 0 && (
+          {subjectsWithCurrentItems.length > 0 && (
             <div className="p-3 sm:p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Tópicos do Edital</h3>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      if (confirm('Apagar TODO o edital deste concurso?')) {
-                        if (activeGoalId) deleteItemsByGoal(activeGoalId);
-                      }
-                    }}
-                    className="text-xs text-red-400 hover:text-red-500 transition-colors flex items-center gap-1"
-                  >
-                    <TrashIcon className="w-3.5 h-3.5" />
-                    Limpar
-                  </button>
-                </div>
+                <button
+                  onClick={() => {
+                    if (confirm('Apagar TODO o edital deste concurso?')) {
+                      if (activeGoalId) deleteItemsByGoal(activeGoalId);
+                    }
+                  }}
+                  className="text-xs text-red-400 hover:text-red-500 transition-colors flex items-center gap-1"
+                >
+                  <TrashIcon className="w-3.5 h-3.5" />
+                  Limpar
+                </button>
               </div>
 
               {/* Tabs de matérias */}
               <div className="flex gap-2 flex-wrap pb-3 mb-3">
-                {subjectsWithItems.map(s => {
+                {subjectsWithCurrentItems.map(s => {
                   const sItems = currentItems.filter(i => i.subjectId === s.id);
                   const sDone = sItems.filter(i => i.completed).length;
                   return (
                     <button
                       key={s.id}
                       onClick={() => setActiveSubjectId(s.id)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${activeSubjectId === s.id
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${activeSubjectId === s.id
                         ? 'text-white shadow-sm'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
@@ -238,7 +254,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
                   <button
                     key={item.id}
                     onClick={() => toggleItem(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${item.completed
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-all ${item.completed
                       ? 'bg-teal-50 dark:bg-teal-900/20'
                       : 'hover:bg-gray-50 dark:hover:bg-gray-800'
                       }`}
@@ -259,16 +275,31 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
                 ))}
               </div>
 
-              {/* Botão apagar matéria */}
-              {activeSubjectId && (
+              {/* Botão apagar matéria (escopo correto: só do concurso ativo) */}
+              {activeSubjectId && activeItems.length > 0 && (
                 <button
-                  onClick={() => { if (confirm('Apagar todos os tópicos desta matéria?')) deleteItemsBySubject(activeSubjectId); }}
+                  onClick={() => {
+                    if (confirm('Apagar todos os tópicos desta matéria neste concurso?'))
+                      deleteItemsBySubjectAndGoal(activeSubjectId, activeGoalId);
+                  }}
                   className="mt-3 text-xs text-red-400 hover:text-red-500 transition-colors flex items-center gap-1"
                 >
                   <TrashIcon className="w-3.5 h-3.5" />
                   Apagar tópicos desta matéria
                 </button>
               )}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {subjectsWithCurrentItems.length === 0 && activeGoalId && (
+            <div className="p-6 text-center text-gray-400 dark:text-gray-500 text-sm">
+              Nenhum tópico neste concurso ainda. Importe um JSON acima!
+            </div>
+          )}
+          {!activeGoalId && goals.length === 0 && (
+            <div className="p-6 text-center text-gray-400 dark:text-gray-500 text-sm">
+              Crie um concurso clicando em "+ Novo" para começar.
             </div>
           )}
         </div>
