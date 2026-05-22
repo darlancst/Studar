@@ -177,7 +177,7 @@ export default function Home() {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen overflow-x-hidden"
       {...swipeHandlers}
     >
       <div className="max-w-6xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4">
