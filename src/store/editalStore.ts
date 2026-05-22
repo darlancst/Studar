@@ -42,21 +42,17 @@ export const useEditalStore = create<EditalStore>()(
       },
 
       deleteItemsBySubject: (subjectId) => {
-        set((state) => {
-          setTimeout(() => firebaseSync.syncToCloud(), 100);
-          return {
-            items: state.items.filter((item) => item.subjectId !== subjectId),
-          };
-        });
+        set((state) => ({
+          items: state.items.filter((item) => item.subjectId !== subjectId),
+        }));
+        setTimeout(() => firebaseSync.syncToCloud(), 100);
       },
 
       deleteItemsByGoal: (goalId) => {
-        set((state) => {
-          setTimeout(() => firebaseSync.syncToCloud(), 100);
-          return {
-            items: state.items.filter((item) => item.goalId !== goalId),
-          };
-        });
+        set((state) => ({
+          items: state.items.filter((item) => item.goalId !== goalId),
+        }));
+        setTimeout(() => firebaseSync.syncToCloud(), 100);
       },
 
       resetEdital: () => {

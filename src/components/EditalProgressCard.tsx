@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSubjectStore } from '@/store/subjectStore';
 import { useEditalStore } from '@/store/editalStore';
+import { useGoalStore } from '@/store/goalStore';
 import { ChevronDownIcon, ChevronUpIcon, ListBulletIcon } from '@heroicons/react/24/outline';
 import EditalManagerModal from './EditalManagerModal';
 
@@ -10,9 +11,12 @@ export default function EditalProgressCard() {
   const [expanded, setExpanded] = useState(false);
   const [showManager, setShowManager] = useState(false);
   const { subjects } = useSubjectStore();
-  const { items } = useEditalStore();
+  const { items: allItems } = useEditalStore();
+  const { activeGoalId } = useGoalStore();
 
-  // Se não houver itens, não renderiza o card
+  const items = allItems.filter(i => i.goalId === activeGoalId);
+
+  // Se não houver itens ou se não houver um goal ativo, mostra o card de criar edital/concurso
   if (items.length === 0) {
     return (
       <>

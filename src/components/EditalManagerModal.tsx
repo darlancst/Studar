@@ -186,6 +186,24 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Tópicos do Edital</h3>
                 <div className="flex items-center gap-3">
+                  {items.some(i => !i.goalId) && (
+                    <button
+                      onClick={() => {
+                        if (confirm('Apagar matérias antigas que não pertencem a nenhum concurso?')) {
+                          useEditalStore.setState((state) => ({
+                            items: state.items.filter(i => i.goalId)
+                          }));
+                          import('@/services/firebaseSync').then(m => {
+                            m.firebaseSync.syncToCloud();
+                          });
+                        }
+                      }}
+                      className="text-xs text-orange-400 hover:text-orange-500 transition-colors flex items-center gap-1"
+                    >
+                      <TrashIcon className="w-3.5 h-3.5" />
+                      Limpar Lixo Antigo
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       if (confirm('Apagar TODO o edital deste concurso?')) {
