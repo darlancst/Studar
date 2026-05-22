@@ -5,6 +5,7 @@ import { useRegisterModal } from '@/hooks/useRegisterModal';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '@/store/authStore';
+import { firebaseSync } from '@/services/firebaseSync';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -25,9 +26,18 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     
     try {
       if (isLogin) {
+        const hadLocalDataBeforeLogin = firebaseSync.hasLocalData();
         await login(email, password);
+        
+        // Prevenir falso-positivo de conflito se for um login limpo (sem dados locais)
+        if (!hadLocalDataBeforeLogin) {
+          localStorage.setItem('hasResolvedConflict', 'true');
+        } else {
+          localStorage.removeItem('hasResolvedConflict');
+        }
       } else {
         await signup(email, password, name);
+        localStorage.setItem('hasResolvedConflict', 'true'); // Novos usuários não têm conflito
       }
       // Sucesso - fechar modal
       onClose();
