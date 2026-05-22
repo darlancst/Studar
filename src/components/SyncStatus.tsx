@@ -20,7 +20,8 @@ export default function SyncStatus() {
       // Verificar conflito antes de iniciar a sync
       firebaseSync.checkCloudData().then(hasCloud => {
         const hasLocal = firebaseSync.hasLocalData();
-        if (hasCloud && hasLocal) {
+        const hasResolved = localStorage.getItem('hasResolvedConflict') === 'true';
+        if (hasCloud && hasLocal && !hasResolved) {
           setSyncStatus('conflict');
         } else {
           firebaseSync.initialSync();
@@ -75,6 +76,7 @@ export default function SyncStatus() {
     } else {
       await firebaseSync.syncToCloud();
     }
+    localStorage.setItem('hasResolvedConflict', 'true');
     setSyncStatus('synced');
   };
 
