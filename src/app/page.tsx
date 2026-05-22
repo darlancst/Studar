@@ -27,6 +27,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabName>('stats');
   const [showSubjectManager, setShowSubjectManager] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showExitToast, setShowExitToast] = useState(false);
   const isDarkMode = useSettingsStore((state) => state.darkMode);
 
   // Register main modals with back button handler
@@ -37,61 +38,81 @@ export default function Home() {
   const tabsOrder: TabName[] = ['stats', 'calendar', 'schedule', 'pomodoro', 'simulados'];
 
   // --- Histórico de abas para o botão voltar do celular ---
-  const isPopStateNav = useRef(false);
+  const lastBackPressTime = useRef(0);
+
+  useEffect(() => {
+    const handleShowToast = () => {
+      setShowExitToast(true);
+      setTimeout(() => setShowExitToast(false), 2000);
+    };
+    window.addEventListener('show-exit-toast', handleShowToast);
+    return () => window.removeEventListener('show-exit-toast', handleShowToast);
+  }, []);
 
   const handleTabChange = useCallback((tab: TabName) => {
     if (tab === activeTab) return;
 
-    if (!isPopStateNav.current) {
-      if (tab === 'stats') {
-        // Se indo para o Início por clique (ou evento), limpa a pilha do browser para não acumular
-        window.history.back();
-        setActiveTab('stats');
-        return;
-      } else if (activeTab === 'stats') {
-        // Saindo do Início: pushState
-        window.history.pushState({ ...window.history.state, tab }, '', '');
-      } else {
-        // Trocando entre abas secundárias: replaceState para manter pilha com apenas 2 itens
-        window.history.replaceState({ ...window.history.state, tab }, '', '');
-      }
+    if (tab === 'stats') {
+      window.history.back(); // Volta para limpar a pilha do browser
+    } else if (activeTab === 'stats') {
+      window.history.pushState({ tab, appInit: true }, '', '');
+    } else {
+      window.history.replaceState({ tab, appInit: true }, '', '');
     }
-    isPopStateNav.current = false;
 
     setActiveTab(tab);
   }, [activeTab]);
 
-  // Botão voltar do celular: volta sempre para o início (stats)
   useEffect(() => {
-    // Define o estado inicial da pilha para 'stats'
-    window.history.replaceState({ ...window.history.state, tab: 'stats' }, '', '');
+    // Inicialização da pilha de histórico
+    if (!window.history.state || !window.history.state.appInit) {
+      // Estado âncora ("dummy") para segurar a saída do app
+      window.history.replaceState({ dummy: true, appInit: true }, '', '');
+      // Estado real da página inicial
+      window.history.pushState({ tab: 'stats', appInit: true }, '', '');
+    }
 
     const handlePopState = (e: PopStateEvent) => {
       const win = window as any;
       const stack = win._modalCloseStack;
 
-      // Se há modal aberto: fecha e NÃO navega tabs.
+      // 1. Fechar Modais
       if (stack && stack.length > 0) {
         win._modalClosedByBack = true;
         const handler = stack.pop();
         if (handler) handler();
 
-        // Se ainda restam modais abertos no stack, re-empilha o sentinel
         if (stack.length > 0) {
-          window.history.pushState({ ...window.history.state, _modalSentinel: true }, '', '');
+          window.history.pushState({ _modalSentinel: true }, '', '');
         }
         return;
       }
 
-      // Entrada órfã de modal
-      if (e.state && (e.state._modal || e.state._modalSentinel)) {
-        window.history.replaceState({ ...window.history.state, tab: 'stats' }, '', '');
+      // 2. Intercepta saída na tela inicial
+      if (e.state && e.state.dummy) {
+        const now = Date.now();
+        if (now - lastBackPressTime.current < 2000) {
+          // Confirmou a saída com clique duplo
+          window.history.back();
+        } else {
+          // Primeira tentativa de sair
+          lastBackPressTime.current = now;
+          window.dispatchEvent(new CustomEvent('show-exit-toast'));
+          // Restaura a tela inicial na frente da âncora
+          window.history.pushState({ tab: 'stats', appInit: true }, '', '');
+        }
         return;
       }
 
-      // Sem modais: o back sempre trará a stack de volta para 'stats' ou a aba atual
+      // 3. Se cair num sentinel órfão, força a volta para o stats
+      if (e.state && (e.state._modal || e.state._modalSentinel)) {
+        window.history.replaceState({ tab: 'stats', appInit: true }, '', '');
+        setActiveTab('stats');
+        return;
+      }
+
+      // 4. Navegação normal
       if (e.state && e.state.tab) {
-        isPopStateNav.current = true;
         setActiveTab(e.state.tab);
       }
     };
@@ -274,6 +295,15 @@ export default function Home() {
           activeTab={activeTab}
           setActiveTab={handleTabChange}
         />
+      </div>
+
+      {/* Toast de saída (clique duplo) */}
+      <div 
+        className={`fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900/90 dark:bg-white/90 text-white dark:text-gray-900 px-4 py-2 rounded-full text-sm font-medium shadow-lg transition-all duration-300 z-[999] pointer-events-none ${
+          showExitToast ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}
+      >
+        Toque de novo para sair
       </div>
     </div>
   );
