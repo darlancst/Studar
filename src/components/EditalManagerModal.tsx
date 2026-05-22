@@ -135,7 +135,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
               </div>
 
               {/* Tabs de matérias */}
-              <div className="flex gap-1.5 flex-wrap mb-3">
+              <div className="flex gap-2 overflow-x-auto pb-3 mb-3 scrollbar-hide snap-x">
                 {subjectsWithItems.map(s => {
                   const sItems = items.filter(i => i.subjectId === s.id);
                   const sDone = sItems.filter(i => i.completed).length;
@@ -143,14 +143,14 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
                     <button
                       key={s.id}
                       onClick={() => setActiveSubjectId(s.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${activeSubjectId === s.id
+                      className={`flex-shrink-0 snap-start flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${activeSubjectId === s.id
                         ? 'text-white shadow-sm'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                       style={activeSubjectId === s.id ? { backgroundColor: s.color } : {}}
                     >
                       {s.name}
-                      <span className={`text-[10px] ${activeSubjectId === s.id ? 'text-white/80' : 'text-gray-400'}`}>
+                      <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${activeSubjectId === s.id ? 'bg-black/20 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
                         {sDone}/{sItems.length}
                       </span>
                     </button>
