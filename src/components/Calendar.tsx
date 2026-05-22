@@ -511,7 +511,7 @@ export default function Calendar() {
 
       {/* Mobile Agenda Modal */}
       {showMobileAgenda && (
-        <div className="md:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="md:hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white dark:bg-gray-800 w-full h-[85vh] sm:h-[600px] sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
             <AgendaPanel
               date={selectedDate}
