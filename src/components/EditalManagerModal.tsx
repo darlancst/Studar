@@ -77,7 +77,12 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
     .sort((a, b) => a.order - b.order);
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div
+      className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+      onTouchStart={e => e.stopPropagation()}
+      onTouchMove={e => e.stopPropagation()}
+      onTouchEnd={e => e.stopPropagation()}
+    >
       <div className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
@@ -89,20 +94,14 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
 
         <div className="flex-1 overflow-y-auto">
           {/* Importação JSON */}
-          <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+          <div className="p-3 border-b border-gray-100 dark:border-gray-800">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Importar via JSON</h3>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
-              Cole o JSON gerado por uma IA no formato abaixo. Os nomes das matérias devem ser idênticos aos cadastrados no app.
-            </p>
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 mb-3 text-xs font-mono text-gray-500 dark:text-gray-400 leading-relaxed overflow-x-auto">
-              {`[{ "materia": "Dir. Administrativo", "topicos": ["Princípios", "Atos"] }]`}
-            </div>
             <textarea
               value={jsonInput}
               onChange={e => { setJsonInput(e.target.value); setImportError(''); setImportSuccess(''); }}
-              placeholder="Cole o JSON aqui..."
-              rows={3}
-              className="w-full text-xs font-mono border border-gray-200 dark:border-gray-700 rounded-xl p-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 resize-none"
+              placeholder='Cole o JSON gerado aqui... Ex: [{ "materia": "...", "topicos": ["..."] }]'
+              rows={2}
+              className="w-full text-xs font-mono border border-gray-200 dark:border-gray-700 rounded-lg p-2.5 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 resize-none mt-1"
             />
             {importError && <p className="text-xs text-red-500 mt-2">{importError}</p>}
             {importSuccess && <p className="text-xs text-teal-600 dark:text-teal-400 mt-2">{importSuccess}</p>}
@@ -110,10 +109,10 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
 
           {/* Botão Importar - sempre visível */}
           {jsonInput.trim() && (
-            <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+            <div className="p-3 border-b border-gray-100 dark:border-gray-800">
               <button
                 onClick={handleImport}
-                className="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors shadow-sm"
+                className="w-full py-2.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors shadow-sm"
               >
                 ✓ Importar tópicos
               </button>
@@ -122,7 +121,7 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
 
           {/* Lista de tópicos por matéria */}
           {subjectsWithItems.length > 0 && (
-            <div className="p-4">
+            <div className="p-3 sm:p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Tópicos do Edital</h3>
                 <button
