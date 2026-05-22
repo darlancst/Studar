@@ -761,6 +761,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               </button>
             </div>
           </div>
+        </div>
       )}
     </div>
   );
