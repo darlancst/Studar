@@ -19,7 +19,7 @@ interface JsonImportEntry {
 export default function EditalManagerModal({ onClose }: EditalManagerModalProps) {
   const { subjects } = useSubjectStore();
   const { items, addItems, toggleItem, deleteItemsBySubjectAndGoal, deleteItemsByGoal, deleteLegacyItems } = useEditalStore();
-  const { goals, activeGoalId, setActiveGoal, addGoal } = useGoalStore();
+  const { goals, activeGoalId, setActiveGoal, addGoal, deleteGoal } = useGoalStore();
   const [jsonInput, setJsonInput] = useState('');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
@@ -95,7 +95,11 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
     }
     const name = prompt('Nome do Concurso (ex: Banco do Brasil):');
     if (name?.trim()) {
-      addGoal(name.trim(), '#14b8a6');
+      let finalName = name.trim();
+      if (finalName.length > 40) {
+        finalName = finalName.substring(0, 40) + '...';
+      }
+      addGoal(finalName, '#14b8a6');
     }
   };
 
@@ -140,6 +144,20 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
             >
               + Novo
             </button>
+            {activeGoalId && (
+              <button
+                onClick={() => {
+                  if (confirm('Tem certeza que deseja apagar este concurso inteiro?')) {
+                    deleteGoal(activeGoalId);
+                    deleteItemsByGoal(activeGoalId);
+                  }
+                }}
+                className="flex-shrink-0 p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                title="Apagar este concurso"
+              >
+                <TrashIcon className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
