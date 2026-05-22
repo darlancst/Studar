@@ -101,19 +101,24 @@ export default function EditalManagerModal({ onClose }: EditalManagerModalProps)
               value={jsonInput}
               onChange={e => { setJsonInput(e.target.value); setImportError(''); setImportSuccess(''); }}
               placeholder="Cole o JSON aqui..."
-              rows={4}
+              rows={3}
               className="w-full text-xs font-mono border border-gray-200 dark:border-gray-700 rounded-xl p-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 resize-none"
             />
             {importError && <p className="text-xs text-red-500 mt-2">{importError}</p>}
             {importSuccess && <p className="text-xs text-teal-600 dark:text-teal-400 mt-2">{importSuccess}</p>}
-            <button
-              onClick={handleImport}
-              disabled={!jsonInput.trim()}
-              className="mt-3 w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
-            >
-              Importar
-            </button>
           </div>
+
+          {/* Botão Importar - sempre visível */}
+          {jsonInput.trim() && (
+            <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+              <button
+                onClick={handleImport}
+                className="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors shadow-sm"
+              >
+                ✓ Importar tópicos
+              </button>
+            </div>
+          )}
 
           {/* Lista de tópicos por matéria */}
           {subjectsWithItems.length > 0 && (
