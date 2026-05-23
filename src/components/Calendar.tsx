@@ -250,7 +250,26 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                 } else {
                   // Se não encontrou o tópico, o session.topicId pode ser o ID de uma matéria diretamente
                   subject = subjects.find(s => s.id === session.topicId) || null;
-                  topicTitle = 'Estudo Geral';
+                  
+                  if (subject) {
+                    // Tenta ver se existem tópicos criados hoje para essa mesma matéria
+                    const createdToday = allTopics.filter(t => 
+                      t.subjectId === subject!.id && 
+                      isSameDay(typeof t.createdAt === 'string' ? parseISO(t.createdAt) : new Date(t.createdAt), date)
+                    );
+                    
+                    if (createdToday.length > 0) {
+                      // Pega o tópico mais recente criado hoje
+                      const sortedCreated = [...createdToday].sort((a, b) => {
+                        const da = typeof a.createdAt === 'string' ? parseISO(a.createdAt) : new Date(a.createdAt);
+                        const db = typeof b.createdAt === 'string' ? parseISO(b.createdAt) : new Date(b.createdAt);
+                        return db.getTime() - da.getTime();
+                      });
+                      topicTitle = sortedCreated[0].title;
+                    } else {
+                      topicTitle = 'Estudo Geral';
+                    }
+                  }
                 }
                 
                 // Calcular horário de início
@@ -275,11 +294,11 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                           <p className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5 tabular-nums">
                             {startTimeStr} às {endTimeStr}
                           </p>
-                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-1 truncate">
-                            {topicTitle}
-                          </p>
-                          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                          <p className="text-sm font-bold text-gray-900 dark:text-white mt-1 truncate">
                             {subject?.name || 'Sem Matéria'}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 italic truncate">
+                            {topicTitle}
                           </p>
                         </div>
                         
