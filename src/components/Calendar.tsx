@@ -239,8 +239,19 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
           {daySessions.length > 0 ? (
             <div className="relative pl-4 ml-2 border-l border-dashed border-gray-200 dark:border-gray-700/60 space-y-4 py-1">
               {daySessions.map((session, idx) => {
+                // Tentar encontrar o tópico primeiro
                 const topic = allTopics.find(t => t.id === session.topicId);
-                const subject = topic ? subjects.find(s => s.id === topic.subjectId) : null;
+                let subject = null;
+                let topicTitle = 'Estudo Geral';
+
+                if (topic) {
+                  subject = subjects.find(s => s.id === topic.subjectId) || null;
+                  topicTitle = topic.title;
+                } else {
+                  // Se não encontrou o tópico, o session.topicId pode ser o ID de uma matéria diretamente
+                  subject = subjects.find(s => s.id === session.topicId) || null;
+                  topicTitle = 'Estudo Geral';
+                }
                 
                 // Calcular horário de início
                 const sessionEndTime = parseISO(session.date);
@@ -265,7 +276,7 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                             {startTimeStr} às {endTimeStr}
                           </p>
                           <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-1 truncate">
-                            {topic?.title || 'Estudo Avulso'}
+                            {topicTitle}
                           </p>
                           <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
                             {subject?.name || 'Sem Matéria'}
