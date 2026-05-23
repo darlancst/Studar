@@ -105,7 +105,8 @@ export default function WeeklyScheduleEditor() {
 
             {/* Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-2">
-                {weekDays.map((day, dayIndex) => {
+                {[1, 2, 3, 4, 5, 6, 0].map((dayIndex) => {
+                    const day = weekDays[dayIndex];
                     const dayItems = sortedItems.filter(item => item.dayOfWeek === dayIndex);
                     const isToday = new Date().getDay() === dayIndex;
 

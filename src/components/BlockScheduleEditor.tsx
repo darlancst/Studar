@@ -249,23 +249,26 @@ export default function BlockScheduleEditor() {
                                     Dias de Descanso (Sem estudo)
                                 </label>
                                 <div className="flex flex-wrap gap-2">
-                                    {weekDays.map((day, index) => (
-                                        <button
-                                            key={index}
-                                            type="button"
-                                            onClick={() => toggleRestDay(index)}
-                                            className={`
-                                                w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center transition-all
-                                                ${restDays.includes(index)
-                                                    ? 'bg-red-100 text-red-600 border-2 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 shadow-sm scale-105'
-                                                    : 'bg-gray-50 text-gray-500 border border-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
-                                                }
-                                            `}
-                                            title={restDays.includes(index) ? 'Dia de descanso' : 'Dia de estudo'}
-                                        >
-                                            {day.charAt(0)}
-                                        </button>
-                                    ))}
+                                    {[1, 2, 3, 4, 5, 6, 0].map((dayIndex) => {
+                                        const day = weekDays[dayIndex];
+                                        return (
+                                            <button
+                                                key={dayIndex}
+                                                type="button"
+                                                onClick={() => toggleRestDay(dayIndex)}
+                                                className={`
+                                                    w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center transition-all
+                                                    ${restDays.includes(dayIndex)
+                                                        ? 'bg-red-100 text-red-600 border-2 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 shadow-sm scale-105'
+                                                        : 'bg-gray-50 text-gray-500 border border-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                                                    }
+                                                `}
+                                                title={restDays.includes(dayIndex) ? 'Dia de descanso' : 'Dia de estudo'}
+                                            >
+                                                {day.charAt(0)}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                                 <p className="text-xs text-gray-500 mt-2">
                                     Selecione os dias da semana em que você <strong>não</strong> estudará esta matéria.

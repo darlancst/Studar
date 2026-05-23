@@ -273,11 +273,11 @@ export default function Calendar() {
   // Calendar Grid Logic
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
   // Force 6 weeks (42 days) to ensure consistent height
   const calendarEnd = addDays(calendarStart, 41);
   const daysInGrid = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
-  const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const weekDays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
   // Navigation
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
