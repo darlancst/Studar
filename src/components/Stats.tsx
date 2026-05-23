@@ -375,16 +375,25 @@ export default function Stats() {
       labels: days.map(day => format(day, 'dd/MM', { locale: ptBR })),
       datasets: [
         {
-          label: 'Minutos por Dia',
+          label: 'Tempo Estudado',
           data: data,
           borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          backgroundColor: 'rgba(59, 130, 246, 0.06)',
           fill: true,
           tension: 0.4,
+          borderWidth: 2.5,
+          pointBackgroundColor: '#3b82f6',
+          pointBorderColor: isDarkMode ? '#111827' : '#ffffff',
+          pointBorderWidth: 1.5,
+          pointRadius: 3.5,
+          pointHoverRadius: 5.5,
+          pointHoverBackgroundColor: '#3b82f6',
+          pointHoverBorderColor: '#ffffff',
+          pointHoverBorderWidth: 2,
         }
       ]
     };
-  }, [sessions, period, customStartDate, customEndDate]);
+  }, [sessions, period, customStartDate, customEndDate, isDarkMode]);
 
   // Opções comuns dos gráficos
   const chartOptions = {
@@ -407,10 +416,10 @@ export default function Stats() {
         display: false,
       },
       tooltip: {
-        backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+        backgroundColor: isDarkMode ? '#111827' : '#ffffff',
         titleColor: isDarkMode ? '#f3f4f6' : '#111827',
         bodyColor: isDarkMode ? '#d1d5db' : '#4b5563',
-        borderColor: isDarkMode ? '#374151' : '#e5e7eb',
+        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#e5e7eb',
         borderWidth: 1,
         padding: 12,
         boxPadding: 6,
@@ -432,7 +441,11 @@ export default function Stats() {
             if (val !== null && val !== undefined) {
               const hours = Math.floor(val / 60);
               const minutes = val % 60;
-              label += `${hours}h ${minutes}m`;
+              if (hours > 0) {
+                label += `${hours}h ${minutes}m`;
+              } else {
+                label += `${minutes}m`;
+              }
             }
             return label;
           }
@@ -442,11 +455,29 @@ export default function Stats() {
     scales: {
       y: {
         beginAtZero: true,
-        ticks: { color: isDarkMode ? '#9ca3af' : '#6b7280' },
-        grid: { color: isDarkMode ? '#374151' : '#e5e7eb' }
+        ticks: { 
+          color: isDarkMode ? '#9ca3af' : '#6b7280',
+          font: { family: "'Inter', sans-serif", size: 10 },
+          callback: function(value: any) {
+            const val = Number(value);
+            if (val === 0) return '0';
+            const hours = Math.floor(val / 60);
+            const minutes = val % 60;
+            if (hours > 0 && minutes === 0) return `${hours}h`;
+            if (hours > 0) return `${hours}h ${minutes}m`;
+            return `${minutes}m`;
+          }
+        },
+        grid: { 
+          color: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+          borderDash: [3, 3]
+        }
       },
       x: {
-        ticks: { color: isDarkMode ? '#9ca3af' : '#6b7280' },
+        ticks: { 
+          color: isDarkMode ? '#9ca3af' : '#6b7280',
+          font: { family: "'Inter', sans-serif", size: 10 }
+        },
         grid: { display: false }
       }
     }
