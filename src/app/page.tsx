@@ -240,7 +240,7 @@ export default function Home() {
             >
               <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-primary-600/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <img 
-                src="/icons/apple-touch-icon.png" 
+                src="/icons/header-logo.png" 
                 alt="Studar" 
                 className="w-6.5 h-6.5 object-contain rounded-md transition-transform duration-300 group-hover:scale-110"
               />
