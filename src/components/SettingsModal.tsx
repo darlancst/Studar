@@ -280,12 +280,13 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </label>
                 <input
                   type="number"
-                  min="1"
                   max="60"
-                  value={pomodoroSettings.focusDuration || ''}
+                  value={pomodoroSettings.focusDuration === 0 ? '' : pomodoroSettings.focusDuration}
                   onChange={(e) => {
-                    const val = e.target.value === '' ? 0 : parseInt(e.target.value);
-                    if (!isNaN(val)) updatePomodoroSettings({ focusDuration: val });
+                    const raw = e.target.value;
+                    if (raw === '') { updatePomodoroSettings({ focusDuration: 0 }); return; }
+                    const val = parseInt(raw);
+                    if (!isNaN(val) && val <= 60) updatePomodoroSettings({ focusDuration: val });
                   }}
                   onBlur={() => {
                     if (!pomodoroSettings.focusDuration || pomodoroSettings.focusDuration < 1) {
@@ -301,12 +302,13 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </label>
                 <input
                   type="number"
-                  min="1"
                   max="30"
-                  value={pomodoroSettings.shortBreakDuration || ''}
+                  value={pomodoroSettings.shortBreakDuration === 0 ? '' : pomodoroSettings.shortBreakDuration}
                   onChange={(e) => {
-                    const val = e.target.value === '' ? 0 : parseInt(e.target.value);
-                    if (!isNaN(val)) updatePomodoroSettings({ shortBreakDuration: val });
+                    const raw = e.target.value;
+                    if (raw === '') { updatePomodoroSettings({ shortBreakDuration: 0 }); return; }
+                    const val = parseInt(raw);
+                    if (!isNaN(val) && val <= 30) updatePomodoroSettings({ shortBreakDuration: val });
                   }}
                   onBlur={() => {
                     if (!pomodoroSettings.shortBreakDuration || pomodoroSettings.shortBreakDuration < 1) {
@@ -322,12 +324,13 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </label>
                 <input
                   type="number"
-                  min="1"
                   max="60"
-                  value={pomodoroSettings.longBreakDuration || ''}
+                  value={pomodoroSettings.longBreakDuration === 0 ? '' : pomodoroSettings.longBreakDuration}
                   onChange={(e) => {
-                    const val = e.target.value === '' ? 0 : parseInt(e.target.value);
-                    if (!isNaN(val)) updatePomodoroSettings({ longBreakDuration: val });
+                    const raw = e.target.value;
+                    if (raw === '') { updatePomodoroSettings({ longBreakDuration: 0 }); return; }
+                    const val = parseInt(raw);
+                    if (!isNaN(val) && val <= 60) updatePomodoroSettings({ longBreakDuration: val });
                   }}
                   onBlur={() => {
                     if (!pomodoroSettings.longBreakDuration || pomodoroSettings.longBreakDuration < 1) {
@@ -343,12 +346,13 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </label>
                 <input
                   type="number"
-                  min="1"
                   max="10"
-                  value={pomodoroSettings.longBreakInterval || ''}
+                  value={pomodoroSettings.longBreakInterval === 0 ? '' : pomodoroSettings.longBreakInterval}
                   onChange={(e) => {
-                    const val = e.target.value === '' ? 0 : parseInt(e.target.value);
-                    if (!isNaN(val)) updatePomodoroSettings({ longBreakInterval: val });
+                    const raw = e.target.value;
+                    if (raw === '') { updatePomodoroSettings({ longBreakInterval: 0 }); return; }
+                    const val = parseInt(raw);
+                    if (!isNaN(val) && val <= 10) updatePomodoroSettings({ longBreakInterval: val });
                   }}
                   onBlur={() => {
                     if (!pomodoroSettings.longBreakInterval || pomodoroSettings.longBreakInterval < 1) {
