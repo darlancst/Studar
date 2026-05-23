@@ -60,7 +60,8 @@ import {
   TrophyIcon,
   PlayIcon,
   CalendarIcon,
-  ClipboardDocumentCheckIcon
+  ClipboardDocumentCheckIcon,
+  ChartPieIcon
 } from '@heroicons/react/24/outline';
 
 // Registrando os componentes necessários
@@ -341,17 +342,27 @@ export default function Stats() {
     ],
   };
 
-  // Dados para o gráfico de pizza (Distribuição)
-  const pieChartData = {
-    labels: subjects.map(s => s.name),
-    datasets: [
-      {
-        data: subjects.map(s => subjectStudyTime[s.id] || 0),
-        backgroundColor: subjects.map(s => s.color),
-        borderWidth: 0,
-      },
-    ],
-  };
+  // Dados filtrados apenas com matérias que possuem tempo de estudo > 0
+  const doughnutChartData = useMemo(() => {
+    const activeSubjects = subjects.filter(s => (subjectStudyTime[s.id] || 0) > 0);
+    
+    return {
+      labels: activeSubjects.map(s => s.name),
+      datasets: [
+        {
+          data: activeSubjects.map(s => subjectStudyTime[s.id] || 0),
+          backgroundColor: activeSubjects.map(s => s.color),
+          borderWidth: isDarkMode ? 2 : 1,
+          borderColor: isDarkMode ? '#111827' : '#ffffff',
+          hoverOffset: 4
+        },
+      ],
+    };
+  }, [subjects, subjectStudyTime, isDarkMode]);
+
+  const hasStudyData = useMemo(() => {
+    return subjects.some(s => (subjectStudyTime[s.id] || 0) > 0);
+  }, [subjects, subjectStudyTime]);
 
   // Dados para o gráfico de linha (Evolução Diária)
   const lineChartData = useMemo(() => {
@@ -483,11 +494,45 @@ export default function Stats() {
     }
   };
 
-  const pieOptions = {
-    ...chartOptions,
-    scales: {
-      x: { display: false },
-      y: { display: false }
+  const doughnutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '70%', // Estilo rosca premium
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          color: isDarkMode ? '#e5e7eb' : '#374151',
+          font: {
+            family: "'Inter', sans-serif",
+            size: 10
+          },
+          usePointStyle: true,
+          padding: 12
+        }
+      },
+      tooltip: {
+        backgroundColor: isDarkMode ? '#111827' : '#ffffff',
+        titleColor: isDarkMode ? '#f3f4f6' : '#111827',
+        bodyColor: isDarkMode ? '#d1d5db' : '#4b5563',
+        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#e5e7eb',
+        borderWidth: 1,
+        padding: 10,
+        callbacks: {
+          label: function (context: any) {
+            const val = context.raw;
+            const hours = Math.floor(val / 60);
+            const minutes = val % 60;
+            let timeStr = '';
+            if (hours > 0) {
+              timeStr = `${hours}h ${minutes}m`;
+            } else {
+              timeStr = `${minutes}m`;
+            }
+            return ` ${context.label}: ${timeStr}`;
+          }
+        }
+      }
     }
   };
 
@@ -753,11 +798,45 @@ export default function Stats() {
         <Heatmap />
       </div>
 
-      {/* Gráfico Principal */}
-      <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-3.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md transition-all duration-300">
-        <h3 className="text-sm font-bold mb-2 dark:text-white">Evolução do Estudo</h3>
-        <div className="min-h-[180px]">
-          <Line data={lineChartData} options={chartOptions} />
+      {/* Seção de Gráficos Analíticos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        {/* Evolução do Estudo */}
+        <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-3.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md transition-all duration-300">
+          <h3 className="text-sm font-bold mb-2 dark:text-white flex items-center gap-1.5">
+            <div className="p-1 bg-gradient-to-br from-primary-500/10 to-primary-600/10 dark:from-primary-500/20 dark:to-primary-600/20 rounded-md">
+              <ChartBarIcon className="w-4 h-4 text-primary-500" />
+            </div>
+            Evolução do Estudo
+          </h3>
+          <div className="h-[200px]">
+            <Line data={lineChartData} options={chartOptions} />
+          </div>
+        </div>
+
+        {/* Distribuição por Matéria */}
+        <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-3.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md transition-all duration-300 flex flex-col">
+          <h3 className="text-sm font-bold mb-2 dark:text-white flex items-center gap-1.5">
+            <div className="p-1 bg-gradient-to-br from-indigo-500/10 to-indigo-600/10 dark:from-indigo-500/20 dark:to-indigo-600/20 rounded-md">
+              <ChartPieIcon className="w-4 h-4 text-indigo-500" />
+            </div>
+            Distribuição por Matéria
+          </h3>
+          
+          <div className="flex-1 h-[200px] flex items-center justify-center relative">
+            {hasStudyData ? (
+              <div className="w-full h-full">
+                <Doughnut data={doughnutChartData} options={doughnutOptions} />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center p-4">
+                <div className="p-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-100/50 dark:border-gray-700/50 rounded-full mb-2 animate-pulse">
+                  <ChartPieIcon className="w-5 h-5 text-gray-300 dark:text-gray-600" />
+                </div>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Nenhum estudo registrado neste período</p>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">Inicie um Pomodoro para ver o equilíbrio das suas matérias!</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
