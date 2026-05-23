@@ -239,14 +239,11 @@ export default function Home() {
               title="Página Inicial (Estatísticas)"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-primary-600/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <svg className="w-5.5 h-5.5 text-primary-600 dark:text-primary-400 drop-shadow-[0_0_6px_rgba(99,102,241,0.35)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="6" y="3" width="14" height="18" rx="2" />
-                <path d="M3 6h3" />
-                <path d="M3 10h3" />
-                <path d="M3 14h3" />
-                <path d="M3 18h3" />
-                <path d="M16 8.5a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v1.5a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v1.5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2" />
-              </svg>
+              <img 
+                src="/icons/apple-touch-icon.png" 
+                alt="Studar" 
+                className="w-6.5 h-6.5 object-contain rounded-md transition-transform duration-300 group-hover:scale-110"
+              />
             </button>
             <div className="hidden sm:block">
               <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-gray-600 dark:from-white dark:via-gray-200 dark:to-gray-400">
