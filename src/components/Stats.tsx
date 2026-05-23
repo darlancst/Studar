@@ -787,17 +787,6 @@ export default function Stats() {
         </div>
       </div>
 
-      {/* Heatmap Section */}
-      <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-3.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md transition-all duration-300" id="tour-heatmap">
-        <h3 className="text-sm font-bold mb-1.5 dark:text-white flex items-center gap-1.5">
-          <div className="p-1 bg-gradient-to-br from-orange-500/10 to-orange-600/10 dark:from-orange-500/20 dark:to-orange-600/20 rounded-md">
-            <FireIcon className="w-4 h-4 text-orange-500" />
-          </div>
-          Consistência de Estudos
-        </h3>
-        <Heatmap />
-      </div>
-
       {/* Seção de Gráficos Analíticos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
         {/* Evolução do Estudo */}
@@ -838,6 +827,17 @@ export default function Stats() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Heatmap Section */}
+      <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-3.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md transition-all duration-300" id="tour-heatmap">
+        <h3 className="text-sm font-bold mb-1.5 dark:text-white flex items-center gap-1.5">
+          <div className="p-1 bg-gradient-to-br from-orange-500/10 to-orange-600/10 dark:from-orange-500/20 dark:to-orange-600/20 rounded-md">
+            <FireIcon className="w-4 h-4 text-orange-500" />
+          </div>
+          Consistência de Estudos
+        </h3>
+        <Heatmap />
       </div>
     </div>
   );
