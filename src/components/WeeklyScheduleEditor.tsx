@@ -92,17 +92,6 @@ export default function WeeklyScheduleEditor() {
 
     return (
         <div className="space-y-4">
-            {/* Header with Add Button */}
-            <div className="flex justify-end">
-                <button
-                    onClick={openModal}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 dark:text-primary-400 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 rounded-lg transition-colors"
-                >
-                    <PlusIcon className="h-4 w-4" />
-                    Adicionar Item
-                </button>
-            </div>
-
             {/* Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-2">
                 {[1, 2, 3, 4, 5, 6, 0].map((dayIndex) => {
