@@ -78,11 +78,21 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   // Estado para gerenciar os limiares de tempo do heatmap
   const [thresholds, setThresholds] = useState<HeatmapThresholds>({ ...heatmapThresholds });
 
+  // Estados locais para campos do Pomodoro (armazenados como string para permitir digitação livre e campo vazio)
+  const [localFocus, setLocalFocus] = useState(pomodoroSettings.focusDuration.toString());
+  const [localShortBreak, setLocalShortBreak] = useState(pomodoroSettings.shortBreakDuration.toString());
+  const [localLongBreak, setLocalLongBreak] = useState(pomodoroSettings.longBreakDuration.toString());
+  const [localLongBreakInterval, setLocalLongBreakInterval] = useState(pomodoroSettings.longBreakInterval.toString());
+
   // Atualizar o estado local quando as configurações mudarem
   useEffect(() => {
     setIntervals(reviewIntervals);
     setThresholds({ ...heatmapThresholds });
-  }, [reviewIntervals, heatmapThresholds]);
+    setLocalFocus(pomodoroSettings.focusDuration.toString());
+    setLocalShortBreak(pomodoroSettings.shortBreakDuration.toString());
+    setLocalLongBreak(pomodoroSettings.longBreakDuration.toString());
+    setLocalLongBreakInterval(pomodoroSettings.longBreakInterval.toString());
+  }, [reviewIntervals, heatmapThresholds, pomodoroSettings]);
 
   // Função para atualizar a meta de tempo semanal
   const handleUpdateWeeklyGoal = () => {
@@ -280,18 +290,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </label>
                 <input
                   type="number"
-                  max="60"
-                  value={pomodoroSettings.focusDuration === 0 ? '' : pomodoroSettings.focusDuration}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === '') { updatePomodoroSettings({ focusDuration: 0 }); return; }
-                    const val = parseInt(raw);
-                    if (!isNaN(val) && val <= 60) updatePomodoroSettings({ focusDuration: val });
-                  }}
+                  value={localFocus}
+                  onChange={(e) => setLocalFocus(e.target.value)}
                   onBlur={() => {
-                    if (!pomodoroSettings.focusDuration || pomodoroSettings.focusDuration < 1) {
-                      updatePomodoroSettings({ focusDuration: 25 });
+                    let val = parseInt(localFocus);
+                    if (isNaN(val) || val < 1) {
+                      val = 25;
                     }
+                    setLocalFocus(val.toString());
+                    updatePomodoroSettings({ focusDuration: val });
                   }}
                   className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
                 />
@@ -302,18 +309,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </label>
                 <input
                   type="number"
-                  max="30"
-                  value={pomodoroSettings.shortBreakDuration === 0 ? '' : pomodoroSettings.shortBreakDuration}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === '') { updatePomodoroSettings({ shortBreakDuration: 0 }); return; }
-                    const val = parseInt(raw);
-                    if (!isNaN(val) && val <= 30) updatePomodoroSettings({ shortBreakDuration: val });
-                  }}
+                  value={localShortBreak}
+                  onChange={(e) => setLocalShortBreak(e.target.value)}
                   onBlur={() => {
-                    if (!pomodoroSettings.shortBreakDuration || pomodoroSettings.shortBreakDuration < 1) {
-                      updatePomodoroSettings({ shortBreakDuration: 5 });
+                    let val = parseInt(localShortBreak);
+                    if (isNaN(val) || val < 1) {
+                      val = 5;
                     }
+                    setLocalShortBreak(val.toString());
+                    updatePomodoroSettings({ shortBreakDuration: val });
                   }}
                   className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
                 />
@@ -324,18 +328,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </label>
                 <input
                   type="number"
-                  max="60"
-                  value={pomodoroSettings.longBreakDuration === 0 ? '' : pomodoroSettings.longBreakDuration}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === '') { updatePomodoroSettings({ longBreakDuration: 0 }); return; }
-                    const val = parseInt(raw);
-                    if (!isNaN(val) && val <= 60) updatePomodoroSettings({ longBreakDuration: val });
-                  }}
+                  value={localLongBreak}
+                  onChange={(e) => setLocalLongBreak(e.target.value)}
                   onBlur={() => {
-                    if (!pomodoroSettings.longBreakDuration || pomodoroSettings.longBreakDuration < 1) {
-                      updatePomodoroSettings({ longBreakDuration: 15 });
+                    let val = parseInt(localLongBreak);
+                    if (isNaN(val) || val < 1) {
+                      val = 15;
                     }
+                    setLocalLongBreak(val.toString());
+                    updatePomodoroSettings({ longBreakDuration: val });
                   }}
                   className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
                 />
@@ -346,18 +347,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </label>
                 <input
                   type="number"
-                  max="10"
-                  value={pomodoroSettings.longBreakInterval === 0 ? '' : pomodoroSettings.longBreakInterval}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === '') { updatePomodoroSettings({ longBreakInterval: 0 }); return; }
-                    const val = parseInt(raw);
-                    if (!isNaN(val) && val <= 10) updatePomodoroSettings({ longBreakInterval: val });
-                  }}
+                  value={localLongBreakInterval}
+                  onChange={(e) => setLocalLongBreakInterval(e.target.value)}
                   onBlur={() => {
-                    if (!pomodoroSettings.longBreakInterval || pomodoroSettings.longBreakInterval < 1) {
-                      updatePomodoroSettings({ longBreakInterval: 4 });
+                    let val = parseInt(localLongBreakInterval);
+                    if (isNaN(val) || val < 1) {
+                      val = 4;
                     }
+                    setLocalLongBreakInterval(val.toString());
+                    updatePomodoroSettings({ longBreakInterval: val });
                   }}
                   className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm p-2"
                 />
