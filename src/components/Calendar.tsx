@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfDay, startOfWeek, endOfWeek, isWithinInterval, parseISO, getDay, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon, XMarkIcon, PlusIcon, CalendarIcon, ClockIcon, PlayIcon } from '@heroicons/react/24/outline';
@@ -33,9 +33,21 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
   const { subjects } = useSubjectStore();
   const { topics: allTopics, addTopic } = useTopicStore();
   const { generateReviewsForTopic } = useReviewStore();
-  const { startSession } = usePomodoroStore();
+  const { startSession, sessions } = usePomodoroStore();
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Filtrar sessões de estudo realizadas neste dia específico
+  const daySessions = useMemo(() => {
+    return sessions.filter(s => {
+      try {
+        const sessionDate = parseISO(s.date);
+        return isSameDay(sessionDate, date);
+      } catch (err) {
+        return false;
+      }
+    }).sort((a, b) => a.date.localeCompare(b.date)); // Ordenar cronologicamente por hora de conclusão
+  }, [sessions, date]);
 
   // Initialize selected subject
   useEffect(() => {
@@ -206,6 +218,76 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                   </div>
                 );
               })}
+            </div>
+          )}
+        </section>
+
+        {/* Estudos Realizados (Linha do Tempo Real) */}
+        <section className="border-t dark:border-gray-700/50 pt-4">
+          <div className="flex items-center justify-between mb-3.5">
+            <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <ClockIcon className="h-4 w-4 text-primary-500" />
+              Estudos Realizados
+            </h3>
+            {daySessions.length > 0 && (
+              <span className="text-[10px] font-bold bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 px-2 py-0.5 rounded-full border border-primary-100 dark:border-primary-900/50">
+                {daySessions.length} {daySessions.length === 1 ? 'ciclo' : 'ciclos'}
+              </span>
+            )}
+          </div>
+
+          {daySessions.length > 0 ? (
+            <div className="relative pl-4 ml-2 border-l border-dashed border-gray-200 dark:border-gray-700/60 space-y-4 py-1">
+              {daySessions.map((session, idx) => {
+                const topic = allTopics.find(t => t.id === session.topicId);
+                const subject = topic ? subjects.find(s => s.id === topic.subjectId) : null;
+                
+                // Calcular horário de início
+                const sessionEndTime = parseISO(session.date);
+                const sessionStartTime = new Date(sessionEndTime.getTime() - session.duration * 60 * 1000);
+                
+                const startTimeStr = format(sessionStartTime, 'HH:mm');
+                const endTimeStr = format(sessionEndTime, 'HH:mm');
+
+                return (
+                  <div key={session.id || idx} className="relative group">
+                    {/* Indicador na linha do tempo */}
+                    <div 
+                      className="absolute -left-[1.375rem] top-1.5 w-2.5 h-2.5 rounded-full border border-white dark:border-gray-800 shadow-sm transition-transform duration-300 group-hover:scale-125 z-10"
+                      style={{ backgroundColor: subject?.color || '#3b82f6' }}
+                    />
+                    
+                    {/* Card do histórico realizado */}
+                    <div className="bg-gray-50/50 dark:bg-gray-900/20 border border-gray-150/40 dark:border-gray-800/40 p-2.5 rounded-xl transition-all duration-300 hover:bg-gray-100/50 dark:hover:bg-gray-900/40 hover:shadow-sm">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5 tabular-nums">
+                            {startTimeStr} às {endTimeStr}
+                          </p>
+                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-1 truncate">
+                            {topic?.title || 'Estudo Avulso'}
+                          </p>
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                            {subject?.name || 'Sem Matéria'}
+                          </p>
+                        </div>
+                        
+                        <span className="text-[10px] font-bold bg-white/80 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 border border-gray-150/50 dark:border-gray-700/50 px-1.5 py-0.5 rounded-md shadow-sm select-none shrink-0 tabular-nums">
+                          {session.duration} min
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-gray-50/30 dark:bg-gray-900/10 border border-dashed border-gray-200 dark:border-gray-800/50 p-4 rounded-xl text-center select-none">
+              <ClockIcon className="h-5 w-5 mx-auto text-gray-300 dark:text-gray-600 mb-1.5" />
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500">Nenhum estudo realizado neste dia.</p>
+              {isSameDay(date, new Date()) && (
+                <p className="text-[10px] text-gray-400 dark:text-gray-600 mt-0.5">Inicie o timer do Pomodoro para começar a sua timeline!</p>
+              )}
             </div>
           )}
         </section>
