@@ -14,6 +14,7 @@ import { useScheduleStore } from '@/store/scheduleStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { Topic, Review } from '@/types';
 import { useRegisterModal } from '@/hooks/useRegisterModal';
+import useSwipe from '@/hooks/useSwipe';
 
 // --- Agenda Panel Component ---
 
@@ -404,6 +405,12 @@ export default function Calendar() {
   const { darkMode } = useSettingsStore();
   const { schedules, weeklyItems, blockItems, isItemCompletedForDate, toggleScheduleItemCompletion } = useScheduleStore();
 
+  const swipeHandlers = useSwipe({
+    onSwipeLeft: () => setCurrentMonth(addMonths(currentMonth, 1)),
+    onSwipeRight: () => setCurrentMonth(subMonths(currentMonth, 1)),
+    threshold: 60
+  });
+
   // Calendar Grid Logic
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -491,7 +498,7 @@ export default function Calendar() {
     <div className="flex flex-col md:flex-row h-auto md:h-[620px] bg-white/80 dark:bg-gray-900/60 backdrop-blur-md rounded-2xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 overflow-hidden">
 
       {/* Left Side: Calendar Grid */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div {...swipeHandlers} className="flex-1 flex flex-col min-w-0">
         {/* Calendar Header */}
         <div className="flex items-center justify-between p-3 border-b border-gray-150/30 dark:border-gray-800/50">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white capitalize">

@@ -147,6 +147,7 @@ export default function Home() {
   }, []);
 
   const handleSwipeLeft = () => {
+    if (activeTab === 'calendar') return;
     const currentIndex = tabsOrder.indexOf(activeTab);
     if (currentIndex < tabsOrder.length - 1) {
       handleTabChange(tabsOrder[currentIndex + 1]);
@@ -154,6 +155,7 @@ export default function Home() {
   };
 
   const handleSwipeRight = () => {
+    if (activeTab === 'calendar') return;
     const currentIndex = tabsOrder.indexOf(activeTab);
     if (currentIndex > 0) {
       handleTabChange(tabsOrder[currentIndex - 1]);
