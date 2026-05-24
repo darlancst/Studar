@@ -977,17 +977,12 @@ export default function Pomodoro() {
                       />
                       <div>
                         <p className={`font-semibold text-base ${isCompleted || isLocked ? 'text-gray-500' : 'text-gray-900 dark:text-white'} ${isCompleted ? 'line-through' : ''}`}>
-                          {linkedTopic ? linkedTopic.title : subject.name}
+                          {item.topicId ? (topics.find(t => t.id === item.topicId)?.title || subject.name) : subject.name}
                         </p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          {linkedTopic && (
+                          {item.topicId && (
                             <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                               {subject.name}
-                            </span>
-                          )}
-                          {!linkedTopic && item.topicId && (
-                            <span className={`text-xs font-medium ${isLocked ? 'text-gray-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                              {topics.find(t => t.id === item.topicId)?.title}
                             </span>
                           )}
                           {item.startTime && (
@@ -1012,11 +1007,11 @@ export default function Pomodoro() {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isLocked) return;
-                          // Se o item já tem tópico definido, finaliza direto
-                          if (item.topicId || linkedTopic) {
+                          // Se o item tem tópico predefinido no cronograma, finaliza direto
+                          if (item.topicId) {
                             handleFinishContent(item.id);
                           } else {
-                            // Entra no modo "O que você estudou?" — pede o tópico
+                            // Se for matéria genérica, entra no modo "O que você estudou?" para salvar o tópico
                             setFinishingItemId(item.id);
                             // Pausa o timer se estiver rodando
                             if (isRunning) pauseTimer();
@@ -1038,14 +1033,19 @@ export default function Pomodoro() {
                   </div>
 
                   {/* Tópicos já estudados neste bloco */}
-                  {completedTopicsPerItem[item.id] && completedTopicsPerItem[item.id].length > 0 && !isCompleted && (
+                  {completedTopicsPerItem[item.id] && completedTopicsPerItem[item.id].length > 0 && (
                     <div className="pl-5 animate-fade-in">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Tópicos estudados:</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+                        {isCompleted ? 'Tópicos concluídos:' : 'Tópicos estudados:'}
+                      </p>
                       <div className="flex flex-wrap gap-1.5">
                         {completedTopicsPerItem[item.id].map(topicId => {
                           const topic = topics.find(t => t.id === topicId);
                           return topic ? (
-                            <span key={topicId} className="text-xs bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full border border-green-100 dark:border-green-900/50 flex items-center gap-1">
+                            <span key={topicId} className={`text-xs px-2.5 py-0.5 rounded-full border flex items-center gap-1 transition-all ${isCompleted
+                              ? 'bg-gray-100 text-gray-400 dark:bg-gray-800/20 dark:text-gray-500 border-gray-200 dark:border-gray-800/50 line-through'
+                              : 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400 border-green-100 dark:border-green-900/50'
+                            }`}>
                               <CheckCircleIcon className="h-3 w-3" />
                               {topic.title}
                             </span>
