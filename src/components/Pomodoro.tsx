@@ -1286,10 +1286,6 @@ export default function Pomodoro() {
                             <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                               {subject.name}
                             </span>
-                            <span className="text-gray-300 dark:text-gray-600">•</span>
-                            <span className="text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-950/20 px-2 py-0.5 rounded-md border border-red-100 dark:border-red-900/30">
-                              Revisão Espaçada
-                            </span>
                           </div>
                         </div>
                       </div>
