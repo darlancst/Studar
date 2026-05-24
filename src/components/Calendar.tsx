@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfDay, startOfWeek, endOfWeek, isWithinInterval, parseISO, getDay, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon, XMarkIcon, PlusIcon, CalendarIcon, ClockIcon, PlayIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon, XMarkIcon, PlusIcon, CalendarIcon, ClockIcon, PlayIcon, ArrowPathIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 
 import { useSubjectStore } from '@/store/subjectStore';
@@ -33,7 +33,7 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
   const { subjects } = useSubjectStore();
   const { topics: allTopics, addTopic } = useTopicStore();
   const { generateReviewsForTopic } = useReviewStore();
-  const { startSession, sessions } = usePomodoroStore();
+  const { startSession, sessions, deleteSession } = usePomodoroStore();
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -292,9 +292,23 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                           </p>
                         </div>
                         
-                        <span className="text-[10px] font-bold bg-white/80 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 border border-gray-150/50 dark:border-gray-700/50 px-1.5 py-0.5 rounded-md shadow-sm select-none shrink-0 tabular-nums">
-                          {session.duration} min
-                        </span>
+                        <div className="flex flex-col items-end gap-1.5 shrink-0">
+                          <span className="text-[10px] font-bold bg-white/80 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 border border-gray-150/50 dark:border-gray-700/50 px-1.5 py-0.5 rounded-md shadow-sm select-none tabular-nums">
+                            {session.duration} min
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Deseja realmente apagar o registro desse estudo de ${session.duration} minutos? Isso removerá permanentemente o tempo das suas estatísticas.`)) {
+                                deleteSession(session.id);
+                              }
+                            }}
+                            className="p-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all active:scale-90"
+                            title="Excluir Registro de Estudo"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
