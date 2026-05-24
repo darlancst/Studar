@@ -387,12 +387,22 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
 
 // --- Main Calendar Component ---
 
-export default function Calendar() {
+interface CalendarProps {
+  activeTab?: string;
+}
+
+export default function Calendar({ activeTab }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showMobileAgenda, setShowMobileAgenda] = useState(false);
 
   useRegisterModal(showMobileAgenda, () => setShowMobileAgenda(false));
+
+  useEffect(() => {
+    if (activeTab && activeTab !== 'calendar') {
+      setShowMobileAgenda(false);
+    }
+  }, [activeTab]);
 
   // Data states
   const [dayTopics, setDayTopics] = useState<Topic[]>([]);

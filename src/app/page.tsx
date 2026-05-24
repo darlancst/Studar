@@ -298,7 +298,7 @@ export default function Home() {
                   <span>Matérias</span>
                 </button>
               </div>
-              <Calendar />
+              <Calendar activeTab={activeTab} />
             </div>
           </div>
           <div style={{ display: activeTab === 'simulados' ? 'block' : 'none' }}>
