@@ -474,7 +474,7 @@ export default function Calendar() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[600px] bg-white/80 dark:bg-gray-900/60 backdrop-blur-md rounded-2xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 overflow-hidden">
+    <div className="flex flex-col md:flex-row h-auto md:h-[620px] bg-white/80 dark:bg-gray-900/60 backdrop-blur-md rounded-2xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 overflow-hidden">
 
       {/* Left Side: Calendar Grid */}
       <div className="flex-1 flex flex-col min-w-0">

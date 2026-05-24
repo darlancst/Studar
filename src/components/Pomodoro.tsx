@@ -216,12 +216,17 @@ export default function Pomodoro() {
   // Obter as revisões pendentes para hoje ou atrasadas
   const todayReviews = useMemo(() => {
     const today = new Date();
-    const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+    const startOfToday = startOfDay(today);
     
     return reviews.filter(review => {
       if (review.completed) return false;
-      const reviewDate = new Date(review.scheduledDate);
-      return reviewDate <= endOfToday;
+      const reviewDate = typeof review.scheduledDate === 'string' 
+        ? parseISO(review.scheduledDate) 
+        : new Date(review.scheduledDate);
+      
+      // Compara o início do dia local da revisão com o início do dia de hoje
+      // para evitar que vazamentos de fuso horário tragam revisões de amanhã para a lista de hoje.
+      return startOfDay(reviewDate) <= startOfToday;
     });
   }, [reviews]);
 
