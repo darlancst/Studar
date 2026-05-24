@@ -5,7 +5,7 @@ import { useTopicStore } from '@/store/topicStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useReviewStore } from '@/store/reviewStore';
-import { PlayIcon, PauseIcon, ArrowPathIcon, ForwardIcon, CheckCircleIcon, SparklesIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ArrowPathIcon, ForwardIcon, CheckCircleIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
 import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } from 'date-fns';
 import confetti from 'canvas-confetti';
 import { playAlarmSound } from '@/utils/sounds';
@@ -53,6 +53,7 @@ export default function Pomodoro() {
   // Rastreia qual item está no modo "O que você estudou?" (após clicar ✓)
   const [finishingItemId, setFinishingItemId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'schedules' | 'reviews'>('schedules');
+  const [showOverdue, setShowOverdue] = useState<boolean>(false);
 
   // Wake Lock: impede a tela do celular de desligar enquanto o timer roda
   useWakeLock(isRunning);
@@ -228,16 +229,31 @@ export default function Pomodoro() {
     });
   }, [reviews]);
 
+  // Obter as revisões atrasadas de dias passados
+  const overdueReviews = useMemo(() => {
+    const today = startOfDay(new Date());
+    
+    return reviews.filter(review => {
+      if (review.completed) return false;
+      const reviewDate = typeof review.scheduledDate === 'string' 
+        ? parseISO(review.scheduledDate) 
+        : new Date(review.scheduledDate);
+      
+      // Compara se o dia da revisão é estritamente anterior ao dia de hoje
+      return startOfDay(reviewDate) < today;
+    });
+  }, [reviews]);
+
   // Obter a revisão selecionada ou ativa
   const activeReview = useMemo(() => {
     if (selectedItemId) {
-      return todayReviews.find(r => r.id === selectedItemId);
+      return todayReviews.find(r => r.id === selectedItemId) || overdueReviews.find(r => r.id === selectedItemId);
     }
     if (activeScheduleItemId) {
-      return todayReviews.find(r => r.id === activeScheduleItemId);
+      return todayReviews.find(r => r.id === activeScheduleItemId) || overdueReviews.find(r => r.id === activeScheduleItemId);
     }
     return null;
-  }, [selectedItemId, activeScheduleItemId, todayReviews]);
+  }, [selectedItemId, activeScheduleItemId, todayReviews, overdueReviews]);
 
   // Obter o item selecionado ou ativo no momento
   const activePlan = useMemo(() => {
@@ -1309,6 +1325,101 @@ export default function Pomodoro() {
               </div>
             )}
           </div>
+
+          {/* Revisões Atrasadas (Discreta e Ocultável) */}
+          {overdueReviews.length > 0 && (
+            <div className="pt-2 border-t border-gray-100 dark:border-gray-800/50">
+              <button
+                type="button"
+                onClick={() => setShowOverdue(!showOverdue)}
+                className="w-full flex items-center justify-between py-2 px-3 rounded-lg text-xs font-medium text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-50/50 dark:hover:bg-gray-900/10 border border-gray-100 dark:border-gray-800/40 transition-all"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span>Mostrar revisões atrasadas</span>
+                  <span className="bg-gray-100 dark:bg-gray-800/60 text-[10px] font-semibold px-2 py-0.2 rounded-full text-gray-400 dark:text-gray-500">
+                    {overdueReviews.length}
+                  </span>
+                </div>
+                {showOverdue ? (
+                  <ChevronUpIcon className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
+                ) : (
+                  <ChevronDownIcon className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
+                )}
+              </button>
+
+              {showOverdue && (
+                <div className="mt-2 space-y-2.5 animate-fade-in pl-1 border-l-2 border-gray-100 dark:border-gray-800/40">
+                  {overdueReviews.map((review) => {
+                    const topic = topics.find(t => t.id === review.topicId);
+                    const subject = topic ? subjects.find(s => s.id === topic.subjectId) : null;
+                    if (!subject || !topic) return null;
+
+                    const isSelected = selectedItemId === review.id;
+                    const isLocked = isRunning && !isSelected;
+
+                    return (
+                      <div
+                        key={review.id}
+                        onClick={() => {
+                          if (!isLocked) setSelectedItemId(review.id);
+                        }}
+                        className={`group flex flex-col gap-2.5 p-3.5 rounded-lg border transition-all 
+                          ${isLocked
+                            ? 'opacity-40 grayscale cursor-not-allowed bg-gray-50/50 dark:bg-gray-900/10 border-gray-100 dark:border-gray-800/50'
+                            : isSelected
+                              ? 'bg-white dark:bg-gray-800 border-primary-500 ring-1 ring-primary-500 shadow-sm cursor-default'
+                              : 'bg-gray-50/30 dark:bg-gray-900/5 border-gray-100 dark:border-gray-800/50 hover:border-gray-255 dark:hover:border-gray-700 cursor-pointer shadow-[0_1px_2px_rgba(0,0,0,0.01)]'
+                          }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-1 h-8 rounded-full transition-all ${isSelected ? 'scale-y-110' : 'scale-y-90 opacity-60'}`}
+                              style={{ backgroundColor: subject.color }}
+                            />
+                            <div>
+                              <p className="font-semibold text-sm text-gray-700 dark:text-gray-300">
+                                {topic.title}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
+                                  {subject.name}
+                                </span>
+                                <span className="text-gray-300 dark:text-gray-700 text-[10px]">•</span>
+                                <span className="text-[9px] font-bold text-amber-500/80 bg-amber-50/50 dark:bg-amber-950/10 px-1.5 py-0.2 rounded border border-amber-100/50 dark:border-amber-900/10">
+                                  Atrasada
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {isSelected && (
+                              <span className="text-[10px] font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded animate-pulse">
+                                {isRunning ? 'Em Andamento' : 'Selecionado'}
+                              </span>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (isLocked) return;
+                                handleFinishReview(review.id);
+                              }}
+                              disabled={isLocked}
+                              className="p-1.5 rounded-full text-gray-350 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20"
+                              title="Concluir Revisão"
+                            >
+                              <CheckCircleIcon className="h-5 w-5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
