@@ -213,10 +213,9 @@ export default function Pomodoro() {
     });
   }, [schedules, weeklyItems, blockItems, topics, isItemCompletedForDate, completedScheduleItems]);
 
-  // Obter as revisões pendentes para hoje ou atrasadas
+  // Obter as revisões pendentes estritamente para o dia de hoje (evita acumular atrasadas de outros dias)
   const todayReviews = useMemo(() => {
     const today = new Date();
-    const startOfToday = startOfDay(today);
     
     return reviews.filter(review => {
       if (review.completed) return false;
@@ -224,9 +223,8 @@ export default function Pomodoro() {
         ? parseISO(review.scheduledDate) 
         : new Date(review.scheduledDate);
       
-      // Compara o início do dia local da revisão com o início do dia de hoje
-      // para evitar que vazamentos de fuso horário tragam revisões de amanhã para a lista de hoje.
-      return startOfDay(reviewDate) <= startOfToday;
+      // Compara se o dia da revisão é exatamente o mesmo dia de hoje no fuso local
+      return isSameDay(reviewDate, today);
     });
   }, [reviews]);
 
