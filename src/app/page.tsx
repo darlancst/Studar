@@ -86,6 +86,21 @@ export default function Home() {
   const handleTabChange = useCallback((tab: TabName) => {
     if (tab === activeTab) return;
 
+    const win = window as any;
+    const stack = win._modalCloseStack || [];
+    
+    // Se houver modais abertos na pilha global, fecha-os e muda de aba imediatamente usando replaceState
+    if (stack.length > 0) {
+      win._modalClosedByBack = true;
+      while (stack.length > 0) {
+        const handler = stack.pop();
+        if (handler) handler();
+      }
+      window.history.replaceState(null, '', '#' + tab);
+      setActiveTab(tab);
+      return;
+    }
+
     if (tab === 'stats') {
       window.history.back(); // Volta para limpar a pilha do browser
     } else if (activeTab === 'stats') {
