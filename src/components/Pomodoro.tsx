@@ -463,6 +463,10 @@ export default function Pomodoro() {
 
     if (!topicIdStudied) return; // Não há tópico definido
 
+    // 1.5. Vincular as sessões acumuladas no ciclo atual de foco ao tópico estudado
+    const { currentCycleSessionIds, linkSessionsToTopic } = usePomodoroStore.getState();
+    linkSessionsToTopic(currentCycleSessionIds, topicIdStudied);
+
     // 2. Registrar o tópico como estudado para este item
     setCompletedTopicsPerItem(prev => {
       const existing = prev[targetId] || [];
@@ -499,7 +503,8 @@ export default function Pomodoro() {
       colors: ['#10B981', '#34D399', '#6EE7B7']
     });
 
-    // 7. Resetar o timer
+    // 7. Resetar o timer (limpa activeSessionId antes no store para que a sessão salva não seja descartada pelo reset)
+    usePomodoroStore.setState({ activeSessionId: null, currentCycleSessionIds: [] });
     resetTimer();
     usePomodoroStore.setState({ activeTopicId: null, activeSubjectId: null, activeScheduleItemId: null });
     // NÃO limpar selectedItemId - mantém o item selecionado para permitir adicionar outro tópico

@@ -81,11 +81,20 @@ export const useStatsStore = create<StatsState>((set, get) => ({
 
     // Para cada sessão, incrementa o tempo da matéria correspondente
     sessions.forEach(session => {
+      // 1. Tenta achar como tópico primeiro
       const topic = topicStore.getTopicById(session.topicId);
       if (topic) {
         const subjectId = topic.subjectId;
         if (studyTimeBySubject[subjectId] !== undefined) {
           studyTimeBySubject[subjectId] += session.duration;
+        }
+      } else {
+        // 2. Se não achar o tópico, o session.topicId pode ser diretamente o ID da matéria (ex: sessões em tempo real acumulando)
+        const subject = subjectStore.subjects.find(s => s.id === session.topicId);
+        if (subject) {
+          if (studyTimeBySubject[subject.id] !== undefined) {
+            studyTimeBySubject[subject.id] += session.duration;
+          }
         }
       }
     });

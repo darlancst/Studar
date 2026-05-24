@@ -257,28 +257,9 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
                   subject = subjects.find(s => s.id === topic.subjectId) || null;
                   topicTitle = topic.title;
                 } else {
-                  // Se não encontrou o tópico, o session.topicId pode ser o ID de uma matéria diretamente
+                  // Se não encontrou o tópico, o session.topicId representa o ID de uma matéria diretamente
                   subject = subjects.find(s => s.id === session.topicId) || null;
-                  
-                  if (subject) {
-                    // Tenta ver se existem tópicos criados hoje para essa mesma matéria
-                    const createdToday = allTopics.filter(t => 
-                      t.subjectId === subject!.id && 
-                      isSameDay(typeof t.createdAt === 'string' ? parseISO(t.createdAt) : new Date(t.createdAt), date)
-                    );
-                    
-                    if (createdToday.length > 0) {
-                      // Pega o tópico mais recente criado hoje
-                      const sortedCreated = [...createdToday].sort((a, b) => {
-                        const da = typeof a.createdAt === 'string' ? parseISO(a.createdAt) : new Date(a.createdAt);
-                        const db = typeof b.createdAt === 'string' ? parseISO(b.createdAt) : new Date(b.createdAt);
-                        return db.getTime() - da.getTime();
-                      });
-                      topicTitle = sortedCreated[0].title;
-                    } else {
-                      topicTitle = 'Estudo Geral';
-                    }
-                  }
+                  topicTitle = 'Estudo Geral';
                 }
                 
                 // Calcular horário de início

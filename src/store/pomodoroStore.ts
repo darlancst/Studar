@@ -18,6 +18,8 @@ interface PomodoroStore {
   elapsedSeconds: number; // segundos decorridos na sessão atual
   lastMinuteUpdate: number; // timestamp da última atualização de minuto
   tempSessionIds: string[]; // IDs das sessões temporárias (criadas em pausas) para rollback
+  activeSessionId: string | null; // ID da sessão ativamente sendo incrementada no minuto a minuto
+  currentCycleSessionIds: string[]; // IDs das sessões geradas no ciclo atual de foco
   zenMode: boolean;
 
   // Sessões (do Pomodoro, não do estudo geral)
@@ -36,6 +38,7 @@ interface PomodoroStore {
   updateSettings: (settings: Partial<PomodoroSettings>) => void;
   incrementElapsedTime: (seconds: number) => void;
   toggleZenMode: (val?: boolean) => void;
+  linkSessionsToTopic: (sessionIds: string[], topicId: string) => void;
 
   // Sessões Pomodoro
   addSession: (topicId: string, duration: number) => string | null; // Retorna ID da sessão criada
@@ -74,6 +77,8 @@ export const usePomodoroStore = create<PomodoroStore>()(
       elapsedSeconds: 0,
       lastMinuteUpdate: 0,
       tempSessionIds: [],
+      activeSessionId: null,
+      currentCycleSessionIds: [],
       zenMode: false,
 
       sessions: [],
@@ -107,6 +112,7 @@ export const usePomodoroStore = create<PomodoroStore>()(
           elapsedSeconds: 0,
           lastMinuteUpdate: Date.now(),
           tempSessionIds: [], // Limpa sessões temporárias ao iniciar novo ciclo
+          activeSessionId: null, // Inicia novo ciclo de foco com sessão ativa limpa
         });
       },
 
@@ -115,6 +121,8 @@ export const usePomodoroStore = create<PomodoroStore>()(
         set({
           activeSubjectId: subjectId,
           activeTopicId: topicId || null,
+          activeSessionId: null,
+          currentCycleSessionIds: [],
         });
 
         // Se houver um tópico específico, inicia o timer diretamente
@@ -133,34 +141,26 @@ export const usePomodoroStore = create<PomodoroStore>()(
             timeRemaining: duration * 60,
             elapsedSeconds: 0,
             tempSessionIds: [],
+            activeSessionId: null,
+            currentCycleSessionIds: [],
           });
         }
       },
 
       pauseTimer: () => {
-        // SE ESTAVA EM FOCO, ADICIONA O TEMPO DECORRIDO COMO NOVA SESSÃO
-        if (get().currentState === 'focus' && get().currentTopicId && get().elapsedSeconds > 0) {
-          const elapsedMinutes = Math.floor(get().elapsedSeconds / 60);
-          if (elapsedMinutes > 0) {
-            const sessionId = get().addSession(get().currentTopicId!, elapsedMinutes);
-            if (sessionId) {
-              set(state => ({ tempSessionIds: [...state.tempSessionIds, sessionId] }));
-            }
-          }
-          // Resetar elapsedSeconds após salvar, pois a pausa interrompe o ciclo atual
-          set({ elapsedSeconds: 0, lastMinuteUpdate: 0 });
-        }
+        // A gravação ocorre incrementalmente em tempo real minuto a minuto!
+        // Não é necessário gerar sessões adicionais ou resetar elapsedSeconds na pausa.
         set({
           isRunning: false,
         });
       },
 
       resetTimer: () => {
-        const { currentState, settings, tempSessionIds } = get();
+        const { currentState, settings, activeSessionId } = get();
 
-        // REINICIAR: Apaga sessões temporárias criadas durante pausas neste ciclo
-        if (tempSessionIds.length > 0) {
-          tempSessionIds.forEach(id => get().deleteSession(id));
+        // REINICIAR: Se o usuário cancelou o foco atual antes de salvar/completar, deleta a sessão ativa do ciclo
+        if (currentState === 'focus' && activeSessionId) {
+          get().deleteSession(activeSessionId);
         }
 
         let timeRemaining;
@@ -184,24 +184,26 @@ export const usePomodoroStore = create<PomodoroStore>()(
           timeRemaining,
           elapsedSeconds: 0,
           lastMinuteUpdate: 0,
-          tempSessionIds: [], // Limpa a lista após rollback
+          tempSessionIds: [],
+          activeSessionId: null,
+          currentCycleSessionIds: [], // Limpa as sessões do ciclo que foi descartado
         });
       },
 
       skipToNext: (completed = false) => {
-        const { currentState, settings, completedPomodoros, currentTopicId, elapsedSeconds } = get();
+        const { currentState, settings, completedPomodoros, currentTopicId, activeSessionId } = get();
         let nextState: PomodoroState = 'focus';
         let timeRemaining: number;
         let newCompletedPomodoros = completedPomodoros;
         let shouldBeRunning = false; // Pausa começa rodando, foco começa parado
 
         if (currentState === 'focus') {
-          // Only increment completed count and add session if naturally completed
+          // Incrementa se completado naturalmente
           if (completed) {
             newCompletedPomodoros = completedPomodoros + 1;
-
-            // AO FINAL DE UM FOCO, ADICIONA UMA NOVA SESSÃO COM A DURAÇÃO COMPLETA
-            if (currentTopicId) {
+            
+            // Se concluiu mas a sessão ativa de minuto a minuto não havia sido criada (ex: foco de < 1 min)
+            if (!activeSessionId && currentTopicId) {
               const focusMinutes = settings.focusDuration;
               if (focusMinutes > 0) {
                 get().addSession(currentTopicId, focusMinutes);
@@ -212,16 +214,16 @@ export const usePomodoroStore = create<PomodoroStore>()(
           if (newCompletedPomodoros % settings.longBreakInterval === 0) {
             nextState = 'longBreak';
             timeRemaining = Math.max(1, settings.longBreakDuration || 15) * 60;
-            shouldBeRunning = true; // Iniciar timer da pausa longa automaticamente
+            shouldBeRunning = true;
           } else {
             nextState = 'shortBreak';
             timeRemaining = Math.max(1, settings.shortBreakDuration || 5) * 60;
-            shouldBeRunning = true; // Iniciar timer da pausa curta automaticamente
+            shouldBeRunning = true;
           }
         } else { // Vindo de uma pausa
           nextState = 'focus';
           timeRemaining = Math.max(1, settings.focusDuration || 25) * 60;
-          shouldBeRunning = false; // Foco começa parado, esperando o usuário iniciar
+          shouldBeRunning = false;
         }
 
         set({
@@ -231,7 +233,9 @@ export const usePomodoroStore = create<PomodoroStore>()(
           isRunning: shouldBeRunning,
           elapsedSeconds: 0, // Reseta segundos para o novo ciclo/pausa
           lastMinuteUpdate: shouldBeRunning ? Date.now() : 0,
-          tempSessionIds: [], // Commit: limpa sessões temporárias ao concluir com sucesso
+          tempSessionIds: [],
+          activeSessionId: null, // Limpa a sessão ativa para o próximo ciclo
+          currentCycleSessionIds: [], // Limpa referências do ciclo concluído
         });
       },
 
@@ -259,14 +263,43 @@ export const usePomodoroStore = create<PomodoroStore>()(
       },
 
       incrementElapsedTime: (seconds) => {
-        const { currentState, elapsedSeconds, currentTopicId } = get();
+        const { currentState, elapsedSeconds, currentTopicId, activeSessionId, currentCycleSessionIds } = get();
 
         if (currentState !== 'focus' || !currentTopicId || !get().isRunning) return;
 
         const newElapsedSeconds = elapsedSeconds + seconds;
-        const now = Date.now();
+
+        // Compara minutos inteiros acumulados antes e depois
+        const oldMinutes = Math.floor(elapsedSeconds / 60);
+        const newMinutes = Math.floor(newElapsedSeconds / 60);
 
         set({ elapsedSeconds: newElapsedSeconds });
+
+        if (newMinutes > oldMinutes) {
+          const minutesDiff = newMinutes - oldMinutes;
+
+          if (activeSessionId) {
+            // Incrementa os minutos da sessão ativa
+            set((state) => ({
+              sessions: state.sessions.map((s) =>
+                s.id === activeSessionId ? { ...s, duration: s.duration + minutesDiff } : s
+              ),
+            }));
+            
+            if (typeof window !== 'undefined') {
+              setTimeout(() => firebaseSync.syncToCloud(), 100);
+            }
+          } else {
+            // Cria a sessão inicial do ciclo
+            const newSessionId = get().addSession(currentTopicId, newMinutes);
+            if (newSessionId) {
+              set({
+                activeSessionId: newSessionId,
+                currentCycleSessionIds: [...currentCycleSessionIds, newSessionId],
+              });
+            }
+          }
+        }
       },
 
       toggleZenMode: (val) => set((state) => ({ zenMode: val !== undefined ? val : !state.zenMode })),
@@ -333,6 +366,18 @@ export const usePomodoroStore = create<PomodoroStore>()(
           get().addSession(topicId, durationInMinutes);
         }
       },
+
+      linkSessionsToTopic: (sessionIds, topicId) => {
+        if (sessionIds.length === 0) return;
+        set((state) => ({
+          sessions: state.sessions.map((s) =>
+            sessionIds.includes(s.id) ? { ...s, topicId } : s
+          ),
+        }));
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
+      },
     }),
     {
       name: 'pomodoro-storage',
@@ -341,9 +386,15 @@ export const usePomodoroStore = create<PomodoroStore>()(
           const str = localStorage.getItem(name);
           if (!str) return null;
           const parsed = JSON.parse(str);
-          // Ensure tempSessionIds exists if loading from old state
+          // Ensure tempSessionIds, activeSessionId, and currentCycleSessionIds exist if loading from old state
           if (!parsed.state.tempSessionIds) {
             parsed.state.tempSessionIds = [];
+          }
+          if (parsed.state.activeSessionId === undefined) {
+            parsed.state.activeSessionId = null;
+          }
+          if (!parsed.state.currentCycleSessionIds) {
+            parsed.state.currentCycleSessionIds = [];
           }
           return parsed;
         },
