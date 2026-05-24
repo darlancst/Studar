@@ -41,7 +41,7 @@ export default function Pomodoro() {
 
   const isDarkMode = useSettingsStore((state) => state.darkMode);
 
-  const { generateReviewsForTopic } = useReviewStore();
+  const { generateReviewsForTopic, reviews, completeReview } = useReviewStore();
 
   const { schedules, weeklyItems, blockItems, completedScheduleItems, isItemCompletedForDate, toggleScheduleItemCompletion } = useScheduleStore();
 
@@ -52,6 +52,7 @@ export default function Pomodoro() {
   const [completedTopicsPerItem, setCompletedTopicsPerItem] = useState<Record<string, string[]>>({});
   // Rastreia qual item está no modo "O que você estudou?" (após clicar ✓)
   const [finishingItemId, setFinishingItemId] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'schedules' | 'reviews'>('schedules');
 
   // Wake Lock: impede a tela do celular de desligar enquanto o timer roda
   useWakeLock(isRunning);
@@ -212,6 +213,29 @@ export default function Pomodoro() {
     });
   }, [schedules, weeklyItems, blockItems, topics, isItemCompletedForDate, completedScheduleItems]);
 
+  // Obter as revisões pendentes para hoje ou atrasadas
+  const todayReviews = useMemo(() => {
+    const today = new Date();
+    const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+    
+    return reviews.filter(review => {
+      if (review.completed) return false;
+      const reviewDate = new Date(review.scheduledDate);
+      return reviewDate <= endOfToday;
+    });
+  }, [reviews]);
+
+  // Obter a revisão selecionada ou ativa
+  const activeReview = useMemo(() => {
+    if (selectedItemId) {
+      return todayReviews.find(r => r.id === selectedItemId);
+    }
+    if (activeScheduleItemId) {
+      return todayReviews.find(r => r.id === activeScheduleItemId);
+    }
+    return null;
+  }, [selectedItemId, activeScheduleItemId, todayReviews]);
+
   // Obter o item selecionado ou ativo no momento
   const activePlan = useMemo(() => {
     if (selectedItemId) {
@@ -226,6 +250,12 @@ export default function Pomodoro() {
   }, [selectedItemId, activeScheduleItemId, todayPlannedItems]);
 
   const activeSubject = useMemo(() => {
+    if (activeReview) {
+      const topic = topics.find(t => t.id === activeReview.topicId);
+      if (topic) {
+        return subjects.find(s => s.id === topic.subjectId) || null;
+      }
+    }
     if (activePlan) {
       return subjects.find(s => s.id === activePlan.item.subjectId);
     }
@@ -238,9 +268,12 @@ export default function Pomodoro() {
       }
     }
     return null;
-  }, [activePlan, currentTopicId, subjects, topics]);
+  }, [activePlan, activeReview, currentTopicId, subjects, topics]);
 
   const activeTopic = useMemo(() => {
+    if (activeReview) {
+      return topics.find(t => t.id === activeReview.topicId) || null;
+    }
     if (activePlan) {
       const { item } = activePlan;
       const overrideText = selectedTopicOverrides[item.id];
@@ -252,14 +285,14 @@ export default function Pomodoro() {
       if (!effectiveTopic && overrideText) {
         effectiveTopic = topics.find(t => t.title.toLowerCase() === overrideText.toLowerCase() && t.subjectId === item.subjectId);
       }
-      return effectiveTopic;
+      return effectiveTopic || null;
     }
     if (currentTopicId) {
       const top = topics.find(t => t.id === currentTopicId);
       if (top) return top;
     }
     return null;
-  }, [activePlan, currentTopicId, topics, selectedTopicOverrides]);
+  }, [activePlan, activeReview, currentTopicId, topics, selectedTopicOverrides]);
 
   // Obter o tempo total da etapa atual em segundos
   const currentStageDuration = useMemo(() => {
@@ -372,8 +405,13 @@ export default function Pomodoro() {
   const handleStart = () => {
     let subjectIdToStart = '';
 
-    // 1. If item selected, use it
-    if (selectedItemId) {
+    // 1. Se for uma revisão selecionada
+    if (activeReview) {
+      subjectIdToStart = activeReview.topicId;
+      setActiveScheduleItemId(activeReview.id);
+    }
+    // 2. Se for um item de cronograma selecionado
+    else if (selectedItemId) {
       const selectedPlan = todayPlannedItems.find(p => p.item.id === selectedItemId);
       if (selectedPlan) {
         // Check for override first
@@ -390,7 +428,6 @@ export default function Pomodoro() {
             subjectIdToStart = existingTopic.id;
           } else {
             // Create new topic linked to this schedule item
-            // Args: title, subjectId, description, customDate, linkedScheduleItemId
             const newTopic = addTopic(
               overrideText,
               selectedPlan.item.subjectId,
@@ -409,7 +446,7 @@ export default function Pomodoro() {
         setActiveScheduleItemId(selectedPlan.item.id);
       }
     }
-    // 2. If no item selected but we have a current paused topic, resume it
+    // 3. Se no currentTopicId já tem algo pausado
     else if (currentTopicId) {
       subjectIdToStart = currentTopicId;
     }
@@ -538,6 +575,28 @@ export default function Pomodoro() {
     });
   };
 
+  // Função para marcar uma REVISÃO como resolvida
+  const handleFinishReview = (reviewId: string) => {
+    // 1. Concluir a revisão no store
+    completeReview(reviewId);
+
+    // 2. Feedback visual festivo
+    confetti({
+      particleCount: 120,
+      spread: 80,
+      origin: { y: 0.6 },
+      colors: ['#3B82F6', '#60A5FA', '#93C5FD']
+    });
+
+    // 3. Limpar sessões ativas do timer antes de resetar para que não apague o tempo estudado real
+    usePomodoroStore.setState({ activeSessionId: null, currentCycleSessionIds: [] });
+    resetTimer();
+    usePomodoroStore.setState({ activeTopicId: null, activeSubjectId: null, activeScheduleItemId: null });
+
+    // 4. Limpar a seleção atual
+    setSelectedItemId('');
+  };
+
   // Mantém compatibilidade - função legada que chama a nova lógica
   const handleFinishContent = (itemId?: string) => {
     handleFinishTopic(itemId);
@@ -564,6 +623,7 @@ export default function Pomodoro() {
   const isStartDisabled = useMemo(() => {
     if (currentState !== 'focus') return false;
     if (currentTopicId) return false; // Resuming
+    if (activeReview) return false; // Se uma revisão está selecionada, pode iniciar
     if (!selectedItemId) return true; // Nothing selected
 
     const selectedPlan = todayPlannedItems.find(p => p.item.id === selectedItemId);
@@ -571,7 +631,7 @@ export default function Pomodoro() {
 
     // Permitir iniciar sem tópico definido — o tópico será preenchido ao finalizar
     return false;
-  }, [currentState, currentTopicId, selectedItemId, todayPlannedItems]);
+  }, [currentState, currentTopicId, selectedItemId, todayPlannedItems, activeReview]);
 
   // Keyboard shortcuts (desktop only)
   useEffect(() => {
@@ -924,12 +984,57 @@ export default function Pomodoro() {
         <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-400 dark:text-gray-500 font-mono">S</kbd> pular</span>
       </div>
 
-      {/* Seção de Itens Planejados para Hoje */}
-      {todayPlannedItems.length > 0 && (
+      {/* Seletor de Abas Ergonômico Mobile-First */}
+      {(todayPlannedItems.length > 0 || todayReviews.length > 0) && (
+        <div className="flex justify-center mb-6 px-2">
+          <div className="flex p-1 bg-gray-150/40 dark:bg-gray-900/60 backdrop-blur-md rounded-xl border border-gray-200/30 dark:border-gray-800/80 shadow-inner max-w-sm w-full">
+            <button
+              onClick={() => {
+                setActiveTab('schedules');
+                setSelectedItemId('');
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 text-xs font-bold rounded-lg transition-all duration-300 ${activeTab === 'schedules'
+                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 shadow-md transform scale-[1.02]'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+            >
+              <span>Estudos</span>
+              {todayPlannedItems.length > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === 'schedules'
+                  ? 'bg-primary-50 text-primary-600 dark:bg-primary-950/40 dark:text-primary-400'
+                  : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                  }`}>
+                  {todayPlannedItems.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('reviews');
+                setSelectedItemId('');
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 text-xs font-bold rounded-lg transition-all duration-300 ${activeTab === 'reviews'
+                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 shadow-md transform scale-[1.02]'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+            >
+              <span>Revisões</span>
+              {todayReviews.length > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === 'reviews'
+                  ? 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 animate-pulse'
+                  : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                  }`}>
+                  {todayReviews.length}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Renderização da Aba de Estudos */}
+      {activeTab === 'schedules' && todayPlannedItems.length > 0 && (
         <div className="space-y-3 px-2">
-          <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center">
-            Planejado para Hoje
-          </h3>
           <div className="space-y-2.5">
             {todayPlannedItems.map((plannedItem, index) => {
               const { item, status } = plannedItem;
@@ -940,8 +1045,6 @@ export default function Pomodoro() {
               const isSelected = selectedItemId === item.id;
               const linkedTopic = topics.find(t => t.linkedScheduleItemId === item.id);
 
-              // Determine which topic is effectively selected (linked, pre-defined, or overridden)
-              // If override exists, try to find topic by name for display purposes
               let effectiveTopic = linkedTopic;
               if (!effectiveTopic && item.topicId) {
                 effectiveTopic = topics.find(t => t.id === item.topicId);
@@ -950,7 +1053,6 @@ export default function Pomodoro() {
                 effectiveTopic = topics.find(t => t.title.toLowerCase() === selectedTopicOverrides[item.id].toLowerCase() && t.subjectId === item.subjectId);
               }
 
-              // Lock other items if timer is running for a specific item
               const isLocked = isRunning && !isSelected;
 
               return (
@@ -1007,13 +1109,10 @@ export default function Pomodoro() {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isLocked) return;
-                          // Se o item tem tópico predefinido no cronograma, finaliza direto
                           if (item.topicId) {
                             handleFinishContent(item.id);
                           } else {
-                            // Se for matéria genérica, entra no modo "O que você estudou?" para salvar o tópico
                             setFinishingItemId(item.id);
-                            // Pausa o timer se estiver rodando
                             if (isRunning) pauseTimer();
                           }
                         }}
@@ -1032,7 +1131,6 @@ export default function Pomodoro() {
                     </div>
                   </div>
 
-                  {/* Tópicos já estudados neste bloco */}
                   {completedTopicsPerItem[item.id] && completedTopicsPerItem[item.id].length > 0 && (
                     <div className="pl-5 animate-fade-in">
                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">
@@ -1055,7 +1153,6 @@ export default function Pomodoro() {
                     </div>
                   )}
 
-                  {/* Input de tópico — aparece ao clicar ✓ (modo finalização) ou ao ter tópicos já estudados */}
                   {!isCompleted && isSelected && !isRunning && (finishingItemId === item.id || (completedTopicsPerItem[item.id]?.length > 0)) && (
                     <div className="pl-5 animate-fade-in" onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-2">
@@ -1079,7 +1176,6 @@ export default function Pomodoro() {
                           autoFocus={finishingItemId === item.id}
                           className="flex-1 text-sm p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all placeholder-gray-400 dark:placeholder-gray-600"
                         />
-                        {/* Botão Confirmar — só aparece quando tem texto digitado */}
                         {selectedTopicOverrides[item.id]?.trim() && (
                           <button
                             onClick={(e) => {
@@ -1093,7 +1189,6 @@ export default function Pomodoro() {
                         )}
                       </div>
 
-                      {/* Botão Cancelar — volta ao estado normal sem registrar */}
                       {finishingItemId === item.id && !completedTopicsPerItem[item.id]?.length && (
                         <button
                           onClick={(e) => {
@@ -1111,7 +1206,6 @@ export default function Pomodoro() {
                         </button>
                       )}
 
-                      {/* Botão Finalizar Estudo - aparece quando já estudou pelo menos 1 tópico */}
                       {completedTopicsPerItem[item.id] && completedTopicsPerItem[item.id].length > 0 && (
                         <button
                           onClick={(e) => {
@@ -1128,6 +1222,89 @@ export default function Pomodoro() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Renderização da Aba de Revisões */}
+      {activeTab === 'reviews' && (
+        <div className="space-y-3 px-2">
+          <div className="space-y-2.5">
+            {todayReviews.length > 0 ? (
+              todayReviews.map((review) => {
+                const topic = topics.find(t => t.id === review.topicId);
+                const subject = topic ? subjects.find(s => s.id === topic.subjectId) : null;
+                if (!subject || !topic) return null;
+
+                const isSelected = selectedItemId === review.id;
+                const isLocked = isRunning && !isSelected;
+
+                return (
+                  <div
+                    key={review.id}
+                    onClick={() => {
+                      if (!isLocked) setSelectedItemId(review.id);
+                    }}
+                    className={`group flex flex-col gap-3 p-4 rounded-xl border transition-all 
+                      ${isLocked
+                        ? 'opacity-40 grayscale cursor-not-allowed bg-gray-50 dark:bg-gray-900/20 border-gray-100 dark:border-gray-800'
+                        : isSelected
+                          ? 'bg-white dark:bg-gray-800 border-primary-500 ring-1 ring-primary-500 shadow-md cursor-default'
+                          : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 shadow-sm hover:shadow-md cursor-pointer'
+                      }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`w-1.5 h-12 rounded-full transition-all ${isSelected ? 'scale-y-110' : 'scale-y-90 opacity-70'}`}
+                          style={{ backgroundColor: subject.color }}
+                        />
+                        <div>
+                          <p className="font-semibold text-base text-gray-900 dark:text-white">
+                            {topic.title}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                              {subject.name}
+                            </span>
+                            <span className="text-gray-300 dark:text-gray-600">•</span>
+                            <span className="text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-950/20 px-2 py-0.5 rounded-md border border-red-100 dark:border-red-900/30">
+                              Revisão Espaçada
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {isSelected && (
+                          <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-1 rounded-md animate-pulse">
+                            {isRunning ? 'Em Andamento' : 'Selecionado'}
+                          </span>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isLocked) return;
+                            handleFinishReview(review.id);
+                          }}
+                          disabled={isLocked}
+                          className="p-2 rounded-full text-gray-300 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20"
+                          title="Concluir Revisão"
+                        >
+                          <CheckCircleIcon className="h-6 w-6" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="bg-gray-50/30 dark:bg-gray-900/10 border border-dashed border-gray-250 dark:border-gray-800/50 p-6 rounded-xl text-center select-none animate-fade-in">
+                <SparklesIcon className="h-6 w-6 mx-auto text-amber-500 mb-2 animate-bounce" />
+                <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Revisões de hoje concluídas!</p>
+                <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">Parabéns! Sua agenda de repetição espaçada está 100% em dia.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
