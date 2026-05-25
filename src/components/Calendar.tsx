@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfDay, startOfWeek, endOfWeek, isWithinInterval, parseISO, getDay, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon, XMarkIcon, PlusIcon, CalendarIcon, ClockIcon, PlayIcon, ArrowPathIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -395,8 +396,13 @@ export default function Calendar({ activeTab }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showMobileAgenda, setShowMobileAgenda] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useRegisterModal(showMobileAgenda, () => setShowMobileAgenda(false));
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (activeTab && activeTab !== 'calendar') {
@@ -644,8 +650,8 @@ export default function Calendar({ activeTab }: CalendarProps) {
       </div>
 
       {/* Mobile Agenda Modal */}
-      {showMobileAgenda && (
-        <div className="md:hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      {showMobileAgenda && mounted && typeof document !== 'undefined' && createPortal(
+        <div className="md:hidden fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white dark:bg-gray-900 w-full h-[85vh] sm:h-[600px] sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-slide-up border border-gray-150/50 dark:border-gray-800/80">
             <AgendaPanel
               date={selectedDate}
@@ -659,7 +665,8 @@ export default function Calendar({ activeTab }: CalendarProps) {
               onToggleScheduleItem={(itemId) => toggleScheduleItemCompletion(itemId, format(selectedDate, 'yyyy-MM-dd'))}
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
