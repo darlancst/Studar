@@ -75,7 +75,7 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
   const unlinkedTopics = topics.filter(t => !t.linkedScheduleItemId);
 
   return (
-    <div className="h-full flex flex-col bg-white/95 dark:bg-gray-900/90 border-l border-gray-150/40 dark:border-gray-800/80 shadow-xl md:shadow-none transition-all duration-300">
+    <div className="flex-1 md:h-full min-h-0 flex flex-col bg-white/95 dark:bg-gray-900/90 border-l border-gray-150/40 dark:border-gray-800/80 shadow-xl md:shadow-none transition-all duration-300">
       {/* Header */}
       <div className="p-3 border-b border-gray-150/50 dark:border-gray-800 flex items-center justify-between bg-white/80 dark:bg-gray-900/60 backdrop-blur-md sticky top-0 z-30">
         <div>

@@ -294,7 +294,7 @@ export default function Home() {
         </div>
 
         {/* Componentes mantidos montados para preservar estado (display: none quando inativo) */}
-        <main className={`transition-all duration-300 ${isZenFocus ? 'pb-0' : 'pb-20 sm:pb-3'}`}>
+        <main className={`${isZenFocus ? 'pb-0' : 'pb-20 sm:pb-3'}`}>
           <div style={{ display: activeTab === 'stats' ? 'block' : 'none' }}>
             <Stats />
           </div>
