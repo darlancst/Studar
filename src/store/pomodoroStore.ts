@@ -235,7 +235,6 @@ export const usePomodoroStore = create<PomodoroStore>()(
           lastMinuteUpdate: shouldBeRunning ? Date.now() : 0,
           tempSessionIds: [],
           activeSessionId: null, // Limpa a sessão ativa para o próximo ciclo
-          currentCycleSessionIds: [], // Limpa referências do ciclo concluído
         });
       },
 
