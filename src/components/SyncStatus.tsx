@@ -178,7 +178,7 @@ export default function SyncStatus() {
 
       {/* Modal de Conflito */}
       {syncStatus === 'conflict' && (
-        <div className="fixed inset-0 z-[100] bg-gray-700 bg-opacity-50 dark:bg-black dark:bg-opacity-60 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full border border-orange-200 dark:border-orange-900/50">
             <div className="flex items-center gap-3 text-orange-600 dark:text-orange-400 mb-4">
               <ExclamationTriangleIcon className="w-8 h-8" />

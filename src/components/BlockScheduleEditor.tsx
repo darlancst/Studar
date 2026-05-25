@@ -160,7 +160,7 @@ export default function BlockScheduleEditor() {
 
             {/* Modal */}
             {isModalOpen && typeof document !== 'undefined' && createPortal(
-                <div className="fixed inset-0 z-[60] bg-gray-750/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
                     <div className="bg-white dark:bg-gray-900 border border-gray-150/50 dark:border-gray-800/80 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-scale-up">
                         <div className="flex items-center justify-between p-4 border-b border-gray-150/30 dark:border-gray-800/50">
                             <h3 className="text-lg font-bold text-gray-900 dark:text-white">

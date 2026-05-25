@@ -95,7 +95,7 @@ export default function AddSimuladoForm({ onClose, simuladoToEdit }: AddSimulado
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] bg-gray-750/60 backdrop-blur-sm overflow-y-auto flex justify-center items-center p-4 animate-fade-in">
+    <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm overflow-y-auto flex justify-center items-center p-4 animate-fade-in">
       <div className="bg-white dark:bg-gray-900 border border-gray-150/50 dark:border-gray-800/80 rounded-2xl shadow-xl w-full max-w-md animate-scale-in">
         <div className="flex items-center justify-between p-4 border-b border-gray-150/30 dark:border-gray-800/50">
           <h2 className="text-lg font-bold dark:text-white">{simuladoToEdit ? 'Editar Simulado' : 'Adicionar Simulado'}</h2>

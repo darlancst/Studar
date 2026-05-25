@@ -109,7 +109,7 @@ export default function ScheduleManager() {
 
             {/* Formulário de Criação */}
             {showCreateForm && typeof document !== 'undefined' && createPortal(
-                <div className="fixed inset-0 z-[60] bg-gray-750/60 backdrop-blur-sm overflow-y-auto flex justify-center items-center p-4">
+                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm overflow-y-auto flex justify-center items-center p-4">
                     <div className="bg-white dark:bg-gray-900 border border-gray-150/50 dark:border-gray-800/80 rounded-2xl shadow-xl w-full max-w-md animate-scale-in">
                         <div className="flex items-center justify-between p-4 border-b border-gray-150/30 dark:border-gray-800/50">
                             <h2 className="text-lg font-bold dark:text-white">Criar Novo Cronograma</h2>

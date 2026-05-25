@@ -53,7 +53,7 @@ export default function ReviewManager({ topicId, topicTitle, onClose }: ReviewMa
     };
 
     return (
-        <div className="fixed inset-0 z-[60] bg-gray-700 bg-opacity-50 dark:bg-black dark:bg-opacity-60 overflow-y-auto flex justify-center items-center">
+        <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm overflow-y-auto flex justify-center items-center">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl m-4 max-h-[90vh] flex flex-col">
                 <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
                     <h2 className="text-xl font-semibold dark:text-white">

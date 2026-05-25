@@ -63,7 +63,7 @@ export default function Header({ onSettingsClick }: HeaderProps) {
 
       {/* Modal de Funcionalidades */}
       {showFeaturesModal && (
-        <div className="fixed inset-0 z-[60] bg-gray-700 bg-opacity-50 dark:bg-black dark:bg-opacity-60 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between p-4 border-b dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
               <h3 className="text-lg font-semibold dark:text-white flex items-center">
