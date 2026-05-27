@@ -10,6 +10,7 @@ import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } fro
 import confetti from 'canvas-confetti';
 import { playAlarmSound } from '@/utils/sounds';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useRegisterModal } from '@/hooks/useRegisterModal';
 
 export default function Pomodoro() {
   // Referência para o timestamp de quando o timer começou/retomou a contar
@@ -57,6 +58,9 @@ export default function Pomodoro() {
 
   // Wake Lock: impede a tela do celular de desligar enquanto o timer roda
   useWakeLock(isRunning);
+
+  // Registra o Modo Zen no controle global do botão voltar do celular
+  useRegisterModal(zenMode, () => toggleZenMode(false));
 
   // Quando o timer começa, retoma, ou transiciona (foco→pausa→foco), salva o timestamp atual
   useEffect(() => {
@@ -1018,12 +1022,12 @@ export default function Pomodoro() {
                 }`}
             >
               <span>Estudos</span>
-              {todayPlannedItems.length > 0 && (
+              {todayPlannedItems.filter(p => p.status === 'pending').length > 0 && (
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === 'schedules'
                   ? 'bg-primary-50 text-primary-600 dark:bg-primary-950/40 dark:text-primary-400'
                   : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                   }`}>
-                  {todayPlannedItems.length}
+                  {todayPlannedItems.filter(p => p.status === 'pending').length}
                 </span>
               )}
             </button>
