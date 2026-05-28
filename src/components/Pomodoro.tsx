@@ -10,7 +10,6 @@ import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } fro
 import confetti from 'canvas-confetti';
 import { playAlarmSound } from '@/utils/sounds';
 import { useSettingsStore } from '@/store/settingsStore';
-import { useRegisterModal } from '@/hooks/useRegisterModal';
 
 export default function Pomodoro() {
   // Referência para o timestamp de quando o timer começou/retomou a contar
@@ -59,8 +58,35 @@ export default function Pomodoro() {
   // Wake Lock: impede a tela do celular de desligar enquanto o timer roda
   useWakeLock(isRunning);
 
-  // Registra o Modo Zen no controle global do botão voltar do celular
-  useRegisterModal(zenMode, () => toggleZenMode(false));
+  // Controle de histórico exclusivo para o Modo Zen (suporta o voltar físico/gestual do celular)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      // Se o usuário navegou para trás e saiu do hash '#zen' enquanto o modo Zen estava ativo, desativamos
+      if (hash !== '#zen' && usePomodoroStore.getState().zenMode) {
+        usePomodoroStore.setState({ zenMode: false });
+      }
+    };
+
+    if (zenMode) {
+      // Adiciona o hash '#zen' ao histórico se ele já não for o atual
+      if (window.location.hash !== '#zen') {
+        window.history.pushState({ zenMode: true }, '', '#zen');
+      }
+      window.addEventListener('hashchange', handleHashChange);
+    } else {
+      // Se saímos do modo Zen manualmente na tela e o hash ainda for '#zen', voltamos um passo
+      if (window.location.hash === '#zen') {
+        window.history.back();
+      }
+    }
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [zenMode]);
 
   // Quando o timer começa, retoma, ou transiciona (foco→pausa→foco), salva o timestamp atual
   useEffect(() => {
@@ -554,6 +580,9 @@ export default function Pomodoro() {
 
     // 5. Sair do modo de finalização (mas manter o item selecionado para adicionar mais tópicos)
     setFinishingItemId('');
+
+    // Marca o bloco/cronograma como concluído automaticamente para diminuir a contagem de estudos disponíveis no dia
+    toggleScheduleItemCompletion(targetId, format(new Date(), 'yyyy-MM-dd'));
 
     // 6. Feedback visual
     confetti({
