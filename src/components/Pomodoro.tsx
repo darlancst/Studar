@@ -55,6 +55,13 @@ export default function Pomodoro() {
   const [activeTab, setActiveTab] = useState<'schedules' | 'reviews'>('schedules');
   const [showOverdue, setShowOverdue] = useState<boolean>(false);
 
+  // Empurrar revisões automaticamente quando não houver estudos agendados no dia
+  useEffect(() => {
+    if (schedules.length > 0 && reviews.length > 0) {
+      useReviewStore.getState().checkAndPushReviews(schedules, weeklyItems, blockItems);
+    }
+  }, [schedules, weeklyItems, blockItems, reviews.length]);
+
   // Wake Lock: impede a tela do celular de desligar enquanto o timer roda
   useWakeLock(isRunning);
 
@@ -1045,9 +1052,9 @@ export default function Pomodoro() {
                 setActiveTab('schedules');
                 setSelectedItemId('');
               }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 text-xs font-bold rounded-lg transition-all duration-300 ${activeTab === 'schedules'
-                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 shadow-md transform scale-[1.02]'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 text-xs font-bold rounded-lg transition-all duration-300 border ${activeTab === 'schedules'
+                ? 'bg-primary-50/50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-300 border-primary-200 dark:border-primary-500/80 shadow-md shadow-primary-500/5 dark:shadow-[0_0_12px_rgba(14,165,233,0.25)] transform scale-[1.02]'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent'
                 }`}
             >
               <span>Estudos</span>
@@ -1065,9 +1072,9 @@ export default function Pomodoro() {
                 setActiveTab('reviews');
                 setSelectedItemId('');
               }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 text-xs font-bold rounded-lg transition-all duration-300 ${activeTab === 'reviews'
-                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 shadow-md transform scale-[1.02]'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 text-xs font-bold rounded-lg transition-all duration-300 border ${activeTab === 'reviews'
+                ? 'bg-red-50/50 dark:bg-red-950/40 text-red-600 dark:text-red-300 border-red-200 dark:border-red-500/80 shadow-md shadow-red-500/5 dark:shadow-[0_0_12px_rgba(239,68,68,0.25)] transform scale-[1.02]'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent'
                 }`}
             >
               <span>Revisões</span>
@@ -1386,6 +1393,10 @@ export default function Pomodoro() {
                     const isSelected = selectedItemId === review.id;
                     const isLocked = isRunning && !isSelected;
 
+                    const reviewDate = typeof review.scheduledDate === 'string'
+                      ? parseISO(review.scheduledDate)
+                      : new Date(review.scheduledDate);
+
                     return (
                       <div
                         key={review.id}
@@ -1416,7 +1427,7 @@ export default function Pomodoro() {
                                 </span>
                                 <span className="text-gray-300 dark:text-gray-700 text-[10px]">•</span>
                                 <span className="text-[9px] font-bold text-amber-500/80 bg-amber-50/50 dark:bg-amber-950/10 px-1.5 py-0.2 rounded border border-amber-100/50 dark:border-amber-900/10">
-                                  Atrasada
+                                  Atrasada ({format(reviewDate, 'dd/MM/yyyy')})
                                 </span>
                               </div>
                             </div>

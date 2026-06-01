@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { Review } from '@/types';
 import { useSettingsStore } from './settingsStore';
-import { addDays } from 'date-fns';
+import { addDays, parseISO, isWithinInterval, startOfDay, getDay } from 'date-fns';
 import { firebaseSync } from '@/services/firebaseSync';
 
 interface ReviewState {
@@ -19,6 +19,7 @@ interface ReviewState {
   getReviewsByDate: (date: Date) => Review[];
   getPendingReviewsByDate: (date: Date) => Review[];
   resetReviews: () => void;
+  checkAndPushReviews: (schedules: any[], weeklyItems: any[], blockItems: any[]) => void;
 }
 
 export const useReviewStore = create<ReviewState>()(
@@ -149,6 +150,81 @@ export const useReviewStore = create<ReviewState>()(
         set({ reviews: [] });
         if (typeof window !== 'undefined') {
           setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
+      },
+      checkAndPushReviews: (schedules, weeklyItems, blockItems) => {
+        const activeSchedules = schedules.filter((s: any) => s.isActive);
+        if (activeSchedules.length === 0) return;
+
+        const hasWeeklyItems = weeklyItems.some((i: any) => activeSchedules.some((s: any) => s.id === i.scheduleId));
+        const hasBlockItems = blockItems.some((i: any) => activeSchedules.some((s: any) => s.id === i.scheduleId));
+        if (!hasWeeklyItems && !hasBlockItems) return;
+
+        let changed = false;
+        const updatedReviews = get().reviews.map(review => {
+          if (review.completed) return review;
+
+          const reviewDate = typeof review.scheduledDate === 'string' 
+            ? parseISO(review.scheduledDate) 
+            : new Date(review.scheduledDate);
+
+          let current = new Date(reviewDate);
+          let pushed = false;
+          let iterations = 0;
+
+          while (iterations < 30) {
+            let plannedCount = 0;
+            activeSchedules.forEach((schedule: any) => {
+              const scheduleStart = parseISO(schedule.startDate);
+              const scheduleEnd = parseISO(schedule.endDate);
+
+              if (!isWithinInterval(startOfDay(current), { start: startOfDay(scheduleStart), end: startOfDay(scheduleEnd) })) {
+                return;
+              }
+
+              if (schedule.mode === 'weekly') {
+                const dayOfWeek = getDay(current);
+                const itemsCount = weeklyItems.filter((item: any) => item.scheduleId === schedule.id && item.dayOfWeek === dayOfWeek).length;
+                plannedCount += itemsCount;
+              } else {
+                const itemsCount = blockItems.filter((item: any) => {
+                  if (item.scheduleId !== schedule.id) return false;
+                  const start = parseISO(item.startDate);
+                  const end = parseISO(item.endDate);
+                  const inRange = isWithinInterval(startOfDay(current), { start: startOfDay(start), end: startOfDay(end) });
+                  const isRestDay = item.restDays?.includes(getDay(current));
+                  return inRange && !isRestDay;
+                }).length;
+                plannedCount += itemsCount;
+              }
+            });
+
+            if (plannedCount > 0) {
+              break;
+            } else {
+              current = addDays(current, 1);
+              pushed = true;
+              iterations++;
+            }
+          }
+
+          if (pushed) {
+            changed = true;
+            return {
+              ...review,
+              scheduledDate: current,
+              date: current,
+            };
+          }
+
+          return review;
+        });
+
+        if (changed) {
+          set({ reviews: updatedReviews });
+          if (typeof window !== 'undefined') {
+            setTimeout(() => firebaseSync.syncToCloud(), 100);
+          }
         }
       },
     }),
