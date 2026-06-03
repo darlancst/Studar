@@ -15,6 +15,8 @@ export interface Topic {
   linkedScheduleItemId?: string;
   pdfCompleted?: boolean;
   questionsCompleted?: boolean;
+  pdfCompletedAt?: string;
+  questionsCompletedAt?: string;
 }
 
 export interface Review {

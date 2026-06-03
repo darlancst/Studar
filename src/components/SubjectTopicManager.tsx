@@ -7,6 +7,8 @@ import { useSubjectStore } from '@/store/subjectStore';
 import { useTopicStore } from '@/store/topicStore';
 import { Subject, Topic } from '@/types';
 import TopicReviews from './TopicReviews';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface SubjectTopicManagerProps {
     onClose: () => void;
@@ -367,7 +369,7 @@ export default function SubjectTopicManager({ onClose }: SubjectTopicManagerProp
                                                                 <span className="font-medium dark:text-white truncate">{topic.title}</span>
                                                             </div>
                                                             {topic.description && (
-                                                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
+                                                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate font-normal">
                                                                     {topic.description}
                                                                 </p>
                                                             )}
@@ -375,32 +377,52 @@ export default function SubjectTopicManager({ onClose }: SubjectTopicManagerProp
                                                                 {/* PDF Completed toggle */}
                                                                 <button
                                                                     type="button"
-                                                                    onClick={() => updateTopic(topic.id, { 
-                                                                        pdfCompleted: !topic.pdfCompleted,
-                                                                        // Se desmarcar PDF, reseta também as questões
-                                                                        ...(topic.pdfCompleted ? { questionsCompleted: false } : {})
-                                                                    })}
+                                                                    onClick={() => {
+                                                                        const isCompleted = !topic.pdfCompleted;
+                                                                        updateTopic(topic.id, { 
+                                                                            pdfCompleted: isCompleted,
+                                                                            pdfCompletedAt: isCompleted ? new Date().toISOString() : undefined,
+                                                                            // Se desmarcar PDF, reseta também as questões e seus carimbos
+                                                                            ...(isCompleted ? {} : { questionsCompleted: false, questionsCompletedAt: undefined })
+                                                                        });
+                                                                    }}
                                                                     className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all flex items-center gap-1 ${
                                                                         topic.pdfCompleted
                                                                             ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900/50'
                                                                             : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-750'
                                                                     }`}
                                                                 >
-                                                                    <span>📄 PDF {topic.pdfCompleted ? 'Concluído' : 'Pendente'}</span>
+                                                                    <span>
+                                                                        📄 PDF {topic.pdfCompleted ? 'Concluído' : 'Pendente'}
+                                                                        {topic.pdfCompleted && topic.pdfCompletedAt && (
+                                                                            ` em ${format(parseISO(topic.pdfCompletedAt), 'dd/MM')} às ${format(parseISO(topic.pdfCompletedAt), 'HH:mm')}`
+                                                                        )}
+                                                                    </span>
                                                                 </button>
 
                                                                 {/* Questions Completed toggle (only shown if PDF completed) */}
                                                                 {topic.pdfCompleted && (
                                                                     <button
                                                                         type="button"
-                                                                        onClick={() => updateTopic(topic.id, { questionsCompleted: !topic.questionsCompleted })}
+                                                                        onClick={() => {
+                                                                            const isCompleted = !topic.questionsCompleted;
+                                                                            updateTopic(topic.id, { 
+                                                                                questionsCompleted: isCompleted,
+                                                                                questionsCompletedAt: isCompleted ? new Date().toISOString() : undefined
+                                                                            });
+                                                                        }}
                                                                         className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all flex items-center gap-1 ${
                                                                             topic.questionsCompleted
                                                                                 ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50'
                                                                                 : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-105 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30'
                                                                         }`}
                                                                     >
-                                                                        <span>📝 Questões {topic.questionsCompleted ? 'Feitas' : 'Fazer Questões'}</span>
+                                                                        <span>
+                                                                            📝 Questões {topic.questionsCompleted ? 'Feitas' : 'Fazer Questões'}
+                                                                            {topic.questionsCompleted && topic.questionsCompletedAt && (
+                                                                                ` em ${format(parseISO(topic.questionsCompletedAt), 'dd/MM')} às ${format(parseISO(topic.questionsCompletedAt), 'HH:mm')}`
+                                                                            )}
+                                                                        </span>
                                                                     </button>
                                                                 )}
                                                             </div>

@@ -54,6 +54,7 @@ export default function Pomodoro() {
   const [completedTopicsPerItem, setCompletedTopicsPerItem] = useState<Record<string, string[]>>({});
   // Rastreia qual item está no modo "O que você estudou?" (após clicar ✓)
   const [finishingItemId, setFinishingItemId] = useState<string>('');
+  const [pdfCompletedCheckbox, setPdfCompletedCheckbox] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState<'schedules' | 'reviews' | 'questions'>('schedules');
   const [showOverdue, setShowOverdue] = useState<boolean>(false);
   const [showSearchModal, setShowSearchModal] = useState<boolean>(false);
@@ -594,6 +595,20 @@ export default function Pomodoro() {
     }
 
     if (!topicIdStudied) return; // Não há tópico definido
+
+    // Se a caixa "Concluiu o PDF completo" estiver marcada, atualizar o tópico
+    if (pdfCompletedCheckbox[targetId]) {
+      useTopicStore.getState().updateTopic(topicIdStudied, {
+        pdfCompleted: true,
+        pdfCompletedAt: new Date().toISOString()
+      });
+      // Limpa o estado da caixa de seleção
+      setPdfCompletedCheckbox(prev => {
+        const newChecked = { ...prev };
+        delete newChecked[targetId];
+        return newChecked;
+      });
+    }
 
     // 1.5. Vincular as sessões acumuladas no ciclo atual de foco ao tópico estudado
     const { currentCycleSessionIds, linkSessionsToTopic } = usePomodoroStore.getState();
@@ -1274,12 +1289,8 @@ export default function Pomodoro() {
                             alert("Por favor, inicie o timer do Pomodoro para esta matéria antes de concluí-la.");
                             return;
                           }
-                          if (item.topicId) {
-                            handleFinishContent(item.id);
-                          } else {
-                            setFinishingItemId(item.id);
-                            if (isRunning) pauseTimer();
-                          }
+                          setFinishingItemId(item.id);
+                          if (isRunning) pauseTimer();
                         }}
                         disabled={isLocked}
                         className={`p-2 rounded-full transition-all ${isLocked
@@ -1319,59 +1330,95 @@ export default function Pomodoro() {
                   )}
 
                   {!isCompleted && isSelected && !isRunning && (finishingItemId === item.id || (completedTopicsPerItem[item.id]?.length > 0)) && (
-                    <div className="pl-5 animate-fade-in" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder={completedTopicsPerItem[item.id]?.length > 0
-                            ? "Adicionar outro tópico..."
-                            : "O que você estudou? (ex: pp. 45-120)"}
-                          value={selectedTopicOverrides[item.id] || ''}
-                          onChange={(e) => {
-                            setSelectedTopicOverrides(prev => ({
-                              ...prev,
-                              [item.id]: e.target.value
-                            }));
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && selectedTopicOverrides[item.id]?.trim()) {
-                              handleFinishTopic(item.id);
-                            }
-                          }}
-                          autoFocus={finishingItemId === item.id}
-                          className="flex-1 text-sm p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all placeholder-gray-400 dark:placeholder-gray-600"
-                        />
-                        {selectedTopicOverrides[item.id]?.trim() && (
+                    <div className="pl-5 space-y-3 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                      
+                      {/* Input de texto (apenas se for avulso/sem tópico pré-definido) */}
+                      {!item.topicId && (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder={completedTopicsPerItem[item.id]?.length > 0
+                              ? "Adicionar outro tópico..."
+                              : "O que você estudou? (ex: pp. 45-120)"}
+                            value={selectedTopicOverrides[item.id] || ''}
+                            onChange={(e) => {
+                              setSelectedTopicOverrides(prev => ({
+                                ...prev,
+                                [item.id]: e.target.value
+                              }));
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && selectedTopicOverrides[item.id]?.trim()) {
+                                handleFinishTopic(item.id);
+                              }
+                            }}
+                            autoFocus={finishingItemId === item.id}
+                            className="flex-1 text-sm p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all placeholder-gray-400 dark:placeholder-gray-600"
+                          />
+                        </div>
+                      )}
+
+                      {/* Exibe o checkbox do PDF apenas no momento de salvar (finishingItemId === item.id) */}
+                      {finishingItemId === item.id && (
+                        <div className="flex items-center gap-2.5 py-1 select-none animate-fade-in">
+                          <input
+                            type="checkbox"
+                            id={`pdf-completed-checkbox-${item.id}`}
+                            checked={pdfCompletedCheckbox[item.id] || false}
+                            onChange={(e) => {
+                              setPdfCompletedCheckbox(prev => ({
+                                ...prev,
+                                [item.id]: e.target.checked
+                              }));
+                            }}
+                            className="rounded text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-700 dark:bg-gray-800 h-4.5 w-4.5 cursor-pointer"
+                          />
+                          <label 
+                            htmlFor={`pdf-completed-checkbox-${item.id}`} 
+                            className="text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer flex items-center gap-1"
+                          >
+                            <span>📄 Concluiu o PDF completo deste conteúdo?</span>
+                          </label>
+                        </div>
+                      )}
+
+                      {/* Botões de Ação para o salvamento */}
+                      {finishingItemId === item.id && (
+                        <div className="flex gap-2">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              // Se for avulso, exige preenchimento do input
+                              if (!item.topicId && !selectedTopicOverrides[item.id]?.trim()) {
+                                alert("Por favor, digite o tópico estudado.");
+                                return;
+                              }
                               handleFinishTopic(item.id);
                             }}
-                            className="px-3 py-2 text-sm font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/50 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors whitespace-nowrap"
+                            className="flex-1 py-2 px-3 text-xs font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/50 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors whitespace-nowrap text-center"
                           >
-                            Salvar
+                            Salvar Estudo
                           </button>
-                        )}
-                      </div>
-
-                      {finishingItemId === item.id && !completedTopicsPerItem[item.id]?.length && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFinishingItemId('');
-                            setSelectedTopicOverrides(prev => {
-                              const newOverrides = { ...prev };
-                              delete newOverrides[item.id];
-                              return newOverrides;
-                            });
-                          }}
-                          className="mt-2 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                        >
-                          Cancelar
-                        </button>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFinishingItemId('');
+                              setPdfCompletedCheckbox(prev => {
+                                const newChecked = { ...prev };
+                                delete newChecked[item.id];
+                                return newChecked;
+                              });
+                            }}
+                            className="py-2 px-3 text-xs font-medium text-gray-550 hover:text-gray-750 dark:text-gray-400 dark:hover:text-gray-250 border border-gray-250 dark:border-gray-700 rounded-lg transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
                       )}
 
-                      {completedTopicsPerItem[item.id] && completedTopicsPerItem[item.id].length > 0 && (
+                      {/* Botão de Finalizar Bloco (apenas se já tiver tópicos cadastrados) */}
+                      {completedTopicsPerItem[item.id] && completedTopicsPerItem[item.id].length > 0 && finishingItemId !== item.id && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1601,13 +1648,18 @@ export default function Pomodoro() {
                           {topic.title}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          {subject.name} • PDF Concluído
+                          {subject.name} • PDF Concluído{topic.pdfCompletedAt && (
+                            ` em ${format(parseISO(topic.pdfCompletedAt), 'dd/MM')} às ${format(parseISO(topic.pdfCompletedAt), 'HH:mm')}`
+                          )}
                         </p>
                       </div>
                     </div>
 
                     <button
-                      onClick={() => updateTopic(topic.id, { questionsCompleted: true })}
+                      onClick={() => updateTopic(topic.id, { 
+                        questionsCompleted: true,
+                        questionsCompletedAt: new Date().toISOString()
+                      })}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-105 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30 transition-all active:scale-95 whitespace-nowrap"
                       title="Marcar Questões como Feitas"
                     >
