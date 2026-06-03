@@ -435,6 +435,7 @@ export default function Calendar({ activeTab }: CalendarProps) {
   const calendarEnd = addDays(calendarStart, 41);
   const daysInGrid = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   const weekDays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+  const weekDaysMobile = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 
   // Navigation
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
@@ -454,6 +455,11 @@ export default function Calendar({ activeTab }: CalendarProps) {
   const getReviewsForDay = (day: Date) => reviews.filter(r => {
     const reviewDate = typeof r.scheduledDate === 'string' ? parseISO(r.scheduledDate) : new Date(r.scheduledDate);
     return isSameDay(reviewDate, day);
+  });
+  const getCompletedReviewsForDay = (day: Date) => reviews.filter(r => {
+    if (!r.completed) return false;
+    const compDate = typeof r.date === 'string' ? parseISO(r.date) : new Date(r.date);
+    return isSameDay(compDate, day);
   });
 
   const getPlannedItemsForDay = (day: Date) => {
@@ -516,28 +522,29 @@ export default function Calendar({ activeTab }: CalendarProps) {
       {/* Left Side: Calendar Grid */}
       <div {...swipeHandlers} className="flex-1 flex flex-col min-w-0">
         {/* Calendar Header */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-150/30 dark:border-gray-800/50">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white capitalize">
+        <div className="flex items-center justify-between p-3 border-b border-gray-150/30 dark:border-gray-800/50 bg-white/40 dark:bg-gray-900/20">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white capitalize truncate max-w-[55%]">
             {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
           </h2>
-          <div className="flex items-center gap-2">
-            <button onClick={prevMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-              <ChevronLeftIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button onClick={prevMonth} className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+              <ChevronLeftIcon className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-400" />
             </button>
-            <button onClick={goToToday} className="px-3 py-1.5 text-sm font-medium bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 rounded-lg hover:bg-primary-100 transition-colors">
+            <button onClick={goToToday} className="px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-semibold bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 rounded-lg hover:bg-primary-100 transition-colors">
               Hoje
             </button>
-            <button onClick={nextMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-              <ChevronRightIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+            <button onClick={nextMonth} className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+              <ChevronRightIcon className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-400" />
             </button>
           </div>
         </div>
 
         {/* Week Days Header */}
-        <div className="grid grid-cols-7 border-b border-gray-150/30 dark:border-gray-800/50">
-          {weekDays.map(day => (
-            <div key={day} className="py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              {day}
+        <div className="grid grid-cols-7 border-b border-gray-150/30 dark:border-gray-800/50 bg-white/50 dark:bg-gray-900/30">
+          {weekDays.map((day, idx) => (
+            <div key={day} className="py-2 text-center text-[10px] sm:text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+              <span className="hidden sm:inline">{day}</span>
+              <span className="inline sm:hidden">{weekDaysMobile[idx]}</span>
             </div>
           ))}
         </div>
@@ -552,29 +559,31 @@ export default function Calendar({ activeTab }: CalendarProps) {
             const dayTopicsList = getTopicsForDay(day);
             const dayReviewsList = getReviewsForDay(day);
             const dayPlannedList = getPlannedItemsForDay(day);
+            const dayCompletedReviewsList = getCompletedReviewsForDay(day);
 
             return (
               <div
                 key={i}
                 onClick={() => handleDayClick(day)}
                 className={`
-                  relative border-b border-r border-gray-150/35 dark:border-gray-700/30 p-1 transition-all cursor-pointer hover:bg-white/80 dark:hover:bg-gray-750/50
+                  relative border-b border-r border-gray-150/35 dark:border-gray-700/30 p-1 sm:p-1.5 transition-all cursor-pointer hover:bg-white/80 dark:hover:bg-gray-750/50
                   ${!isCurrentMonth ? 'opacity-30 bg-gray-100/30 dark:bg-gray-900/30' : ''}
                   ${isSelected ? 'bg-white/90 dark:bg-gray-800/80 ring-2 ring-inset ring-primary-500/50 z-10' : ''}
+                  min-h-[56px] sm:min-h-0
                 `}
               >
                 <div className="flex flex-col h-full justify-between">
                   <div className="flex justify-between items-start">
                     <span className={`
-                      text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full
+                      text-xs sm:text-sm font-semibold w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full
                       ${isToday ? 'bg-primary-600 text-white shadow-md' : 'text-gray-700 dark:text-gray-300'}
                     `}>
                       {format(day, 'd')}
                     </span>
                   </div>
 
-                  {/* Grouped and Compact Indicators */}
-                  <div className="flex flex-wrap gap-1 mt-1 content-end">
+                  {/* Indicators for Desktop/Tablet */}
+                  <div className="hidden sm:flex flex-wrap gap-1 mt-1 content-end origin-bottom-left">
                     {dayPlannedList.length > 0 && (
                       <div 
                         className="px-1 py-0.5 rounded bg-gray-100/80 dark:bg-gray-800/80 text-[10px] font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1 border border-gray-200/50 dark:border-gray-700/30" 
@@ -596,11 +605,50 @@ export default function Calendar({ activeTab }: CalendarProps) {
                     {dayReviewsList.length > 0 && (
                       <div 
                         className="px-1 py-0.5 rounded bg-yellow-50 dark:bg-yellow-950/30 text-[10px] font-bold text-yellow-700 dark:text-yellow-400 flex items-center gap-1 border border-yellow-200/30 dark:border-yellow-900/20" 
-                        title={`${dayReviewsList.length} Revisão/Revisões`}
+                        title={`${dayReviewsList.length} Revisão/Revisões Planejada(s)`}
                       >
                         <div className="w-1.5 h-1.5 bg-yellow-500" style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
                         <span>{dayReviewsList.length}</span>
                       </div>
+                    )}
+                    {dayCompletedReviewsList.length > 0 && (
+                      <div 
+                        className="px-1 py-0.5 rounded bg-purple-50 dark:bg-purple-950/30 text-[10px] font-bold text-purple-700 dark:text-purple-400 flex items-center gap-1 border border-purple-200/30 dark:border-purple-900/20" 
+                        title={`${dayCompletedReviewsList.length} Revisão/Revisões Concluída(s)`}
+                      >
+                        <div className="w-1.5 h-1.5 bg-purple-500" style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }} />
+                        <span>{dayCompletedReviewsList.length}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Indicators for Mobile (Compact geometric shapes) */}
+                  <div className="flex sm:hidden items-center justify-start gap-0.5 mt-0.5 w-full overflow-hidden h-3 pb-0.5">
+                    {dayPlannedList.length > 0 && (
+                      <div 
+                        className="w-1.5 h-1.5 rounded-sm bg-gray-450 dark:bg-gray-500 flex-shrink-0" 
+                        title={`${dayPlannedList.length} Planejado(s)`}
+                      />
+                    )}
+                    {dayTopicsList.length > 0 && (
+                      <div 
+                        className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" 
+                        title={`${dayTopicsList.length} Estudado(s)`}
+                      />
+                    )}
+                    {dayReviewsList.length > 0 && (
+                      <div 
+                        className="w-1.5 h-1.5 bg-yellow-500 flex-shrink-0" 
+                        style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
+                        title={`${dayReviewsList.length} Revisão(ões) Planejada(s)`}
+                      />
+                    )}
+                    {dayCompletedReviewsList.length > 0 && (
+                      <div 
+                        className="w-1.5 h-1.5 bg-purple-500 flex-shrink-0" 
+                        style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
+                        title={`${dayCompletedReviewsList.length} Revisão(ões) Concluída(s)`}
+                      />
                     )}
                   </div>
                 </div>
@@ -611,23 +659,30 @@ export default function Calendar({ activeTab }: CalendarProps) {
 
         {/* Legend */}
         <div className="px-4 py-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-600 dark:text-gray-400">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 text-xs text-gray-600 dark:text-gray-400">
+            <div className="flex items-center gap-1.5">
               <div className="h-3 w-3 rounded-sm bg-gray-400" />
               <span>Planejado</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <div className="h-3 w-3 rounded-full bg-gray-400" />
               <span>Estudado</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <div
                 className="h-3 w-3 bg-gray-400"
                 style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
               />
               <span>Revisão</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <div
+                className="h-3 w-3 bg-gray-400"
+                style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
+              />
+              <span>Rev. Concluída</span>
+            </div>
+            <div className="flex items-center gap-1.5">
               <div className="h-3 w-3 rounded-full bg-gradient-to-r from-blue-500 via-green-500 to-purple-500" />
               <span>Cores = Matérias</span>
             </div>
@@ -651,8 +706,15 @@ export default function Calendar({ activeTab }: CalendarProps) {
 
       {/* Mobile Agenda Modal */}
       {showMobileAgenda && mounted && typeof document !== 'undefined' && createPortal(
-        <div className="md:hidden fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white dark:bg-gray-900 w-full h-[85vh] sm:h-[600px] sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-slide-up border border-gray-150/50 dark:border-gray-800/80">
+        <div className="md:hidden fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-end justify-center transition-all duration-300">
+          <div className="bg-white dark:bg-gray-900 w-full h-[82vh] rounded-t-3xl shadow-2xl overflow-hidden flex flex-col animate-slide-up border border-gray-150/50 dark:border-gray-800/80">
+            {/* Bottom Sheet Drag Handle */}
+            <div 
+              className="w-full flex justify-center py-2.5 bg-white dark:bg-gray-900 border-b border-gray-100/30 dark:border-gray-850/10 flex-shrink-0 cursor-pointer"
+              onClick={() => setShowMobileAgenda(false)}
+            >
+              <div className="w-12 h-1.5 rounded-full bg-gray-300 dark:bg-gray-700/80 transition-colors hover:bg-gray-400 dark:hover:bg-gray-600" />
+            </div>
             <AgendaPanel
               date={selectedDate}
               topics={dayTopics}

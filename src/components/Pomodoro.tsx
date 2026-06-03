@@ -36,7 +36,8 @@ export default function Pomodoro() {
     incrementElapsedTime,
     zenMode,
     toggleZenMode,
-    settings
+    settings,
+    sessions
   } = usePomodoroStore();
 
   const isDarkMode = useSettingsStore((state) => state.darkMode);
@@ -349,6 +350,20 @@ export default function Pomodoro() {
     }
     return null;
   }, [activePlan, activeReview, currentTopicId, topics, selectedTopicOverrides]);
+
+  // Helper para obter o último tópico estudado de uma matéria
+  const getLastStudiedTopic = useCallback((subjectId: string) => {
+    const subjectTopics = topics.filter(t => t.subjectId === subjectId);
+    const subjectTopicIds = new Set(subjectTopics.map(t => t.id));
+    const matchingSessions = sessions.filter(s => subjectTopicIds.has(s.topicId));
+    if (matchingSessions.length === 0) return null;
+
+    const latestSession = matchingSessions.reduce((latest, current) => {
+      return new Date(current.date) > new Date(latest.date) ? current : latest;
+    }, matchingSessions[0]);
+
+    return subjectTopics.find(t => t.id === latestSession.topicId) || null;
+  }, [topics, sessions]);
 
   // Obter o tempo total da etapa atual em segundos
   const currentStageDuration = useMemo(() => {
@@ -845,6 +860,18 @@ export default function Pomodoro() {
                 {activeTopic.description}
               </p>
             )}
+            {!activeTopic && activeSubject && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 max-w-xs mt-1 animate-fade-in">
+                {(() => {
+                  const lastTopic = getLastStudiedTopic(activeSubject.id);
+                  return lastTopic ? (
+                    <span>Último estudado: <strong className="font-semibold text-primary-500">{lastTopic.title}</strong></span>
+                  ) : (
+                    <span className="italic">Nenhum tópico estudado ainda</span>
+                  );
+                })()}
+              </p>
+            )}
           </div>
         </div>
 
@@ -982,6 +1009,14 @@ export default function Pomodoro() {
               {activeTopic && (
                 <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mt-1 truncate max-w-full" title={activeTopic.title}>
                   {activeTopic.title}
+                </p>
+              )}
+              {!activeTopic && activeSubject && (
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 truncate max-w-full animate-fade-in" title={activeSubject.name}>
+                  {(() => {
+                    const lastTopic = getLastStudiedTopic(activeSubject.id);
+                    return lastTopic ? `Último: ${lastTopic.title}` : 'Nenhum estudado';
+                  })()}
                 </p>
               )}
             </div>
@@ -1155,6 +1190,20 @@ export default function Pomodoro() {
                             </>
                           )}
                         </div>
+                        {isSelected && !isCompleted && (
+                          <div className="text-xs mt-1.5 text-gray-500 dark:text-gray-450 font-medium animate-fade-in">
+                            {(() => {
+                              const lastTopic = getLastStudiedTopic(item.subjectId);
+                              return lastTopic ? (
+                                <span>
+                                  Último estudado: <strong className="text-primary-600 dark:text-primary-400 font-semibold">{lastTopic.title}</strong>
+                                </span>
+                              ) : (
+                                <span className="italic text-gray-405 dark:text-gray-500">Nenhum tópico estudado ainda</span>
+                              );
+                            })()}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1168,6 +1217,10 @@ export default function Pomodoro() {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isLocked) return;
+                          if (!isCompleted && activeScheduleItemId !== item.id) {
+                            alert("Por favor, inicie o timer do Pomodoro para esta matéria antes de concluí-la.");
+                            return;
+                          }
                           if (item.topicId) {
                             handleFinishContent(item.id);
                           } else {
@@ -1340,6 +1393,10 @@ export default function Pomodoro() {
                           onClick={(e) => {
                             e.stopPropagation();
                             if (isLocked) return;
+                            if (activeScheduleItemId !== review.id) {
+                              alert("Por favor, inicie o timer do Pomodoro para esta revisão antes de concluí-la.");
+                              return;
+                            }
                             handleFinishReview(review.id);
                           }}
                           disabled={isLocked}
@@ -1443,6 +1500,10 @@ export default function Pomodoro() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (isLocked) return;
+                                if (activeScheduleItemId !== review.id) {
+                                  alert("Por favor, inicie o timer do Pomodoro para esta revisão antes de concluí-la.");
+                                  return;
+                                }
                                 handleFinishReview(review.id);
                               }}
                               disabled={isLocked}
