@@ -586,37 +586,43 @@ export default function Calendar({ activeTab }: CalendarProps) {
                   <div className="hidden sm:flex flex-wrap gap-1 mt-1 content-end origin-bottom-left">
                     {dayPlannedList.length > 0 && (
                       <div 
-                        className="px-1 py-0.5 rounded bg-gray-100/80 dark:bg-gray-800/80 text-[10px] font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1 border border-gray-200/50 dark:border-gray-700/30" 
+                        className="px-1 py-0.5 rounded bg-gray-100/80 dark:bg-gray-800/80 text-[10px] font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1 border border-gray-200/50 dark:border-gray-700/30 shadow-sm" 
                         title={`${dayPlannedList.length} Planejado(s)`}
                       >
-                        <div className="w-1.5 h-1.5 rounded-sm bg-gray-400 dark:bg-gray-500" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.4)]" />
                         <span>{dayPlannedList.length}</span>
                       </div>
                     )}
                     {dayTopicsList.length > 0 && (
                       <div 
-                        className="px-1 py-0.5 rounded bg-green-50 dark:bg-green-950/30 text-[10px] font-bold text-green-700 dark:text-green-400 flex items-center gap-1 border border-green-200/30 dark:border-green-900/20" 
+                        className="px-1 py-0.5 rounded bg-green-50 dark:bg-green-950/30 text-[10px] font-bold text-green-700 dark:text-green-400 flex items-center gap-1 border border-green-200/30 dark:border-green-900/20 shadow-sm" 
                         title={`${dayTopicsList.length} Estudado(s)`}
                       >
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-green-300 via-green-500 to-green-600 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.5)]" />
                         <span>{dayTopicsList.length}</span>
                       </div>
                     )}
                     {dayReviewsList.length > 0 && (
                       <div 
-                        className="px-1 py-0.5 rounded bg-yellow-50 dark:bg-yellow-950/30 text-[10px] font-bold text-yellow-700 dark:text-yellow-400 flex items-center gap-1 border border-yellow-200/30 dark:border-yellow-900/20" 
+                        className="px-1 py-0.5 rounded bg-yellow-50 dark:bg-yellow-950/30 text-[10px] font-bold text-yellow-700 dark:text-yellow-400 flex items-center gap-1 border border-yellow-200/30 dark:border-yellow-900/20 shadow-sm" 
                         title={`${dayReviewsList.length} Revisão/Revisões Planejada(s)`}
                       >
-                        <div className="w-1.5 h-1.5 bg-yellow-500" style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
+                        <div 
+                          className="w-1.5 h-1.5 bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.4)]" 
+                          style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }} 
+                        />
                         <span>{dayReviewsList.length}</span>
                       </div>
                     )}
                     {dayCompletedReviewsList.length > 0 && (
                       <div 
-                        className="px-1 py-0.5 rounded bg-purple-50 dark:bg-purple-950/30 text-[10px] font-bold text-purple-700 dark:text-purple-400 flex items-center gap-1 border border-purple-200/30 dark:border-purple-900/20" 
+                        className="px-1 py-0.5 rounded bg-purple-50 dark:bg-purple-950/30 text-[10px] font-bold text-purple-700 dark:text-purple-400 flex items-center gap-1 border border-purple-200/30 dark:border-purple-900/20 shadow-sm" 
                         title={`${dayCompletedReviewsList.length} Revisão/Revisões Concluída(s)`}
                       >
-                        <div className="w-1.5 h-1.5 bg-purple-500" style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }} />
+                        <div 
+                          className="w-1.5 h-1.5 bg-gradient-to-br from-purple-300 via-purple-500 to-purple-600 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.5)]" 
+                          style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }} 
+                        />
                         <span>{dayCompletedReviewsList.length}</span>
                       </div>
                     )}
@@ -626,26 +632,26 @@ export default function Calendar({ activeTab }: CalendarProps) {
                   <div className="flex sm:hidden items-center justify-start gap-0.5 mt-0.5 w-full overflow-hidden h-3 pb-0.5">
                     {dayPlannedList.length > 0 && (
                       <div 
-                        className="w-1.5 h-1.5 rounded-sm bg-gray-450 dark:bg-gray-500 flex-shrink-0" 
+                        className="w-2 h-2 rounded-full bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.4)] flex-shrink-0" 
                         title={`${dayPlannedList.length} Planejado(s)`}
                       />
                     )}
                     {dayTopicsList.length > 0 && (
                       <div 
-                        className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" 
+                        className="w-2 h-2 rounded-full bg-gradient-to-br from-green-300 via-green-500 to-green-600 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.5)] flex-shrink-0" 
                         title={`${dayTopicsList.length} Estudado(s)`}
                       />
                     )}
                     {dayReviewsList.length > 0 && (
                       <div 
-                        className="w-1.5 h-1.5 bg-yellow-500 flex-shrink-0" 
-                        style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
+                        className="w-2 h-2 bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.4)] flex-shrink-0" 
+                        style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
                         title={`${dayReviewsList.length} Revisão(ões) Planejada(s)`}
                       />
                     )}
                     {dayCompletedReviewsList.length > 0 && (
                       <div 
-                        className="w-1.5 h-1.5 bg-purple-500 flex-shrink-0" 
+                        className="w-2 h-2 bg-gradient-to-br from-purple-300 via-purple-500 to-purple-600 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.5)] flex-shrink-0" 
                         style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
                         title={`${dayCompletedReviewsList.length} Revisão(ões) Concluída(s)`}
                       />
@@ -661,26 +667,26 @@ export default function Calendar({ activeTab }: CalendarProps) {
         <div className="px-4 py-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
           <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 text-xs text-gray-600 dark:text-gray-400">
             <div className="flex items-center gap-1.5">
-              <div className="h-3 w-3 rounded-sm bg-gray-400" />
-              <span>Planejado</span>
+              <div className="h-3.5 w-3.5 rounded-full bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4)]" />
+              <span>Estudo Planejado</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="h-3 w-3 rounded-full bg-gray-400" />
-              <span>Estudado</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div
-                className="h-3 w-3 bg-gray-400"
-                style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
-              />
-              <span>Revisão</span>
+              <div className="h-3.5 w-3.5 rounded-full bg-gradient-to-br from-green-300 via-green-500 to-green-600 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.5)]" />
+              <span>Estudo Concluído</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div
-                className="h-3 w-3 bg-gray-400"
+                className="h-3.5 w-3.5 bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4)]"
                 style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
               />
-              <span>Rev. Concluída</span>
+              <span>Revisão Planejada</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div
+                className="h-3.5 w-3.5 bg-gradient-to-br from-purple-300 via-purple-500 to-purple-600 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.5)]"
+                style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
+              />
+              <span>Revisão Concluída</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="h-3 w-3 rounded-full bg-gradient-to-r from-blue-500 via-green-500 to-purple-500" />
