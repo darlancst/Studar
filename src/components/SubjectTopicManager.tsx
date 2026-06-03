@@ -356,23 +356,56 @@ export default function SubjectTopicManager({ onClose }: SubjectTopicManagerProp
                                                         key={topic.id}
                                                         className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                                                     >
-                                                        <div>
+                                                        <div className="min-w-0 flex-1 mr-2">
                                                             <div className="flex items-center">
                                                                 {subject && (
                                                                     <div
-                                                                        className="w-3 h-3 rounded-full mr-2"
+                                                                        className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
                                                                         style={{ backgroundColor: subject.color }}
                                                                     />
                                                                 )}
-                                                                <span className="font-medium dark:text-white">{topic.title}</span>
+                                                                <span className="font-medium dark:text-white truncate">{topic.title}</span>
                                                             </div>
                                                             {topic.description && (
                                                                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
                                                                     {topic.description}
                                                                 </p>
                                                             )}
+                                                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                                                {/* PDF Completed toggle */}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => updateTopic(topic.id, { 
+                                                                        pdfCompleted: !topic.pdfCompleted,
+                                                                        // Se desmarcar PDF, reseta também as questões
+                                                                        ...(topic.pdfCompleted ? { questionsCompleted: false } : {})
+                                                                    })}
+                                                                    className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all flex items-center gap-1 ${
+                                                                        topic.pdfCompleted
+                                                                            ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900/50'
+                                                                            : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-750'
+                                                                    }`}
+                                                                >
+                                                                    <span>📄 PDF {topic.pdfCompleted ? 'Concluído' : 'Pendente'}</span>
+                                                                </button>
+
+                                                                {/* Questions Completed toggle (only shown if PDF completed) */}
+                                                                {topic.pdfCompleted && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => updateTopic(topic.id, { questionsCompleted: !topic.questionsCompleted })}
+                                                                        className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all flex items-center gap-1 ${
+                                                                            topic.questionsCompleted
+                                                                                ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50'
+                                                                                : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-105 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30'
+                                                                        }`}
+                                                                    >
+                                                                        <span>📝 Questões {topic.questionsCompleted ? 'Feitas' : 'Fazer Questões'}</span>
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        <div className="flex space-x-2">
+                                                        <div className="flex space-x-2 flex-shrink-0">
                                                             <button
                                                                 onClick={() => {
                                                                     setEditingTopic(topic);

@@ -252,6 +252,8 @@ export default function Stats() {
   // Estatísticas Gerais
   const totalStudyTime = filteredSessions.reduce((acc, session) => acc + session.duration, 0);
   const totalSessions = filteredSessions.length;
+  const subjectStudyTimeOnly = filteredSessions.filter(s => !s.isReview).reduce((acc, curr) => acc + curr.duration, 0);
+  const reviewsStudyTimeOnly = filteredSessions.filter(s => s.isReview).reduce((acc, curr) => acc + curr.duration, 0);
 
   // Calcular Revisões Feitas
   const totalReviews = useMemo(() => {
@@ -718,11 +720,11 @@ export default function Stats() {
             <div className="p-1 bg-gradient-to-br from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 rounded-lg group-hover:scale-105 transition-transform">
               <ClockIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Tempo Total</span>
+            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Tempo Estudado</span>
           </div>
           <div>
             <span className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">
-              {Math.floor(totalStudyTime / 60)}h {totalStudyTime % 60}m
+              {Math.floor(subjectStudyTimeOnly / 60)}h {subjectStudyTimeOnly % 60}m
             </span>
           </div>
         </div>
@@ -732,11 +734,11 @@ export default function Stats() {
             <div className="p-1 bg-gradient-to-br from-purple-500/10 to-purple-600/10 dark:from-purple-500/20 dark:to-purple-600/20 rounded-lg group-hover:scale-105 transition-transform">
               <CheckCircleIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
             </div>
-            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Sessões</span>
+            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Tempo de Revisão</span>
           </div>
           <div>
             <span className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">
-              {totalSessions}
+              {Math.floor(reviewsStudyTimeOnly / 60)}h {reviewsStudyTimeOnly % 60}m
             </span>
           </div>
         </div>

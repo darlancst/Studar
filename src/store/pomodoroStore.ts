@@ -3,6 +3,7 @@ import { persist, StorageValue } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { PomodoroSession, PomodoroSettings, PomodoroState } from '@/types';
 import { useDatesStore } from './datesStore';
+import { useReviewStore } from './reviewStore';
 import { firebaseSync } from '@/services/firebaseSync';
 
 interface PomodoroStore {
@@ -41,7 +42,7 @@ interface PomodoroStore {
   linkSessionsToTopic: (sessionIds: string[], topicId: string) => void;
 
   // Sessões Pomodoro
-  addSession: (topicId: string, duration: number) => string | null; // Retorna ID da sessão criada
+  addSession: (topicId: string, duration: number, isReview?: boolean) => string | null; // Retorna ID da sessão criada
   deleteSession: (sessionId: string) => void;
   updateCurrentSession: (forceUpdate?: boolean) => void; // Atualiza a sessão atual em tempo real
   getSessionsByTopicId: (topicId: string) => PomodoroSession[];
@@ -290,7 +291,11 @@ export const usePomodoroStore = create<PomodoroStore>()(
             }
           } else {
             // Cria a sessão inicial do ciclo
-            const newSessionId = get().addSession(currentTopicId, newMinutes);
+            const activeScheduleItemId = get().activeScheduleItemId;
+            const isReviewSession = activeScheduleItemId 
+              ? useReviewStore.getState().reviews.some((r: any) => r.id === activeScheduleItemId)
+              : false;
+            const newSessionId = get().addSession(currentTopicId, newMinutes, isReviewSession);
             if (newSessionId) {
               set({
                 activeSessionId: newSessionId,
@@ -303,7 +308,7 @@ export const usePomodoroStore = create<PomodoroStore>()(
 
       toggleZenMode: (val) => set((state) => ({ zenMode: val !== undefined ? val : !state.zenMode })),
 
-      addSession: (topicId, duration) => {
+      addSession: (topicId, duration, isReview = false) => {
         if (duration <= 0) return null;
 
         const newSession: PomodoroSession = {
@@ -311,6 +316,7 @@ export const usePomodoroStore = create<PomodoroStore>()(
           topicId,
           duration,
           date: new Date().toISOString(),
+          isReview,
         };
 
         set((state) => ({
@@ -355,14 +361,22 @@ export const usePomodoroStore = create<PomodoroStore>()(
       completeFocusSession: (topicId, durationInSeconds) => {
         const durationInMinutes = Math.floor(durationInSeconds / 60);
         if (durationInMinutes > 0) {
-          get().addSession(topicId, durationInMinutes);
+          const activeScheduleItemId = get().activeScheduleItemId;
+          const isReviewSession = activeScheduleItemId 
+            ? useReviewStore.getState().reviews.some((r: any) => r.id === activeScheduleItemId)
+            : false;
+          get().addSession(topicId, durationInMinutes, isReviewSession);
         }
       },
 
       interruptFocusSession: (topicId, durationInSeconds) => {
         const durationInMinutes = Math.floor(durationInSeconds / 60);
         if (durationInMinutes > 0) {
-          get().addSession(topicId, durationInMinutes);
+          const activeScheduleItemId = get().activeScheduleItemId;
+          const isReviewSession = activeScheduleItemId 
+            ? useReviewStore.getState().reviews.some((r: any) => r.id === activeScheduleItemId)
+            : false;
+          get().addSession(topicId, durationInMinutes, isReviewSession);
         }
       },
 

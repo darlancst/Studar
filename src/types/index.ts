@@ -13,6 +13,8 @@ export interface Topic {
   subjectId: string;
   createdAt: Date;
   linkedScheduleItemId?: string;
+  pdfCompleted?: boolean;
+  questionsCompleted?: boolean;
 }
 
 export interface Review {
@@ -28,6 +30,7 @@ export interface PomodoroSession {
   topicId: string;
   duration: number; // em minutos
   date: string; // Padronizado para ISO string
+  isReview?: boolean;
 }
 
 export interface PomodoroSettings {

@@ -5,8 +5,9 @@ import { useTopicStore } from '@/store/topicStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useReviewStore } from '@/store/reviewStore';
-import { PlayIcon, PauseIcon, ArrowPathIcon, ForwardIcon, CheckCircleIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ArrowPathIcon, ForwardIcon, CheckCircleIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon, MagnifyingGlassIcon, XMarkIcon, BookmarkIcon } from '@heroicons/react/24/solid';
 import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import confetti from 'canvas-confetti';
 import { playAlarmSound } from '@/utils/sounds';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -17,7 +18,7 @@ export default function Pomodoro() {
   const timeRemainingAtStartRef = useRef<number>(0);
   const reportedElapsedSecondsRef = useRef<number>(0);
   const { subjects } = useSubjectStore();
-  const { topics, addTopic } = useTopicStore();
+  const { topics, addTopic, updateTopic } = useTopicStore();
   const {
     activeSubjectId,
     activeTopicId,
@@ -53,8 +54,31 @@ export default function Pomodoro() {
   const [completedTopicsPerItem, setCompletedTopicsPerItem] = useState<Record<string, string[]>>({});
   // Rastreia qual item está no modo "O que você estudou?" (após clicar ✓)
   const [finishingItemId, setFinishingItemId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'schedules' | 'reviews'>('schedules');
+  const [activeTab, setActiveTab] = useState<'schedules' | 'reviews' | 'questions'>('schedules');
   const [showOverdue, setShowOverdue] = useState<boolean>(false);
+  const [showSearchModal, setShowSearchModal] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>( '');
+
+  const pendingQuestionsTopics = useMemo(() => {
+    return topics.filter(t => t.pdfCompleted && !t.questionsCompleted);
+  }, [topics]);
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const query = searchQuery.toLowerCase();
+    
+    return sessions.filter(session => {
+      const topic = topics.find(t => t.id === session.topicId);
+      const subject = topic 
+        ? subjects.find(s => s.id === topic.subjectId) 
+        : subjects.find(s => s.id === session.topicId);
+
+      const topicTitle = topic ? topic.title.toLowerCase() : 'estudo geral';
+      const subjectName = subject ? subject.name.toLowerCase() : 'sem materia';
+
+      return topicTitle.includes(query) || subjectName.includes(query);
+    });
+  }, [searchQuery, sessions, topics, subjects]);
 
   // Empurrar revisões automaticamente quando não houver estudos agendados no dia
   useEffect(() => {
@@ -928,7 +952,16 @@ export default function Pomodoro() {
     <div className="max-w-md mx-auto space-y-3 pb-16">
       {/* Header Minimalista */}
       <div className="flex flex-row justify-between items-center gap-2 mb-2 w-full min-w-0">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight shrink-0">Foco</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight shrink-0">Foco</h2>
+          <button
+            onClick={() => setShowSearchModal(true)}
+            className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800 transition-colors"
+            title="Pesquisar Tópicos Estudados"
+          >
+            <MagnifyingGlassIcon className="h-5 w-5" />
+          </button>
+        </div>
         <div className={`px-2.5 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 border shadow-sm transition-all ${currentState === 'focus'
           ? 'bg-primary-600 text-white border-primary-600 dark:bg-primary-500 dark:text-gray-950 dark:border-primary-500'
           : 'bg-green-600 text-white border-green-600 dark:bg-green-500 dark:text-gray-950 dark:border-green-500'
@@ -1079,15 +1112,15 @@ export default function Pomodoro() {
       </div>
 
       {/* Seletor de Abas Ergonômico Mobile-First */}
-      {(todayPlannedItems.length > 0 || todayReviews.length > 0) && (
+      {(todayPlannedItems.length > 0 || todayReviews.length > 0 || pendingQuestionsTopics.length > 0) && (
         <div className="flex justify-center mb-6 px-2">
-          <div className="flex p-1 bg-gray-150/40 dark:bg-gray-900/60 backdrop-blur-md rounded-xl border border-gray-200/30 dark:border-gray-800/80 shadow-inner max-w-sm w-full">
+          <div className="flex p-1 bg-gray-150/40 dark:bg-gray-900/60 backdrop-blur-md rounded-xl border border-gray-200/30 dark:border-gray-800/80 shadow-inner w-full">
             <button
               onClick={() => {
                 setActiveTab('schedules');
                 setSelectedItemId('');
               }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 text-xs font-bold rounded-lg transition-all duration-300 border ${activeTab === 'schedules'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold rounded-lg transition-all duration-300 border ${activeTab === 'schedules'
                 ? 'bg-primary-50/50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-300 border-primary-200 dark:border-primary-500/80 shadow-md shadow-primary-500/5 dark:shadow-[0_0_12px_rgba(14,165,233,0.25)] transform scale-[1.02]'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent'
                 }`}
@@ -1107,7 +1140,7 @@ export default function Pomodoro() {
                 setActiveTab('reviews');
                 setSelectedItemId('');
               }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 text-xs font-bold rounded-lg transition-all duration-300 border ${activeTab === 'reviews'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold rounded-lg transition-all duration-300 border ${activeTab === 'reviews'
                 ? 'bg-red-50/50 dark:bg-red-950/40 text-red-600 dark:text-red-300 border-red-200 dark:border-red-500/80 shadow-md shadow-red-500/5 dark:shadow-[0_0_12px_rgba(239,68,68,0.25)] transform scale-[1.02]'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent'
                 }`}
@@ -1119,6 +1152,26 @@ export default function Pomodoro() {
                   : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                   }`}>
                   {todayReviews.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('questions');
+                setSelectedItemId('');
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold rounded-lg transition-all duration-300 border ${activeTab === 'questions'
+                ? 'bg-amber-50/50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-300 border-amber-200 dark:border-amber-500/80 shadow-md shadow-amber-500/5 dark:shadow-[0_0_12px_rgba(245,158,11,0.25)] transform scale-[1.02]'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent'
+                }`}
+            >
+              <span>Questões</span>
+              {pendingQuestionsTopics.length > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === 'questions'
+                  ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 animate-pulse'
+                  : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                  }`}>
+                  {pendingQuestionsTopics.length}
                 </span>
               )}
             </button>
@@ -1521,6 +1574,150 @@ export default function Pomodoro() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Renderização da Aba de Questões Pendentes */}
+      {activeTab === 'questions' && (
+        <div className="space-y-3 px-2">
+          <div className="space-y-2.5">
+            {pendingQuestionsTopics.length > 0 ? (
+              pendingQuestionsTopics.map((topic) => {
+                const subject = subjects.find(s => s.id === topic.subjectId);
+                if (!subject) return null;
+
+                return (
+                  <div
+                    key={topic.id}
+                    className="group flex items-center justify-between p-3.5 bg-white dark:bg-gray-800 border border-gray-150/50 dark:border-gray-750/30 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 animate-fade-in"
+                  >
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div
+                        className="w-1.5 h-10 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: subject.color }}
+                      />
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                          {topic.title}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          {subject.name} • PDF Concluído
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => updateTopic(topic.id, { questionsCompleted: true })}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-105 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30 transition-all active:scale-95 whitespace-nowrap"
+                      title="Marcar Questões como Feitas"
+                    >
+                      <CheckCircleIcon className="h-4 w-4" />
+                      <span>Fazer Questões</span>
+                    </button>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="bg-white dark:bg-gray-900 border border-dashed border-gray-250 dark:border-gray-800 p-8 rounded-xl text-center select-none animate-fade-in shadow-sm">
+                <SparklesIcon className="h-7 w-7 mx-auto text-amber-500 mb-2 animate-bounce" />
+                <h3 className="text-sm font-bold text-gray-805 dark:text-gray-200">Tudo em dia! 🎉</h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 max-w-xs mx-auto">
+                  Nenhum conteúdo com teoria estudada pendente de questões. Continue estudando para praticar!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Pesquisa Global de Histórico */}
+      {showSearchModal && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[70vh] border border-gray-150/50 dark:border-gray-800/80 animate-scale-in">
+            {/* Header */}
+            <div className="p-4 border-b border-gray-150/50 dark:border-gray-850/80 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <MagnifyingGlassIcon className="h-5 w-5 text-primary-500" />
+                Buscar Tópicos Estudados
+              </h3>
+              <button 
+                onClick={() => {
+                  setShowSearchModal(false);
+                  setSearchQuery('');
+                }} 
+                className="p-1.5 text-gray-500 hover:text-gray-850 dark:text-gray-400 dark:hover:text-gray-250 rounded-lg active:scale-95 transition-all"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Search Input */}
+            <div className="p-3 border-b border-gray-150/30 dark:border-gray-800/50 bg-gray-50/50 dark:bg-gray-900/30">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Pesquise por tópico ou matéria..."
+                className="w-full text-sm p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all placeholder-gray-400 dark:placeholder-gray-600 shadow-inner"
+                autoFocus
+              />
+            </div>
+
+            {/* Results List */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {searchResults.length > 0 ? (
+                searchResults.map((session, idx) => {
+                  const topic = topics.find(t => t.id === session.topicId);
+                  const subject = topic 
+                    ? subjects.find(s => s.id === topic.subjectId) 
+                    : subjects.find(s => s.id === session.topicId);
+                  
+                  const topicTitle = topic ? topic.title : 'Estudo Geral';
+                  const subjectName = subject ? subject.name : 'Sem Matéria';
+                  const sessionDate = parseISO(session.date);
+
+                  return (
+                    <div 
+                      key={session.id || idx} 
+                      className="p-3 bg-gray-50/50 dark:bg-gray-900/20 border border-gray-150/40 dark:border-gray-800/40 rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-900/40 transition-all flex items-center justify-between gap-3"
+                    >
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <div 
+                          className="mt-1 w-1.5 h-8 rounded-full flex-shrink-0" 
+                          style={{ backgroundColor: subject?.color || '#3b82f6' }}
+                        />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                            {topicTitle}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {subjectName}
+                          </p>
+                          <p className="text-[10px] text-gray-400 mt-0.5 font-medium">
+                            {format(sessionDate, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right flex-shrink-0">
+                        <span className="text-xs font-bold bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-150/40 dark:border-gray-700/50 px-2 py-0.5 rounded-md shadow-sm">
+                          {session.duration} min
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : searchQuery ? (
+                <div className="text-center py-12 text-gray-400 dark:text-gray-500">
+                  Nenhum estudo encontrado para "{searchQuery}"
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-400 dark:text-gray-500">
+                  Digite algo para pesquisar no seu histórico de estudos.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
