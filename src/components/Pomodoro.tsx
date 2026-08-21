@@ -10,6 +10,7 @@ import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } fro
 import { ptBR } from 'date-fns/locale';
 import confetti from 'canvas-confetti';
 import { playAlarmSound } from '@/utils/sounds';
+import { sendPomodoroNotification } from '@/utils/notifications';
 import { useSettingsStore } from '@/store/settingsStore';
 
 export default function Pomodoro() {
@@ -154,7 +155,18 @@ export default function Pomodoro() {
       // Toca som do alarme (se habilitado)
       const pomodoroState = usePomodoroStore.getState();
       if (pomodoroState.settings?.soundEnabled !== false) {
-        playAlarmSound(pomodoroState.settings?.selectedSound || 'ding');
+        playAlarmSound(pomodoroState.settings?.selectedSound || 'digital');
+      }
+
+      // Dispara Notificação no Celular / Navegador (se habilitado)
+      const settingsState = useSettingsStore.getState();
+      if (settingsState.notificationsEnabled && settingsState.notifyPomodoro !== false) {
+        const topic = topics.find(t => t.id === currentTopicId);
+        if (currentState === 'focus') {
+          sendPomodoroNotification('focus_completed', topic?.title);
+        } else {
+          sendPomodoroNotification('break_completed');
+        }
       }
 
       if (currentState === 'focus') {
@@ -1223,20 +1235,20 @@ export default function Pomodoro() {
                   onClick={() => {
                     if (!isCompleted && !isLocked) setSelectedItemId(item.id);
                   }}
-                  className={`group flex flex-col gap-3 p-4 rounded-xl border transition-all 
+                  className={`group flex flex-col gap-3 p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 
                     ${isLocked
-                      ? 'opacity-40 grayscale cursor-not-allowed bg-gray-50 dark:bg-gray-900/20 border-gray-100 dark:border-gray-800'
+                      ? 'opacity-40 grayscale cursor-not-allowed bg-gray-50 dark:bg-gray-900/20 border-gray-150/40 dark:border-gray-850'
                       : isCompleted
-                        ? 'bg-gray-50 border-transparent dark:bg-gray-800/30 opacity-60 cursor-default'
+                        ? 'bg-gray-50/70 border-transparent dark:bg-gray-900/30 opacity-60 cursor-default'
                         : isSelected
-                          ? 'bg-white dark:bg-gray-800 border-primary-500 ring-1 ring-primary-500 shadow-md cursor-default'
-                          : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 shadow-sm hover:shadow-md cursor-pointer'
+                          ? 'bg-white/95 dark:bg-gray-900/90 border-primary-500/80 ring-1 ring-primary-500/40 shadow-md cursor-default'
+                          : 'bg-white/80 dark:bg-gray-900/60 backdrop-blur-md border-gray-150/60 dark:border-gray-800/80 hover:border-gray-300 dark:hover:border-gray-700 shadow-sm hover:shadow-md cursor-pointer'
                     }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
                       <div
-                        className={`w-1.5 h-12 rounded-full transition-all ${isSelected ? 'scale-y-110' : 'scale-y-90 opacity-70'}`}
+                        className={`w-1.5 h-12 rounded-full transition-all ${isSelected ? 'scale-y-110 shadow-sm' : 'scale-y-90 opacity-70'}`}
                         style={{ backgroundColor: subject.color, filter: isCompleted || isLocked ? 'grayscale(100%)' : 'none' }}
                       />
                       <div>

@@ -16,7 +16,10 @@ import {
   ArrowPathIcon,
   ExclamationTriangleIcon,
   CheckIcon,
-  PaperAirplaneIcon
+  PaperAirplaneIcon,
+  BellAlertIcon,
+  DevicePhoneMobileIcon,
+  SpeakerWaveIcon
 } from '@heroicons/react/24/outline';
 import { useSettingsStore, HeatmapThresholds } from '@/store/settingsStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
@@ -33,6 +36,13 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import SyncStatus from '@/components/SyncStatus';
 import { ALARM_OPTIONS, playAlarmSound } from '@/utils/sounds';
+import { 
+  isNotificationSupported, 
+  getNotificationPermission, 
+  requestNotificationPermission, 
+  sendTestNotification, 
+  NotificationPermissionStatus 
+} from '@/utils/notifications';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -62,10 +72,52 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     heatmapThresholds,
     setHeatmapThresholds,
     soundEnabled,
-    toggleSoundEnabled
+    toggleSoundEnabled,
+    notificationsEnabled,
+    setNotificationsEnabled,
+    notifyPomodoro,
+    notifyDailyReviews,
+    notifyStreak,
+    setNotificationSetting
   } = useSettingsStore();
 
   const { settings: pomodoroSettings, updateSettings: updatePomodoroSettings } = usePomodoroStore();
+
+  // Estados de Notificações
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermissionStatus>('default');
+  const [isTestingNotification, setIsTestingNotification] = useState(false);
+  const [testNotificationFeedback, setTestNotificationFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNotificationPermission(getNotificationPermission());
+  }, []);
+
+  const handleRequestNotificationPermission = async () => {
+    const granted = await requestNotificationPermission();
+    const perm = getNotificationPermission();
+    setNotificationPermission(perm);
+    if (granted) {
+      setNotificationsEnabled(true);
+      await sendTestNotification();
+      setTestNotificationFeedback('Permissão concedida! Notificação de teste enviada.');
+      setTimeout(() => setTestNotificationFeedback(null), 4000);
+    } else {
+      setTestNotificationFeedback('Permissão negada ou bloqueada no navegador.');
+      setTimeout(() => setTestNotificationFeedback(null), 4000);
+    }
+  };
+
+  const handleTestNotification = async () => {
+    setIsTestingNotification(true);
+    const success = await sendTestNotification();
+    setIsTestingNotification(false);
+    if (success) {
+      setTestNotificationFeedback('Notificação de teste disparada com sucesso!');
+    } else {
+      setTestNotificationFeedback('Não foi possível disparar. Verifique as permissões.');
+    }
+    setTimeout(() => setTestNotificationFeedback(null), 4000);
+  };
 
   // Estado para gerenciar o valor da meta semanal no formulário
   const [goalHours, setGoalHours] = useState(Math.floor(weeklyGoal / 60));
@@ -383,33 +435,180 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </div>
 
                 {pomodoroSettings.soundEnabled && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {ALARM_OPTIONS.map(sound => {
-                      const isSelected = (pomodoroSettings.selectedSound || 'digital') === sound.value;
-                      return (
-                        <button
-                          key={sound.value}
-                          type="button"
-                          onClick={() => {
-                            updatePomodoroSettings({ selectedSound: sound.value });
-                            playAlarmSound(sound.value);
-                          }}
-                          className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-center ${
-                            isSelected
-                              ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
-                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                          }`}
-                        >
-                          <span className="text-xl">{sound.emoji}</span>
-                          <span className={`text-xs font-medium ${isSelected ? 'text-primary-700 dark:text-primary-300' : 'text-gray-600 dark:text-gray-400'}`}>
-                            {sound.label}
-                          </span>
-                        </button>
-                      );
-                    })}
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Escolha o som e clique para testar:
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {ALARM_OPTIONS.map(sound => {
+                        const isSelected = (pomodoroSettings.selectedSound || 'digital') === sound.value;
+                        return (
+                          <button
+                            key={sound.value}
+                            type="button"
+                            onClick={() => {
+                              updatePomodoroSettings({ selectedSound: sound.value });
+                              playAlarmSound(sound.value);
+                            }}
+                            className={`flex flex-col items-center justify-center p-2.5 rounded-xl border-2 transition-all text-center hover:scale-[1.02] active:scale-95 cursor-pointer ${
+                              isSelected
+                                ? 'border-primary-500 bg-primary-50/80 dark:bg-primary-950/40 shadow-sm ring-1 ring-primary-500/30'
+                                : 'border-gray-200/80 dark:border-gray-700/80 hover:border-gray-300 dark:hover:border-gray-600 bg-white/50 dark:bg-gray-800/40'
+                            }`}
+                          >
+                            <span className="text-xl mb-0.5">{sound.emoji}</span>
+                            <span className={`text-xs font-semibold truncate w-full ${isSelected ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                              {sound.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Seção de Notificações no Celular / Navegador */}
+          <div className="pb-3 border-b dark:border-gray-700">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center">
+                <BellAlertIcon className="h-5 w-5 mr-2 text-amber-500" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notificações no Celular</h3>
+              </div>
+              {notificationPermission === 'granted' && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">
+                  <span className="w-1.5 h-1.5 mr-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                  Permitido
+                </span>
+              )}
+            </div>
+
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              Receba avisos com som e vibração no celular quando o Pomodoro terminar ou quando houver revisões pendentes (funciona com o app instalado ou no navegador).
+            </p>
+
+            {/* Banner de Permissão */}
+            {notificationPermission !== 'granted' && notificationPermission !== 'unsupported' && (
+              <div className="mb-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+                <div className="text-xs text-amber-800 dark:text-amber-300">
+                  {notificationPermission === 'denied' ? (
+                    <span>⚠️ As notificações estão bloqueadas nas configurações do seu navegador. Permita o acesso para receber os alertas.</span>
+                  ) : (
+                    <span>💡 Permita o envio de notificações para ser alertado com a tela bloqueada.</span>
+                  )}
+                </div>
+                {notificationPermission !== 'denied' && (
+                  <button
+                    type="button"
+                    onClick={handleRequestNotificationPermission}
+                    className="shrink-0 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs font-bold rounded-lg shadow-sm transition-all"
+                  >
+                    Ativar Notificações
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Opções de Notificação */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/40 border border-gray-150/60 dark:border-gray-700/60">
+                <div className="flex items-center gap-2">
+                  <DevicePhoneMobileIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                  <div>
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 block">
+                      Notificações Gerais
+                    </span>
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400 block">
+                      Habilita o envio de alertas pelo sistema
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (notificationPermission !== 'granted') {
+                      handleRequestNotificationPermission();
+                    } else {
+                      setNotificationsEnabled(!notificationsEnabled);
+                    }
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
+                    notificationsEnabled && notificationPermission === 'granted' ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                      notificationsEnabled && notificationPermission === 'granted' ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {notificationsEnabled && notificationPermission === 'granted' && (
+                <div className="pl-2 space-y-2 border-l-2 border-primary-500/40 dark:border-primary-500/30 ml-2">
+                  {/* Fim de Pomodoro */}
+                  <label className="flex items-center justify-between text-xs text-gray-700 dark:text-gray-300 cursor-pointer p-1.5 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/30">
+                    <span className="flex items-center gap-1.5">
+                      <span>⏱️</span>
+                      <span>Fim de ciclo Pomodoro e pausas</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={notifyPomodoro}
+                      onChange={(e) => setNotificationSetting('notifyPomodoro', e.target.checked)}
+                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 h-4 w-4"
+                    />
+                  </label>
+
+                  {/* Revisões do Dia */}
+                  <label className="flex items-center justify-between text-xs text-gray-700 dark:text-gray-300 cursor-pointer p-1.5 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/30">
+                    <span className="flex items-center gap-1.5">
+                      <span>📅</span>
+                      <span>Lembrete de revisões pendentes do dia</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={notifyDailyReviews}
+                      onChange={(e) => setNotificationSetting('notifyDailyReviews', e.target.checked)}
+                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 h-4 w-4"
+                    />
+                  </label>
+
+                  {/* Ofensiva / Streak */}
+                  <label className="flex items-center justify-between text-xs text-gray-700 dark:text-gray-300 cursor-pointer p-1.5 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/30">
+                    <span className="flex items-center gap-1.5">
+                      <span>🔥</span>
+                      <span>Alerta de proteção da Ofensiva (Streak)</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={notifyStreak}
+                      onChange={(e) => setNotificationSetting('notifyStreak', e.target.checked)}
+                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 h-4 w-4"
+                    />
+                  </label>
+
+                  {/* Botão de Teste */}
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      disabled={isTestingNotification}
+                      onClick={handleTestNotification}
+                      className="w-full py-2 px-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                    >
+                      <BellAlertIcon className="h-4 w-4 text-primary-500" />
+                      <span>{isTestingNotification ? 'Disparando teste...' : 'Testar Notificação no Aparelho'}</span>
+                    </button>
+                    {testNotificationFeedback && (
+                      <p className="mt-1.5 text-[11px] text-center text-primary-600 dark:text-primary-400 font-medium animate-fadeIn">
+                        {testNotificationFeedback}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

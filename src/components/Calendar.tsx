@@ -13,7 +13,7 @@ import { useReviewStore } from '@/store/reviewStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
-import { Topic, Review } from '@/types';
+import { Topic, Review, Subject } from '@/types';
 import { useRegisterModal } from '@/hooks/useRegisterModal';
 import useSwipe from '@/hooks/useSwipe';
 
@@ -491,6 +491,55 @@ export default function Calendar({ activeTab }: CalendarProps) {
     return plannedItems;
   };
 
+  const getDayItems = (day: Date) => {
+    const dateStr = format(day, 'yyyy-MM-dd');
+    const dayPlannedList = getPlannedItemsForDay(day);
+    const dayReviewsList = getReviewsForDay(day);
+    
+    const items: {
+      id: string;
+      subject: Subject;
+      label: string;
+      isCompleted: boolean;
+      type: 'study' | 'review';
+    }[] = [];
+
+    // 1. Estudos planejados
+    dayPlannedList.forEach(item => {
+      const subject = subjects.find(s => s.id === item.subjectId);
+      if (!subject) return;
+      const isCompleted = isItemCompletedForDate(item.id, dateStr);
+      const linkedTopic = topics.find(t => t.linkedScheduleItemId === item.id);
+      const itemTopic = item.topicId ? topics.find(t => t.id === item.topicId) : null;
+      const label = linkedTopic?.title || itemTopic?.title || subject.name;
+
+      items.push({
+        id: `plan-${item.id}`,
+        subject,
+        label,
+        isCompleted,
+        type: 'study'
+      });
+    });
+
+    // 2. Revisões agendadas
+    dayReviewsList.forEach(review => {
+      const topic = topics.find(t => t.id === review.topicId);
+      const subject = topic ? subjects.find(s => s.id === topic.subjectId) : null;
+      if (!subject) return;
+
+      items.push({
+        id: `rev-${review.id}`,
+        subject,
+        label: topic?.title || subject.name,
+        isCompleted: review.completed,
+        type: 'review'
+      });
+    });
+
+    return items;
+  };
+
   const updateSelectedDayInfo = (day: Date) => {
     setDayTopics(getTopicsForDay(day));
     setDayReviews(getReviewsForDay(day));
@@ -555,11 +604,7 @@ export default function Calendar({ activeTab }: CalendarProps) {
             const isSelected = isSameDay(day, selectedDate);
             const isToday = isSameDay(day, new Date());
             const isCurrentMonth = isSameMonth(day, currentMonth);
-
-            const dayTopicsList = getTopicsForDay(day);
-            const dayReviewsList = getReviewsForDay(day);
-            const dayPlannedList = getPlannedItemsForDay(day);
-            const dayCompletedReviewsList = getCompletedReviewsForDay(day);
+            const dayItems = getDayItems(day);
 
             return (
               <div
@@ -568,95 +613,49 @@ export default function Calendar({ activeTab }: CalendarProps) {
                 className={`
                   relative border-b border-r border-gray-150/35 dark:border-gray-700/30 p-1 sm:p-1.5 transition-all cursor-pointer hover:bg-white/80 dark:hover:bg-gray-750/50
                   ${!isCurrentMonth ? 'opacity-30 bg-gray-100/30 dark:bg-gray-900/30' : ''}
-                  ${isSelected ? 'bg-white/90 dark:bg-gray-800/80 ring-2 ring-inset ring-primary-500/50 z-10' : ''}
-                  min-h-[56px] sm:min-h-0
+                  ${isSelected ? 'bg-white/95 dark:bg-gray-800/90 ring-2 ring-inset ring-primary-500/60 z-10 shadow-sm' : ''}
+                  min-h-[58px] sm:min-h-0 flex flex-col justify-between
                 `}
               >
-                <div className="flex flex-col h-full justify-between">
-                  <div className="flex justify-between items-start">
-                    <span className={`
-                      text-xs sm:text-sm font-semibold w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full
-                      ${isToday ? 'bg-primary-600 text-white shadow-md' : 'text-gray-700 dark:text-gray-300'}
-                    `}>
-                      {format(day, 'd')}
+                {/* Header da Célula (Número do Dia) */}
+                <div className="flex justify-between items-start">
+                  <span className={`
+                    text-xs sm:text-sm font-bold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full transition-all tabular-nums
+                    ${isToday ? 'bg-primary-600 text-white shadow-sm font-black' : isSelected ? 'text-primary-600 dark:text-primary-400 font-black' : 'text-gray-700 dark:text-gray-300'}
+                  `}>
+                    {format(day, 'd')}
+                  </span>
+                </div>
+
+                {/* MATRIZ DE ALTA DENSIDADE: Micro-pontos e losangos coloridos (Suporta 10 a 14+ itens/dia) */}
+                <div className="flex flex-wrap gap-1 sm:gap-1.5 items-center content-start mt-1 w-full overflow-hidden min-h-[18px]">
+                  {dayItems.slice(0, 12).map((item, idx) => {
+                    const isStudy = item.type === 'study';
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`transition-all hover:scale-125 flex-shrink-0 ${
+                          isStudy
+                            ? 'w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full'
+                            : 'w-1.5 h-1.5 sm:w-2 sm:h-2 rotate-45 rounded-[1px]'
+                        } ${
+                          item.isCompleted
+                            ? 'opacity-25 ring-1 ring-gray-400/50'
+                            : 'opacity-100 shadow-xs ring-1 ring-black/10 dark:ring-white/20'
+                        }`}
+                        style={{
+                          backgroundColor: item.subject.color,
+                        }}
+                        title={`${isStudy ? 'Estudo' : 'Revisão'}: ${item.subject.name} - ${item.label} (${item.isCompleted ? 'Concluído' : 'Pendente'})`}
+                      />
+                    );
+                  })}
+                  {dayItems.length > 12 && (
+                    <span className="text-[7.5px] font-black text-gray-400 dark:text-gray-500 leading-none pl-0.5">
+                      +{dayItems.length - 12}
                     </span>
-                  </div>
-
-                  {/* Indicators for Desktop/Tablet */}
-                  <div className="hidden sm:flex flex-wrap gap-1 mt-1 content-end origin-bottom-left">
-                    {dayPlannedList.length > 0 && (
-                      <div 
-                        className="px-1 py-0.5 rounded bg-gray-100/80 dark:bg-gray-800/80 text-[10px] font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1 border border-gray-200/50 dark:border-gray-700/30 shadow-sm" 
-                        title={`${dayPlannedList.length} Planejado(s)`}
-                      >
-                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.4)]" />
-                        <span>{dayPlannedList.length}</span>
-                      </div>
-                    )}
-                    {dayTopicsList.length > 0 && (
-                      <div 
-                        className="px-1 py-0.5 rounded bg-green-50 dark:bg-green-950/30 text-[10px] font-bold text-green-700 dark:text-green-400 flex items-center gap-1 border border-green-200/30 dark:border-green-900/20 shadow-sm" 
-                        title={`${dayTopicsList.length} Estudado(s)`}
-                      >
-                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-green-300 via-green-500 to-green-600 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.5)]" />
-                        <span>{dayTopicsList.length}</span>
-                      </div>
-                    )}
-                    {dayReviewsList.length > 0 && (
-                      <div 
-                        className="px-1 py-0.5 rounded bg-yellow-50 dark:bg-yellow-950/30 text-[10px] font-bold text-yellow-700 dark:text-yellow-400 flex items-center gap-1 border border-yellow-200/30 dark:border-yellow-900/20 shadow-sm" 
-                        title={`${dayReviewsList.length} Revisão/Revisões Planejada(s)`}
-                      >
-                        <div 
-                          className="w-1.5 h-1.5 bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.4)]" 
-                          style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }} 
-                        />
-                        <span>{dayReviewsList.length}</span>
-                      </div>
-                    )}
-                    {dayCompletedReviewsList.length > 0 && (
-                      <div 
-                        className="px-1 py-0.5 rounded bg-purple-50 dark:bg-purple-950/30 text-[10px] font-bold text-purple-700 dark:text-purple-400 flex items-center gap-1 border border-purple-200/30 dark:border-purple-900/20 shadow-sm" 
-                        title={`${dayCompletedReviewsList.length} Revisão/Revisões Concluída(s)`}
-                      >
-                        <div 
-                          className="w-1.5 h-1.5 bg-gradient-to-br from-purple-300 via-purple-500 to-purple-600 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.5)]" 
-                          style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }} 
-                        />
-                        <span>{dayCompletedReviewsList.length}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Indicators for Mobile (Compact geometric shapes) */}
-                  <div className="flex sm:hidden items-center justify-start gap-0.5 mt-0.5 w-full overflow-hidden h-3 pb-0.5">
-                    {dayPlannedList.length > 0 && (
-                      <div 
-                        className="w-2 h-2 rounded-full bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.4)] flex-shrink-0" 
-                        title={`${dayPlannedList.length} Planejado(s)`}
-                      />
-                    )}
-                    {dayTopicsList.length > 0 && (
-                      <div 
-                        className="w-2 h-2 rounded-full bg-gradient-to-br from-green-300 via-green-500 to-green-600 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.5)] flex-shrink-0" 
-                        title={`${dayTopicsList.length} Estudado(s)`}
-                      />
-                    )}
-                    {dayReviewsList.length > 0 && (
-                      <div 
-                        className="w-2 h-2 bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.4)] flex-shrink-0" 
-                        style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
-                        title={`${dayReviewsList.length} Revisão(ões) Planejada(s)`}
-                      />
-                    )}
-                    {dayCompletedReviewsList.length > 0 && (
-                      <div 
-                        className="w-2 h-2 bg-gradient-to-br from-purple-300 via-purple-500 to-purple-600 shadow-[inset_0.5px_0.5px_1px_rgba(255,255,255,0.5)] flex-shrink-0" 
-                        style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
-                        title={`${dayCompletedReviewsList.length} Revisão(ões) Concluída(s)`}
-                      />
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             );
@@ -664,33 +663,32 @@ export default function Calendar({ activeTab }: CalendarProps) {
         </div>
 
         {/* Legend */}
-        <div className="px-4 py-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-          <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 text-xs text-gray-600 dark:text-gray-400">
-            <div className="flex items-center gap-1.5">
-              <div className="h-3.5 w-3.5 rounded-full bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4)]" />
-              <span>Estudo Planejado</span>
+        <div className="px-3 sm:px-4 py-2.5 border-t border-gray-150/40 dark:border-gray-800 bg-white/40 dark:bg-gray-900/30">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-[11px] text-gray-500 dark:text-gray-400">
+            {/* Matérias do Usuário */}
+            <div className="flex flex-wrap items-center gap-2 max-w-full overflow-hidden">
+              {subjects.map(sub => (
+                <div key={sub.id} className="flex items-center gap-1 text-[10px] font-semibold text-gray-700 dark:text-gray-300">
+                  <div className="w-2 h-2 rounded-full flex-shrink-0 shadow-xs" style={{ backgroundColor: sub.color }} />
+                  <span className="truncate max-w-[90px] sm:max-w-none">{sub.name}</span>
+                </div>
+              ))}
             </div>
-            <div className="flex items-center gap-1.5">
-              <div className="h-3.5 w-3.5 rounded-full bg-gradient-to-br from-green-300 via-green-500 to-green-600 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.5)]" />
-              <span>Estudo Concluído</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div
-                className="h-3.5 w-3.5 bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4)]"
-                style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
-              />
-              <span>Revisão Planejada</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div
-                className="h-3.5 w-3.5 bg-gradient-to-br from-purple-300 via-purple-500 to-purple-600 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.5)]"
-                style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
-              />
-              <span>Revisão Concluída</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="h-3 w-3 rounded-full bg-gradient-to-r from-blue-500 via-green-500 to-purple-500" />
-              <span>Cores = Matérias</span>
+
+            {/* Guia de símbolos */}
+            <div className="flex items-center gap-3 text-[10px] font-medium text-gray-500 dark:text-gray-400 shrink-0">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-gray-600 dark:bg-gray-300" />
+                <span>Estudo</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rotate-45 rounded-[1px] bg-gray-600 dark:bg-gray-300" />
+                <span>Revisão</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full border border-gray-400 opacity-40" />
+                <span>Concluído</span>
+              </div>
             </div>
           </div>
         </div>

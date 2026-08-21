@@ -59,9 +59,11 @@ import {
   CheckCircleIcon,
   TrophyIcon,
   PlayIcon,
-  CalendarIcon,
-  ClipboardDocumentCheckIcon,
-  ChartPieIcon
+  ChartPieIcon,
+  SparklesIcon,
+  AcademicCapIcon,
+  CalendarDaysIcon,
+  ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
 
 // Registrando os componentes necessários
@@ -597,55 +599,71 @@ export default function Stats() {
             </div>
           </div>
         ) : (
-          <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-md rounded-xl p-3 sm:p-4 shadow-sm border border-gray-150/70 dark:border-gray-800/80 flex flex-col items-center justify-center text-center gap-1.5 min-h-[120px]">
-            <div className="w-16 h-16 relative">
-              <img
-                src="/dashboard-empty.gif"
-                alt="Sem planos"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            {subjects.length === 0 ? (
+          <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-150/60 dark:border-gray-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left transition-all">
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-primary-500/10 via-primary-500/20 to-blue-500/10 dark:from-primary-500/20 dark:to-blue-500/20 flex items-center justify-center flex-shrink-0 border border-primary-500/20 shadow-inner">
+                {subjects.length === 0 ? (
+                  <BookOpenIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                ) : schedules.filter(s => s.isActive).length === 0 ? (
+                  <CalendarDaysIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                ) : todayMinutes > 0 ? (
+                  <CheckCircleIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                ) : (
+                  <SparklesIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                )}
+              </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Comece sua jornada! 📚</h3>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Crie sua primeira matéria para começar</p>
+                {subjects.length === 0 ? (
+                  <>
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Comece sua jornada</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Cadastre suas matérias para organizar seus estudos</p>
+                  </>
+                ) : schedules.filter(s => s.isActive).length === 0 ? (
+                  <>
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Monte seu cronograma</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Planeje sua grade semanal ou ciclos de estudo</p>
+                  </>
+                ) : todayMinutes > 0 ? (
+                  <>
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Excelente foco hoje! ✨</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      Você já acumulou {Math.floor(todayMinutes / 60)}h {todayMinutes % 60}m de dedicação
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Pronto para estudar?</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Inicie uma sessão de foco ou aproveite seu dia livre</p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="shrink-0 w-full sm:w-auto">
+              {subjects.length === 0 ? (
                 <button
                   onClick={() => window.dispatchEvent(new CustomEvent('open-subject-manager'))}
-                  className="mt-2 px-3 py-1.5 bg-primary-600 text-white text-xs font-semibold rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
+                  className="w-full sm:w-auto px-4 py-2 bg-primary-600 hover:bg-primary-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
                 >
                   Criar Matéria
                 </button>
-              </div>
-            ) : schedules.filter(s => s.isActive).length === 0 ? (
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Monte seu cronograma 📅</h3>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Organize seus estudos da semana</p>
+              ) : schedules.filter(s => s.isActive).length === 0 ? (
                 <button
                   onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-schedule'))}
-                  className="mt-2 px-3 py-1.5 bg-primary-600 text-white text-xs font-semibold rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
+                  className="w-full sm:w-auto px-4 py-2 bg-primary-600 hover:bg-primary-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
                 >
                   Criar Cronograma
                 </button>
-              </div>
-            ) : todayMinutes > 0 ? (
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Mandou bem hoje! ✅</h3>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-                  Você já estudou {Math.floor(todayMinutes / 60)}h {todayMinutes % 60}m
-                </p>
-              </div>
-            ) : (
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Dia livre! 🎉</h3>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Descanse ou inicie uma sessão avulsa</p>
+              ) : (
                 <button
                   onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-pomodoro'))}
-                  className="mt-2 px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm"
+                  className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-primary-600 to-blue-600 hover:from-primary-500 hover:to-blue-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm shadow-primary-500/20 transition-all flex items-center justify-center gap-1.5"
                 >
-                  Iniciar Sessão
+                  <PlayIcon className="w-3.5 h-3.5" />
+                  <span>Iniciar Foco</span>
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -654,14 +672,14 @@ export default function Stats() {
       <EditalProgressCard />
 
       {/* 3. Cabeçalho e Filtros */}
-      <div className="flex flex-row justify-between items-center gap-2 mb-2 w-full min-w-0">
+      <div className="flex flex-row justify-between items-center gap-2 mb-1 w-full min-w-0 pt-1">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight shrink-0">Estatísticas</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight shrink-0">Estatísticas</h2>
           {goals.length > 0 && (
             <select
               value={activeGoalId || ''}
               onChange={(e) => setActiveGoal(e.target.value)}
-              className="min-w-0 truncate max-w-[120px] sm:max-w-none flex-1 sm:flex-initial bg-white/80 dark:bg-gray-950/60 backdrop-blur-md border border-gray-150/50 dark:border-gray-800/80 text-sm rounded-xl py-1.5 px-2.5 text-gray-900 dark:text-white focus:ring-1 focus:ring-primary-500/50 font-semibold cursor-pointer shadow-sm transition-all"
+              className="min-w-0 truncate max-w-[120px] sm:max-w-none flex-1 sm:flex-initial bg-white/80 dark:bg-gray-950/60 backdrop-blur-md border border-gray-150/50 dark:border-gray-800/80 text-xs sm:text-sm rounded-xl py-1.5 px-2.5 text-gray-900 dark:text-white focus:ring-1 focus:ring-primary-500/50 font-semibold cursor-pointer shadow-sm transition-all"
             >
               {goals.map(g => (
                 <option key={g.id} value={g.id}>{g.name}</option>
@@ -670,13 +688,13 @@ export default function Stats() {
           )}
         </div>
 
-        <div className="flex bg-gray-100/80 dark:bg-gray-900/60 backdrop-blur-sm p-0.5 rounded-xl border border-gray-150/30 dark:border-gray-800/60 overflow-x-auto max-w-full shrink-0">
+        <div className="flex bg-gray-100/90 dark:bg-gray-900/70 backdrop-blur-sm p-0.5 rounded-xl border border-gray-150/40 dark:border-gray-800/60 overflow-x-auto max-w-full shrink-0">
           {(['today', 'week', 'month', 'annual', 'custom'] as const).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap ${period === p
-                ? 'bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm border border-gray-150/30 dark:border-gray-750/30'
+              className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all whitespace-nowrap active:scale-95 ${period === p
+                ? 'bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm border border-gray-150/40 dark:border-gray-700/50'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
             >
@@ -713,77 +731,83 @@ export default function Stats() {
         </div>
       )}
 
-      {/* 3. Cards de Resumo (KPIs) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2" id="tour-stats-kpi">
-        <div className="group bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-2.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800/50 transition-all duration-300">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-1 bg-gradient-to-br from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 rounded-lg group-hover:scale-105 transition-transform">
-              <ClockIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+      {/* 4. Cards de Resumo (KPIs) - Mobile First */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5" id="tour-stats-kpi">
+        {/* Tempo Estudado */}
+        <div className="group relative overflow-hidden bg-white/85 dark:bg-gray-900/60 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl shadow-sm border border-gray-150/60 dark:border-gray-800/80 hover:shadow-md hover:border-blue-300/60 dark:hover:border-blue-700/50 transition-all duration-300">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <div className="p-1.5 bg-blue-500/10 dark:bg-blue-500/20 rounded-lg text-blue-600 dark:text-blue-400">
+              <ClockIcon className="w-3.5 h-3.5" />
             </div>
-            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Tempo Estudado</span>
+            <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estudo</span>
           </div>
           <div>
-            <span className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">
+            <span className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight tabular-nums">
               {Math.floor(subjectStudyTimeOnly / 60)}h {subjectStudyTimeOnly % 60}m
             </span>
           </div>
         </div>
 
-        <div className="group bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-2.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800/50 transition-all duration-300">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-1 bg-gradient-to-br from-purple-500/10 to-purple-600/10 dark:from-purple-500/20 dark:to-purple-600/20 rounded-lg group-hover:scale-105 transition-transform">
-              <CheckCircleIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+        {/* Tempo de Revisão */}
+        <div className="group relative overflow-hidden bg-white/85 dark:bg-gray-900/60 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl shadow-sm border border-gray-150/60 dark:border-gray-800/80 hover:shadow-md hover:border-purple-300/60 dark:hover:border-purple-700/50 transition-all duration-300">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <div className="p-1.5 bg-purple-500/10 dark:bg-purple-500/20 rounded-lg text-purple-600 dark:text-purple-400">
+              <CheckCircleIcon className="w-3.5 h-3.5" />
             </div>
-            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Tempo de Revisão</span>
+            <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Revisão</span>
           </div>
           <div>
-            <span className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">
+            <span className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight tabular-nums">
               {Math.floor(reviewsStudyTimeOnly / 60)}h {reviewsStudyTimeOnly % 60}m
             </span>
           </div>
         </div>
 
-        <div className="group bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-2.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800/50 transition-all duration-300">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-1 bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 dark:from-emerald-500/20 dark:to-emerald-600/20 rounded-lg group-hover:scale-105 transition-transform">
-              <ClipboardDocumentCheckIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+        {/* Total de Revisões */}
+        <div className="group relative overflow-hidden bg-white/85 dark:bg-gray-900/60 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl shadow-sm border border-gray-150/60 dark:border-gray-800/80 hover:shadow-md hover:border-emerald-300/60 dark:hover:border-emerald-700/50 transition-all duration-300">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <div className="p-1.5 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg text-emerald-600 dark:text-emerald-400">
+              <ClipboardDocumentCheckIcon className="w-3.5 h-3.5" />
             </div>
-            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Revisões</span>
+            <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Concluídas</span>
           </div>
           <div>
-            <span className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">
+            <span className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight tabular-nums">
               {totalReviews}
             </span>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-1 font-medium">cards</span>
           </div>
         </div>
 
-        <div className="group bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-2.5 rounded-xl shadow-sm border border-gray-150/50 dark:border-gray-800/80 hover:shadow-md hover:border-orange-200 dark:hover:border-orange-800/50 transition-all duration-300">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-1 bg-gradient-to-br from-orange-500/10 to-orange-600/10 dark:from-orange-500/20 dark:to-orange-600/20 rounded-lg group-hover:scale-105 transition-transform">
-              <TrophyIcon className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+        {/* Meta Semanal */}
+        <div className="group relative overflow-hidden bg-white/85 dark:bg-gray-900/60 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl shadow-sm border border-gray-150/60 dark:border-gray-800/80 hover:shadow-md hover:border-orange-300/60 dark:hover:border-orange-700/50 transition-all duration-300">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5">
+              <div className="p-1.5 bg-orange-500/10 dark:bg-orange-500/20 rounded-lg text-orange-600 dark:text-orange-400">
+                <TrophyIcon className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Meta</span>
             </div>
-            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Meta Semanal</span>
+            <span className={`text-xs font-black tabular-nums ${weeklyProgress.percentage >= 100 ? 'text-amber-500' : 'text-gray-700 dark:text-gray-300'}`}>
+              {Math.floor(weeklyProgress.percentage)}%
+            </span>
           </div>
           <div>
-            <div className="flex items-end justify-between mb-1">
-              <span className={`text-base font-bold tabular-nums ${weeklyProgress.percentage >= 100 ? 'text-amber-500' : 'text-gray-900 dark:text-white'}`}>
-                {Math.floor(weeklyProgress.percentage)}%
-              </span>
-              <span className="text-[10px] text-gray-400 dark:text-gray-500 tabular-nums">
-                {Math.floor(weeklyProgress.current / 60)}h / {Math.floor(weeklyProgress.target / 60)}h
-              </span>
-            </div>
-            <div className="w-full bg-gray-100/70 dark:bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
+            <div className="w-full bg-gray-100/80 dark:bg-gray-800 rounded-full h-2 overflow-hidden mb-1">
               <div
-                className={`h-1.5 rounded-full animate-fill-bar ${
+                className={`h-2 rounded-full animate-fill-bar ${
                   weeklyProgress.percentage >= 100
                     ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 animate-shimmer'
                     : weeklyProgress.percentage >= 80
-                    ? 'bg-gradient-to-r from-orange-400 to-orange-500 animate-shimmer'
-                    : 'bg-gradient-to-r from-orange-400 to-orange-500'
+                    ? 'bg-gradient-to-r from-orange-400 to-amber-500 animate-shimmer'
+                    : 'bg-gradient-to-r from-primary-500 to-blue-600'
                 }`}
-                style={{ '--fill-width': `${weeklyProgress.percentage}%` } as React.CSSProperties}
+                style={{ '--fill-width': `${Math.min(100, weeklyProgress.percentage)}%` } as React.CSSProperties}
               />
+            </div>
+            <div className="text-[10px] text-gray-400 dark:text-gray-500 tabular-nums flex justify-between font-medium">
+              <span>{Math.floor(weeklyProgress.current / 60)}h {weeklyProgress.current % 60}m</span>
+              <span>{Math.floor(weeklyProgress.target / 60)}h meta</span>
             </div>
           </div>
         </div>

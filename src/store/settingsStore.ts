@@ -40,6 +40,14 @@ interface SettingsState {
   soundEnabled: boolean;
   toggleSoundEnabled: () => void;
   
+  // Notificações no Celular / Navegador
+  notificationsEnabled: boolean;
+  notifyPomodoro: boolean;
+  notifyDailyReviews: boolean;
+  notifyStreak: boolean;
+  setNotificationsEnabled: (enabled: boolean) => void;
+  setNotificationSetting: (key: 'notifyPomodoro' | 'notifyDailyReviews' | 'notifyStreak', value: boolean) => void;
+  
   // Funções de Reset
   resetStats: () => void;
   resetPomodoros: () => void; 
@@ -66,6 +74,26 @@ export const useSettingsStore = create<SettingsState>()(
       reviewIntervals: [1, 7, 30], // Intervalos padrão (1, 7 e 30 dias)
       heatmapThresholds: DEFAULT_HEATMAP_THRESHOLDS, // Limiares padrão
       soundEnabled: true, // Som habilitado por padrão
+      
+      // Notificações
+      notificationsEnabled: false,
+      notifyPomodoro: true,
+      notifyDailyReviews: true,
+      notifyStreak: true,
+      
+      setNotificationsEnabled: (enabled: boolean) => {
+        set({ notificationsEnabled: enabled });
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
+      },
+      
+      setNotificationSetting: (key, value) => {
+        set({ [key]: value });
+        if (typeof window !== 'undefined') {
+          setTimeout(() => firebaseSync.syncToCloud(), 100);
+        }
+      },
       
       // Alterna entre tema claro e escuro
       toggleDarkMode: () => {

@@ -15,9 +15,11 @@ import PWADebug from '@/components/PWADebug';
 import ScheduleManager from '@/components/ScheduleManager';
 import StreakCounter from '@/components/StreakCounter';
 import { usePomodoroStore } from '@/store/pomodoroStore';
-
+import { useReviewStore } from '@/store/reviewStore';
+import { sendNotification } from '@/utils/notifications';
 
 import NextSessionDisplay from '@/components/NextSessionDisplay';
+import DailyGreeting from '@/components/DailyGreeting';
 
 import { TabName } from '@/types';
 
@@ -241,11 +243,37 @@ export default function Home() {
     window.scrollTo(0, 0);
   }, [activeTab]);
 
+  // Verificação diária de revisões pendentes para notificação
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const timer = setTimeout(() => {
+      const { notificationsEnabled, notifyDailyReviews } = useSettingsStore.getState();
+      if (!notificationsEnabled || !notifyDailyReviews) return;
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      const lastNotified = localStorage.getItem('studar_last_daily_review_notify');
+      if (lastNotified === todayStr) return;
+
+      const pendingReviews = useReviewStore.getState().getPendingReviewsByDate(new Date());
+      if (pendingReviews && pendingReviews.length > 0) {
+        sendNotification('📅 Revisões do Dia', {
+          body: `Você tem ${pendingReviews.length} revisão(ões) pendente(s) hoje no Studar.`,
+          tag: 'daily-reviews-reminder',
+        });
+        localStorage.setItem('studar_last_daily_review_notify', todayStr);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div
       className="min-h-screen overflow-x-hidden"
       {...swipeHandlers}
     >
+      <DailyGreeting />
       <div className={`max-w-6xl mx-auto px-3 sm:px-4 pt-2 sm:pt-3.5 transition-all duration-300 ${isZenFocus ? 'pt-0 px-0 max-w-full' : ''}`}>
         <header className={`flex items-center justify-between mb-2.5 sm:mb-3 transition-all duration-300 ${isZenFocus ? 'opacity-0 h-0 pointer-events-none mb-0 overflow-hidden py-0' : ''}`}>
           {/* Left: Logo */}

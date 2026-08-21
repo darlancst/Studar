@@ -80,12 +80,16 @@ export const useVacationStore = create<VacationState>()(
                 const updatedReviews = reviewStore.reviews.map(review => {
                     if (review.completed) return review;
 
-                    const reviewDate = new Date(review.scheduledDate);
+                    const reviewDate = typeof review.scheduledDate === 'string'
+                        ? parseISO(review.scheduledDate)
+                        : new Date(review.scheduledDate);
+
                     if (isAfter(reviewDate, startOfDayFrom) || reviewDate.getTime() === startOfDayFrom.getTime()) {
+                        const newScheduled = addDays(reviewDate, days);
                         return {
                             ...review,
-                            scheduledDate: addDays(reviewDate, days),
-                            date: addDays(new Date(review.date), days),
+                            scheduledDate: newScheduled,
+                            date: newScheduled,
                         };
                     }
                     return review;

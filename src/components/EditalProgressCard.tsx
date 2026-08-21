@@ -21,17 +21,22 @@ export default function EditalProgressCard() {
     return (
       <>
         <div
-          className="group bg-white dark:bg-gray-800/90 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-all duration-300 cursor-pointer"
+          className="group bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl shadow-sm border border-gray-150/60 dark:border-gray-800/80 hover:shadow-md hover:border-teal-300/50 dark:hover:border-teal-700/50 transition-all duration-300 cursor-pointer"
           onClick={() => setShowManager(true)}
         >
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-800/30 rounded-xl group-hover:scale-105 transition-transform">
-              <ListBulletIcon className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-teal-500/10 dark:bg-teal-500/20 rounded-xl text-teal-600 dark:text-teal-400 group-hover:scale-105 transition-transform">
+                <ListBulletIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-gray-900 dark:text-white">Progresso do Edital</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Cadastre o conteúdo programático e acompanhe sua evolução</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Progresso do Edital</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Clique para importar seu edital</p>
-            </div>
+            <span className="text-xs font-bold text-teal-600 dark:text-teal-400 shrink-0 hidden sm:inline-block">
+              Adicionar +
+            </span>
           </div>
         </div>
         {showManager && <EditalManagerModal onClose={() => setShowManager(false)} />}

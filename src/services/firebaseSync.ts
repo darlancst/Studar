@@ -135,6 +135,10 @@ export class FirebaseSync {
         weeklyGoalEndDate: settingsState.weeklyGoalEndDate,
         reviewIntervals: settingsState.reviewIntervals,
         heatmapThresholds: settingsState.heatmapThresholds,
+        notificationsEnabled: settingsState.notificationsEnabled,
+        notifyPomodoro: settingsState.notifyPomodoro,
+        notifyDailyReviews: settingsState.notifyDailyReviews,
+        notifyStreak: settingsState.notifyStreak,
       };
 
       const editalItems = useEditalStore.getState().items;
@@ -225,6 +229,18 @@ export class FirebaseSync {
           }
           if (userData.settings.heatmapThresholds) {
             useSettingsStore.setState({ heatmapThresholds: userData.settings.heatmapThresholds });
+          }
+          if (typeof userData.settings.notificationsEnabled === 'boolean') {
+            useSettingsStore.setState({ notificationsEnabled: userData.settings.notificationsEnabled });
+          }
+          if (typeof userData.settings.notifyPomodoro === 'boolean') {
+            useSettingsStore.setState({ notifyPomodoro: userData.settings.notifyPomodoro });
+          }
+          if (typeof userData.settings.notifyDailyReviews === 'boolean') {
+            useSettingsStore.setState({ notifyDailyReviews: userData.settings.notifyDailyReviews });
+          }
+          if (typeof userData.settings.notifyStreak === 'boolean') {
+            useSettingsStore.setState({ notifyStreak: userData.settings.notifyStreak });
           }
         }
 
