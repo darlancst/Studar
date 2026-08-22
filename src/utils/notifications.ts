@@ -34,11 +34,19 @@ export async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegis
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return null;
 
   try {
-    // 1. Tenta obter o registro existente imediatamente
+    // 1. Tenta obter o registro existente imediatamente se já estiver ativo
     const existing = await navigator.serviceWorker.getRegistration();
+    if (existing && existing.active) return existing;
+
+    // 2. Race com navigator.serviceWorker.ready (com timeout de 1200ms)
+    const readyPromise = navigator.serviceWorker.ready.catch(() => null);
+    const readyTimeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200));
+    const readyReg = await Promise.race([readyPromise, readyTimeout]);
+    if (readyReg) return readyReg;
+
     if (existing) return existing;
 
-    // 2. Se não houver, tenta registrar o sw.js padrão
+    // 3. Se não houver, tenta registrar o sw.js padrão
     try {
       const reg = await navigator.serviceWorker.register('/sw.js');
       if (reg) return reg;
@@ -46,11 +54,7 @@ export async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegis
       // Ignora erro de registro se ambiente não permitir
     }
 
-    // 3. Race seguro com navigator.serviceWorker.ready para não bloquear
-    const readyTimeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 400));
-    const readyPromise = navigator.serviceWorker.ready.catch(() => null);
-    const resolved = await Promise.race([readyPromise, readyTimeout]);
-    return (resolved as ServiceWorkerRegistration | null) || null;
+    return null;
   } catch (err) {
     console.warn('Erro ao obter ServiceWorkerRegistration:', err);
     return null;

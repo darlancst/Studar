@@ -107,8 +107,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       setTestNotificationFeedback('Permissão concedida! Notificação de teste enviada.');
       setTimeout(() => setTestNotificationFeedback(null), 4000);
     } else if (perm === 'denied') {
-      setTestNotificationFeedback('Permissão bloqueada no navegador. Permita o acesso ao lado da barra de endereços.');
-      setTimeout(() => setTestNotificationFeedback(null), 5000);
+      setTestNotificationFeedback('Notificações bloqueadas. No Android, ative em: Configurações > Apps > Chrome > Notificações.');
+      setTimeout(() => setTestNotificationFeedback(null), 6000);
     } else {
       setTestNotificationFeedback('Permissão não concedida.');
       setTimeout(() => setTestNotificationFeedback(null), 4000);
@@ -126,9 +126,9 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     if (success) {
       setTestNotificationFeedback('Notificação de teste disparada com sucesso!');
     } else {
-      setTestNotificationFeedback('Não foi possível disparar. Verifique se o navegador bloqueou.');
+      setTestNotificationFeedback('Não foi possível disparar. Verifique se o app Chrome está com notificações ativadas nas Configurações do Android.');
     }
-    setTimeout(() => setTestNotificationFeedback(null), 4000);
+    setTimeout(() => setTestNotificationFeedback(null), 5000);
   };
 
   // Estado para gerenciar o valor da meta semanal no formulário
@@ -511,7 +511,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <div className="mb-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
                 <div className="text-xs text-amber-800 dark:text-amber-300">
                   {notificationPermission === 'denied' ? (
-                    <span>⚠️ As notificações estão bloqueadas no navegador. Clique no ícone de cadeado/configurações ao lado do endereço web para permitir.</span>
+                    <span>⚠️ <strong>Notificações bloqueadas:</strong> No celular Android, os atalhos dependem do <strong>Google Chrome</strong>. Ative as notificações em: <em>Configurações do Android &gt; Aplicativos &gt; Chrome &gt; Notificações</em>.</span>
                   ) : (
                     <span>💡 Permita o envio de notificações para receber os alertas mesmo com a tela bloqueada ou em outra aba.</span>
                   )}
