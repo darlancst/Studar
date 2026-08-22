@@ -28,13 +28,62 @@ export function getNotificationPermission(): NotificationPermissionStatus {
 }
 
 /**
+ * Obtém a ServiceWorkerRegistration de forma segura sem travar o event loop
+ */
+export async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return null;
+
+  try {
+    // 1. Tenta obter o registro existente imediatamente
+    const existing = await navigator.serviceWorker.getRegistration();
+    if (existing) return existing;
+
+    // 2. Se não houver, tenta registrar o sw.js padrão
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      if (reg) return reg;
+    } catch {
+      // Ignora erro de registro se ambiente não permitir
+    }
+
+    // 3. Race seguro com navigator.serviceWorker.ready para não bloquear
+    const readyTimeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 400));
+    const readyPromise = navigator.serviceWorker.ready.catch(() => null);
+    const resolved = await Promise.race([readyPromise, readyTimeout]);
+    return (resolved as ServiceWorkerRegistration | null) || null;
+  } catch (err) {
+    console.warn('Erro ao obter ServiceWorkerRegistration:', err);
+    return null;
+  }
+}
+
+/**
  * Solicita permissão ao usuário para enviar notificações
  */
 export async function requestNotificationPermission(): Promise<boolean> {
   if (!isNotificationSupported()) return false;
 
   try {
-    const permission = await Notification.requestPermission();
+    let permission: NotificationPermission;
+    const requestResult = Notification.requestPermission();
+    if (requestResult && typeof (requestResult as any).then === 'function') {
+      permission = await requestResult;
+    } else {
+      // Suporte para navegadores mais antigos baseados em callback
+      permission = await new Promise<NotificationPermission>((resolve) => {
+        Notification.requestPermission((p) => resolve(p));
+      });
+    }
+
+    // Se concedido, pré-registra o Service Worker para garantir prontidão
+    if (permission === 'granted' && 'serviceWorker' in navigator) {
+      try {
+        await navigator.serviceWorker.register('/sw.js');
+      } catch {
+        // Ignora falha de registro silenciosa
+      }
+    }
+
     return permission === 'granted';
   } catch (error) {
     console.error('Erro ao solicitar permissão de notificação:', error);
@@ -55,12 +104,14 @@ export async function sendNotification(
   const defaultIcon = '/icons/icon-192x192.png';
   const defaultBadge = '/icons/icon-192x192.png';
   const vibratePattern = options?.vibratePattern || options?.vibrate || [200, 100, 200];
+  const tag = options?.tag || (options?.renotify ? 'studar-notification' : undefined);
 
   const notificationOptions: any = {
     icon: defaultIcon,
     badge: defaultBadge,
     vibrate: vibratePattern,
     silent: false,
+    ...(tag ? { tag } : {}),
     ...options,
   };
 
@@ -73,31 +124,34 @@ export async function sendNotification(
     }
   }
 
-  // 1. Tenta disparar via Service Worker (ideal para PWA no celular / background)
-  if ('serviceWorker' in navigator) {
+  // 1. Tenta disparar via Service Worker (ideal para PWA no celular / background / tela bloqueada)
+  try {
+    const registration = await getServiceWorkerRegistration();
+    if (registration && 'showNotification' in registration) {
+      await registration.showNotification(title, notificationOptions);
+      return true;
+    }
+  } catch (e) {
+    console.warn('Falha ao enviar via Service Worker, tentando fallback da janela:', e);
+  }
+
+  // 2. Fallback para Notification API padrão da janela (Desktop Chrome, Firefox, Edge, Safari)
+  if (typeof Notification !== 'undefined') {
     try {
-      const registration = await navigator.serviceWorker.ready;
-      if (registration && 'showNotification' in registration) {
-        await registration.showNotification(title, notificationOptions);
-        return true;
-      }
+      const notification = new Notification(title, notificationOptions);
+      notification.onclick = () => {
+        if (typeof window !== 'undefined') {
+          window.focus();
+        }
+        notification.close();
+      };
+      return true;
     } catch (e) {
-      console.warn('Falha ao enviar via Service Worker, tentando fallback:', e);
+      console.warn('Erro ao instanciar Notification na janela:', e);
     }
   }
 
-  // 2. Fallback para Notification API padrão do navegador
-  try {
-    const notification = new Notification(title, notificationOptions);
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
-    };
-    return true;
-  } catch (e) {
-    console.error('Erro ao instanciar Notification:', e);
-    return false;
-  }
+  return false;
 }
 
 /**

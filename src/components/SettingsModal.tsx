@@ -89,7 +89,12 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [testNotificationFeedback, setTestNotificationFeedback] = useState<string | null>(null);
 
   useEffect(() => {
-    setNotificationPermission(getNotificationPermission());
+    const updatePerm = () => {
+      setNotificationPermission(getNotificationPermission());
+    };
+    updatePerm();
+    window.addEventListener('focus', updatePerm);
+    return () => window.removeEventListener('focus', updatePerm);
   }, []);
 
   const handleRequestNotificationPermission = async () => {
@@ -101,20 +106,27 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       await sendTestNotification();
       setTestNotificationFeedback('Permissão concedida! Notificação de teste enviada.');
       setTimeout(() => setTestNotificationFeedback(null), 4000);
+    } else if (perm === 'denied') {
+      setTestNotificationFeedback('Permissão bloqueada no navegador. Permita o acesso ao lado da barra de endereços.');
+      setTimeout(() => setTestNotificationFeedback(null), 5000);
     } else {
-      setTestNotificationFeedback('Permissão negada ou bloqueada no navegador.');
+      setTestNotificationFeedback('Permissão não concedida.');
       setTimeout(() => setTestNotificationFeedback(null), 4000);
     }
   };
 
   const handleTestNotification = async () => {
+    if (notificationPermission !== 'granted') {
+      await handleRequestNotificationPermission();
+      return;
+    }
     setIsTestingNotification(true);
     const success = await sendTestNotification();
     setIsTestingNotification(false);
     if (success) {
       setTestNotificationFeedback('Notificação de teste disparada com sucesso!');
     } else {
-      setTestNotificationFeedback('Não foi possível disparar. Verifique as permissões.');
+      setTestNotificationFeedback('Não foi possível disparar. Verifique se o navegador bloqueou.');
     }
     setTimeout(() => setTestNotificationFeedback(null), 4000);
   };
@@ -475,7 +487,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center">
                 <BellAlertIcon className="h-5 w-5 mr-2 text-amber-500" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notificações no Celular</h3>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notificações no Celular e Navegador</h3>
               </div>
               {notificationPermission === 'granted' && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">
@@ -483,10 +495,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   Permitido
                 </span>
               )}
+              {notificationPermission === 'denied' && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+                  Bloqueado
+                </span>
+              )}
             </div>
 
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-              Receba avisos com som e vibração no celular quando o Pomodoro terminar ou quando houver revisões pendentes (funciona com o app instalado ou no navegador).
+              Receba alertas com som e vibração quando seus ciclos de foco terminarem ou quando houver revisões pendentes.
             </p>
 
             {/* Banner de Permissão */}
@@ -494,9 +511,9 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <div className="mb-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
                 <div className="text-xs text-amber-800 dark:text-amber-300">
                   {notificationPermission === 'denied' ? (
-                    <span>⚠️ As notificações estão bloqueadas nas configurações do seu navegador. Permita o acesso para receber os alertas.</span>
+                    <span>⚠️ As notificações estão bloqueadas no navegador. Clique no ícone de cadeado/configurações ao lado do endereço web para permitir.</span>
                   ) : (
-                    <span>💡 Permita o envio de notificações para ser alertado com a tela bloqueada.</span>
+                    <span>💡 Permita o envio de notificações para receber os alertas mesmo com a tela bloqueada ou em outra aba.</span>
                   )}
                 </div>
                 {notificationPermission !== 'denied' && (
@@ -508,6 +525,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     Ativar Notificações
                   </button>
                 )}
+              </div>
+            )}
+
+            {/* Banner de Ajuda para iOS / Não suportado */}
+            {notificationPermission === 'unsupported' && (
+              <div className="mb-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/50 text-xs text-blue-800 dark:text-blue-300">
+                <p className="font-semibold mb-1">📱 Dica para iPhone / iPad (iOS):</p>
+                <p>Para receber notificações no iOS, adicione o Studar à <strong>Tela de Início</strong> (toque no botão <strong>Compartilhar</strong> do Safari ➔ <strong>Adicionar à Tela de Início</strong>) e abra pelo ícone instalado.</p>
               </div>
             )}
 
