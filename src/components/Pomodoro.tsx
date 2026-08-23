@@ -10,7 +10,6 @@ import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } fro
 import { ptBR } from 'date-fns/locale';
 import confetti from 'canvas-confetti';
 import { playAlarmSound } from '@/utils/sounds';
-import { sendPomodoroNotification } from '@/utils/notifications';
 import { useSettingsStore } from '@/store/settingsStore';
 
 export default function Pomodoro() {
@@ -156,17 +155,6 @@ export default function Pomodoro() {
       const pomodoroState = usePomodoroStore.getState();
       if (pomodoroState.settings?.soundEnabled !== false) {
         playAlarmSound(pomodoroState.settings?.selectedSound || 'digital');
-      }
-
-      // Dispara Notificação no Celular / Navegador (se habilitado)
-      const settingsState = useSettingsStore.getState();
-      if (settingsState.notificationsEnabled && settingsState.notifyPomodoro !== false) {
-        const topic = topics.find(t => t.id === currentTopicId);
-        if (currentState === 'focus') {
-          sendPomodoroNotification('focus_completed', topic?.title);
-        } else {
-          sendPomodoroNotification('break_completed');
-        }
       }
 
       if (currentState === 'focus') {

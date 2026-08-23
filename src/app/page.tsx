@@ -17,7 +17,6 @@ import StreakCounter from '@/components/StreakCounter';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useReviewStore } from '@/store/reviewStore';
 import { useStatsStore } from '@/store/statsStore';
-import { sendNotification } from '@/utils/notifications';
 
 import NextSessionDisplay from '@/components/NextSessionDisplay';
 import DailyGreeting from '@/components/DailyGreeting';
@@ -243,54 +242,6 @@ export default function Home() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [activeTab]);
-
-  // Verificação diária de revisões pendentes e proteção de streak para notificação
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const timer = setTimeout(() => {
-      const { notificationsEnabled, notifyDailyReviews, notifyStreak } = useSettingsStore.getState();
-      if (!notificationsEnabled) return;
-
-      const todayStr = new Date().toISOString().split('T')[0];
-
-      // 1. Revisões do Dia
-      if (notifyDailyReviews) {
-        const lastNotified = localStorage.getItem('studar_last_daily_review_notify');
-        if (lastNotified !== todayStr) {
-          const pendingReviews = useReviewStore.getState().getPendingReviewsByDate(new Date());
-          if (pendingReviews && pendingReviews.length > 0) {
-            sendNotification('📅 Revisões do Dia', {
-              body: `Você tem ${pendingReviews.length} revisão(ões) pendente(s) hoje no Studar.`,
-              tag: 'daily-reviews-reminder',
-            });
-            localStorage.setItem('studar_last_daily_review_notify', todayStr);
-          }
-        }
-      }
-
-      // 2. Proteção de Ofensiva (Streak) no fim do dia
-      if (notifyStreak) {
-        const lastStreakNotified = localStorage.getItem('studar_last_streak_notify');
-        if (lastStreakNotified !== todayStr) {
-          const streak = useStatsStore.getState().getStreak();
-          const currentHour = new Date().getHours();
-          const sessions = usePomodoroStore.getState().sessions;
-          const studiedToday = sessions.some(s => s.date && s.date.startsWith(todayStr));
-
-          if (streak > 0 && !studiedToday && currentHour >= 18) {
-            sendNotification('🔥 Mantenha sua Ofensiva!', {
-              body: `Você tem ${streak} dia(s) seguidos de estudo! Conclua uma sessão hoje para manter seu ritmo.`,
-              tag: 'streak-protection-reminder',
-            });
-            localStorage.setItem('studar_last_streak_notify', todayStr);
-          }
-        }
-      }
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div

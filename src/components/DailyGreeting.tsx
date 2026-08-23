@@ -37,15 +37,15 @@ export default function DailyGreeting() {
         localStorage.setItem('studar_last_daily_greeting', todayStr);
       }, 500);
 
-      // Fica visível por 2 segundos e desvanece suavemente
+      // Fica visível por 4 segundos e desvanece suavemente
       const hideTimer = setTimeout(() => {
         setVisible(false);
-      }, 2500);
+      }, 4500);
 
       // Limpa do DOM
       const cleanupTimer = setTimeout(() => {
         setGreeting(null);
-      }, 3000);
+      }, 5000);
 
       return () => {
         clearTimeout(showTimer);

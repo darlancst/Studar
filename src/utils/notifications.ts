@@ -38,21 +38,27 @@ export async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegis
     const existing = await navigator.serviceWorker.getRegistration();
     if (existing && existing.active) return existing;
 
-    // 2. Race com navigator.serviceWorker.ready (com timeout de 1200ms)
-    const readyPromise = navigator.serviceWorker.ready.catch(() => null);
-    const readyTimeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200));
+    // 2. Se não houver registro, tenta registrar o sw.js padrão
+    if (!existing) {
+      try {
+        await navigator.serviceWorker.register('/sw.js');
+      } catch (regErr) {
+        console.warn('Tentativa de registrar /sw.js falhou:', regErr);
+      }
+    }
+
+    // 3. Aguarda navigator.serviceWorker.ready com timeout de 4000ms (essencial em redes móveis)
+    const readyPromise = navigator.serviceWorker.ready;
+    const readyTimeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000));
     const readyReg = await Promise.race([readyPromise, readyTimeout]);
     if (readyReg) return readyReg;
 
+    // 4. Se o timeout estourou mas o existing existe (ex: em processo de ativação)
     if (existing) return existing;
 
-    // 3. Se não houver, tenta registrar o sw.js padrão
-    try {
-      const reg = await navigator.serviceWorker.register('/sw.js');
-      if (reg) return reg;
-    } catch {
-      // Ignora erro de registro se ambiente não permitir
-    }
+    // 5. Última tentativa de obter o registro
+    const finalCheck = await navigator.serviceWorker.getRegistration();
+    if (finalCheck) return finalCheck;
 
     return null;
   } catch (err) {
@@ -102,21 +108,31 @@ export async function sendNotification(
   title: string,
   options?: ExtendedNotificationOptions
 ): Promise<boolean> {
-  if (!isNotificationSupported()) return false;
-  if (Notification.permission !== 'granted') return false;
+  if (!isNotificationSupported()) {
+    console.warn('API de Notificações não é suportada neste navegador.');
+    return false;
+  }
+
+  if (Notification.permission !== 'granted') {
+    console.warn('Permissão de Notificações não está concedida. Status atual:', Notification.permission);
+    return false;
+  }
 
   const defaultIcon = '/icons/icon-192x192.png';
   const defaultBadge = '/icons/icon-192x192.png';
   const vibratePattern = options?.vibratePattern || options?.vibrate || [200, 100, 200];
   const tag = options?.tag || (options?.renotify ? 'studar-notification' : undefined);
 
-  const notificationOptions: any = {
-    icon: defaultIcon,
-    badge: defaultBadge,
+  // Opções sanitizadas estritas para compatibilidade total (W3C / Android Chrome)
+  const notificationOptions: Record<string, any> = {
+    body: options?.body || '',
+    icon: options?.icon || defaultIcon,
+    badge: options?.badge || defaultBadge,
     vibrate: vibratePattern,
-    silent: false,
     ...(tag ? { tag } : {}),
-    ...options,
+    ...(options?.renotify ? { renotify: true } : {}),
+    ...(options?.data ? { data: options.data } : {}),
+    ...(options?.requireInteraction ? { requireInteraction: options.requireInteraction } : {}),
   };
 
   // Se houver suporte à API de vibração nativa no celular, ativa
@@ -128,11 +144,12 @@ export async function sendNotification(
     }
   }
 
-  // 1. Tenta disparar via Service Worker (ideal para PWA no celular / background / tela bloqueada)
+  // 1. Tenta disparar via Service Worker (obrigatório para Android Chrome / PWA)
   try {
     const registration = await getServiceWorkerRegistration();
-    if (registration && 'showNotification' in registration) {
+    if (registration && typeof registration.showNotification === 'function') {
       await registration.showNotification(title, notificationOptions);
+      console.log('Notificação disparada com sucesso via Service Worker');
       return true;
     }
   } catch (e) {
@@ -149,6 +166,7 @@ export async function sendNotification(
         }
         notification.close();
       };
+      console.log('Notificação disparada com sucesso via window.Notification');
       return true;
     } catch (e) {
       console.warn('Erro ao instanciar Notification na janela:', e);
