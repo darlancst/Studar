@@ -2,23 +2,26 @@ import { useMemo } from 'react';
 import { useReviewStore } from '@/store/reviewStore';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useTopicStore } from '@/store/topicStore';
+import { useVacationStore } from '@/store/vacationStore';
 import { startOfDay, isWithinInterval, parseISO, getDay, isSameDay, isValid, format } from 'date-fns';
 
 export function useTodayStats() {
     const { getPendingReviewsByDate } = useReviewStore();
     const { schedules, weeklyItems, blockItems, isItemCompletedForDate } = useScheduleStore();
     const { topics } = useTopicStore();
+    const { isVacationDate, vacationPeriods } = useVacationStore();
 
     const stats = useMemo(() => {
         const today = new Date();
         if (!isValid(today)) return { reviews: 0, planned: 0, completed: 0, remaining: 0 };
+        const isVacationToday = isVacationDate(today);
         const todayStr = format(today, 'yyyy-MM-dd');
 
         // 1. Pending Reviews
         const pendingReviews = getPendingReviewsByDate ? getPendingReviewsByDate(today) : [];
 
         // 2. Planned Items (Schedule + Standalone)
-        const activeSchedules = schedules ? schedules.filter(s => s.isActive) : [];
+        const activeSchedules = (schedules && !isVacationToday) ? schedules.filter(s => s.isActive) : [];
         let plannedCount = 0;
         let completedCount = 0;
 
@@ -86,7 +89,7 @@ export function useTodayStats() {
             completed: completedCount,
             remaining: Math.max(0, plannedCount - completedCount)
         };
-    }, [getPendingReviewsByDate, schedules, weeklyItems, blockItems, isItemCompletedForDate, topics]);
+    }, [getPendingReviewsByDate, schedules, weeklyItems, blockItems, isItemCompletedForDate, topics, isVacationDate, vacationPeriods]);
 
     return stats;
 }

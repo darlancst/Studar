@@ -13,6 +13,7 @@ import { useReviewStore } from '@/store/reviewStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
+import { useVacationStore } from '@/store/vacationStore';
 import { Topic, Review, Subject } from '@/types';
 import { useRegisterModal } from '@/hooks/useRegisterModal';
 import useSwipe from '@/hooks/useSwipe';
@@ -36,8 +37,11 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
   const { topics: allTopics, addTopic } = useTopicStore();
   const { generateReviewsForTopic } = useReviewStore();
   const { startSession, sessions, deleteSession } = usePomodoroStore();
+  const { isVacationDate } = useVacationStore();
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const isVacation = isVacationDate(date);
 
   // Filtrar sessões de estudo realizadas neste dia específico
   const daySessions = useMemo(() => {
@@ -80,8 +84,13 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
       {/* Header */}
       <div className="p-3 border-b border-gray-150/50 dark:border-gray-800 flex items-center justify-between bg-white/80 dark:bg-gray-900/60 backdrop-blur-md sticky top-0 z-30">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white capitalize tracking-tight">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white capitalize tracking-tight flex items-center gap-2">
             {format(date, "EEEE", { locale: ptBR })}
+            {isVacation && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/50">
+                🌴 Férias
+              </span>
+            )}
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
             {format(date, "d 'de' MMMM", { locale: ptBR })}
@@ -99,6 +108,19 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
       </div>
 
       <div ref={contentRef} className="flex-1 overflow-y-auto p-3 space-y-4">
+        {/* Vacation Notice Banner */}
+        {isVacation && (
+          <div className="p-3 bg-gradient-to-r from-cyan-500/10 via-teal-500/10 to-blue-500/10 border border-cyan-200 dark:border-cyan-800/60 rounded-xl flex items-center gap-3 shadow-xs">
+            <span className="text-2xl">🌴</span>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-cyan-800 dark:text-cyan-300 uppercase tracking-wide">Período de Férias</p>
+              <p className="text-xs text-cyan-700 dark:text-cyan-400 mt-0.5">
+                Descanso programado. As matérias de cronograma estão pausadas neste dia.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Planned Items Section */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
@@ -197,7 +219,9 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
           ) : (
             <div className="bg-gray-50/20 dark:bg-gray-900/10 border border-dashed border-gray-200 dark:border-gray-800/40 p-4 rounded-xl text-center select-none mb-4">
               <CalendarIcon className="h-5 w-5 mx-auto text-gray-300 dark:text-gray-600 mb-1" />
-              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 italic">Nada planejado para este dia.</p>
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 italic">
+                {isVacation ? 'Dia de férias/folga (sem matérias de cronograma).' : 'Nada planejado para este dia.'}
+              </p>
             </div>
           )}
 
@@ -420,6 +444,7 @@ export default function Calendar({ activeTab }: CalendarProps) {
   const { reviews, toggleReviewCompletion } = useReviewStore();
   const { darkMode } = useSettingsStore();
   const { schedules, weeklyItems, blockItems, isItemCompletedForDate, toggleScheduleItemCompletion } = useScheduleStore();
+  const { isVacationDate, vacationPeriods } = useVacationStore();
 
   const swipeHandlers = useSwipe({
     onSwipeLeft: () => setCurrentMonth(addMonths(currentMonth, 1)),
@@ -463,6 +488,9 @@ export default function Calendar({ activeTab }: CalendarProps) {
   });
 
   const getPlannedItemsForDay = (day: Date) => {
+    // Se o dia for de férias, nenhum item de cronograma é planejado
+    if (isVacationDate(day)) return [];
+
     const activeSchedules = schedules.filter(s => s.isActive);
     let plannedItems: any[] = [];
 
@@ -548,7 +576,7 @@ export default function Calendar({ activeTab }: CalendarProps) {
 
   useEffect(() => {
     updateSelectedDayInfo(selectedDate);
-  }, [selectedDate, topics, reviews]); // Added reviews dependency to update when reviews change
+  }, [selectedDate, topics, reviews, vacationPeriods]);
 
   const handleDayClick = (day: Date) => {
     setSelectedDate(day);
@@ -604,6 +632,7 @@ export default function Calendar({ activeTab }: CalendarProps) {
             const isSelected = isSameDay(day, selectedDate);
             const isToday = isSameDay(day, new Date());
             const isCurrentMonth = isSameMonth(day, currentMonth);
+            const isVacation = isVacationDate(day);
             const dayItems = getDayItems(day);
 
             return (
@@ -613,18 +642,27 @@ export default function Calendar({ activeTab }: CalendarProps) {
                 className={`
                   relative border-b border-r border-gray-150/35 dark:border-gray-700/30 p-1 sm:p-1.5 transition-all cursor-pointer hover:bg-white/80 dark:hover:bg-gray-750/50
                   ${!isCurrentMonth ? 'opacity-30 bg-gray-100/30 dark:bg-gray-900/30' : ''}
+                  ${isVacation && !isSelected ? 'bg-cyan-50/20 dark:bg-cyan-950/15' : ''}
                   ${isSelected ? 'bg-white/95 dark:bg-gray-800/90 ring-2 ring-inset ring-primary-500/60 z-10 shadow-sm' : ''}
                   min-h-[58px] sm:min-h-0 flex flex-col justify-between
                 `}
               >
-                {/* Header da Célula (Número do Dia) */}
-                <div className="flex justify-between items-start">
+                {/* Header da Célula (Número do Dia e Badge de Férias) */}
+                <div className="flex justify-between items-start gap-1">
                   <span className={`
                     text-xs sm:text-sm font-bold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full transition-all tabular-nums
                     ${isToday ? 'bg-primary-600 text-white shadow-sm font-black' : isSelected ? 'text-primary-600 dark:text-primary-400 font-black' : 'text-gray-700 dark:text-gray-300'}
                   `}>
                     {format(day, 'd')}
                   </span>
+                  {isVacation && (
+                    <span 
+                      className="text-[8px] sm:text-[9px] font-bold text-cyan-700 dark:text-cyan-300 bg-cyan-100/80 dark:bg-cyan-950/70 border border-cyan-200 dark:border-cyan-800/60 px-1 py-0.5 rounded leading-none flex items-center gap-0.5 select-none"
+                      title="Dia de férias programado"
+                    >
+                      🌴 <span className="hidden sm:inline">Férias</span>
+                    </span>
+                  )}
                 </div>
 
                 {/* MATRIZ DE ALTA DENSIDADE: Micro-pontos e losangos coloridos (Suporta 10 a 14+ itens/dia) */}

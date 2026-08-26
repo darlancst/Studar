@@ -13,6 +13,7 @@ import {
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { usePomodoroStore } from '@/store/pomodoroStore';
+import { useVacationStore } from '@/store/vacationStore';
 
 interface HeatmapProps {
     days?: number; // Default to ~365 or enough to fill the view
@@ -20,6 +21,7 @@ interface HeatmapProps {
 
 export default function Heatmap({ days = 365 }: HeatmapProps) {
     const { sessions } = usePomodoroStore();
+    const { isVacationDate, vacationPeriods } = useVacationStore();
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const data = useMemo(() => {
@@ -32,6 +34,7 @@ export default function Heatmap({ days = 365 }: HeatmapProps) {
         const dayData = allDays.map(day => {
             const daySessions = sessions.filter(s => isSameDay(new Date(s.date), day));
             const totalMinutes = daySessions.reduce((acc, s) => acc + s.duration, 0);
+            const isVacation = isVacationDate(day);
 
             let level = 0;
             if (totalMinutes > 0) level = 1;
@@ -42,16 +45,17 @@ export default function Heatmap({ days = 365 }: HeatmapProps) {
             return {
                 date: day,
                 count: totalMinutes,
-                level
+                level,
+                isVacation
             };
         });
 
         return dayData;
-    }, [sessions, days]);
+    }, [sessions, days, isVacationDate, vacationPeriods]);
 
     const weeks = useMemo(() => {
-        const weeksArray: { date: Date; count: number; level: number }[][] = [];
-        let currentWeek: { date: Date; count: number; level: number }[] = [];
+        const weeksArray: { date: Date; count: number; level: number; isVacation: boolean }[][] = [];
+        let currentWeek: { date: Date; count: number; level: number; isVacation: boolean }[] = [];
 
         data.forEach((day) => {
             if (getDay(day.date) === 0 && currentWeek.length > 0) {
@@ -72,7 +76,19 @@ export default function Heatmap({ days = 365 }: HeatmapProps) {
         }
     }, [weeks]);
 
-    const getLevelColor = (level: number) => {
+    const getDayColor = (level: number, isVacation: boolean) => {
+        if (isVacation && level === 0) {
+            return 'bg-cyan-100/90 dark:bg-cyan-950/70 border border-cyan-300/60 dark:border-cyan-700/50';
+        }
+        if (isVacation && level > 0) {
+            switch (level) {
+                case 1: return 'bg-green-200 dark:bg-green-900/40 ring-1 ring-cyan-400 dark:ring-cyan-600';
+                case 2: return 'bg-green-300 dark:bg-green-800/60 ring-1 ring-cyan-400 dark:ring-cyan-600';
+                case 3: return 'bg-green-400 dark:bg-green-600 ring-1 ring-cyan-400 dark:ring-cyan-600';
+                case 4: return 'bg-green-500 dark:bg-green-500 ring-1 ring-cyan-400 dark:ring-cyan-600';
+                default: return 'bg-gray-100 dark:bg-gray-700/50';
+            }
+        }
         switch (level) {
             case 0: return 'bg-gray-100 dark:bg-gray-700/50';
             case 1: return 'bg-green-200 dark:bg-green-900/40';
@@ -152,10 +168,10 @@ export default function Heatmap({ days = 365 }: HeatmapProps) {
                                     return (
                                         <div
                                             key={dayIndex}
-                                            className={`w-3 h-3 rounded-sm ${getLevelColor(day.level)} transition-colors relative group`}
+                                            className={`w-3 h-3 rounded-sm ${getDayColor(day.level, day.isVacation)} transition-colors relative group`}
                                         >
                                             <div className={tooltipClass}>
-                                                {format(day.date, "d 'de' MMMM", { locale: ptBR })}: {Math.floor(day.count / 60)}h {day.count % 60}m
+                                                {format(day.date, "d 'de' MMMM", { locale: ptBR })}: {day.isVacation ? '🌴 Férias - ' : ''}{Math.floor(day.count / 60)}h {day.count % 60}m
                                             </div>
                                         </div>
                                     );
@@ -166,13 +182,19 @@ export default function Heatmap({ days = 365 }: HeatmapProps) {
                     <div className="flex items-center justify-end gap-2 mt-2 text-xs text-gray-400">
                         <span>Menos</span>
                         <div className="flex gap-1">
-                            <div className={`w-3 h-3 rounded-sm ${getLevelColor(0)}`}></div>
-                            <div className={`w-3 h-3 rounded-sm ${getLevelColor(1)}`}></div>
-                            <div className={`w-3 h-3 rounded-sm ${getLevelColor(2)}`}></div>
-                            <div className={`w-3 h-3 rounded-sm ${getLevelColor(3)}`}></div>
-                            <div className={`w-3 h-3 rounded-sm ${getLevelColor(4)}`}></div>
+                            <div className="w-3 h-3 rounded-sm bg-gray-100 dark:bg-gray-700/50"></div>
+                            <div className="w-3 h-3 rounded-sm bg-green-200 dark:bg-green-900/40"></div>
+                            <div className="w-3 h-3 rounded-sm bg-green-300 dark:bg-green-800/60"></div>
+                            <div className="w-3 h-3 rounded-sm bg-green-400 dark:bg-green-600"></div>
+                            <div className="w-3 h-3 rounded-sm bg-green-500 dark:bg-green-500"></div>
                         </div>
                         <span>Mais</span>
+
+                        {/* Legenda de Férias */}
+                        <div className="flex items-center gap-1.5 ml-2.5 pl-2.5 border-l border-gray-200 dark:border-gray-700">
+                            <div className="w-3 h-3 rounded-sm bg-cyan-100/90 dark:bg-cyan-950/70 border border-cyan-300/60 dark:border-cyan-700/50"></div>
+                            <span>Férias</span>
+                        </div>
                     </div>
                 </div>
             </div>

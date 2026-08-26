@@ -8,6 +8,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useAuthStore } from '@/store/authStore';
 import { useEditalStore } from '@/store/editalStore';
 import { useGoalStore } from '@/store/goalStore';
+import { useVacationStore } from '@/store/vacationStore';
 import { supabase } from '@/lib/supabaseClient';
 
 export interface UserData {
@@ -25,6 +26,7 @@ export interface UserData {
   weeklyItems?: any[];
   blockItems?: any[];
   completedScheduleItems?: CompletedScheduleItem[];
+  vacationPeriods?: any[];
   lastSync: number;
 }
 
@@ -144,6 +146,7 @@ export class FirebaseSync {
       const editalItems = useEditalStore.getState().items;
       const { goals, activeGoalId } = useGoalStore.getState();
       const { schedules, activeScheduleId, weeklyItems, blockItems, completedScheduleItems } = useScheduleStore.getState();
+      const vacationPeriods = useVacationStore.getState().vacationPeriods;
 
       const userData: UserData = {
         subjects,
@@ -160,6 +163,7 @@ export class FirebaseSync {
         weeklyItems,
         blockItems,
         completedScheduleItems,
+        vacationPeriods,
         lastSync: Date.now(),
       };
 
@@ -211,6 +215,11 @@ export class FirebaseSync {
         }
         if (userData.completedScheduleItems) {
           useScheduleStore.setState({ completedScheduleItems: userData.completedScheduleItems });
+        }
+
+        // Restaurar Férias
+        if (Array.isArray(userData.vacationPeriods)) {
+          useVacationStore.setState({ vacationPeriods: userData.vacationPeriods });
         }
 
         if (userData.settings) {

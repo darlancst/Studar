@@ -3,6 +3,7 @@ import { useTopicStore } from './topicStore';
 import { usePomodoroStore } from './pomodoroStore';
 import { useReviewStore } from './reviewStore';
 import { useSubjectStore } from './subjectStore';
+import { useVacationStore } from './vacationStore';
 import { StudyStats } from '@/types';
 
 interface StatsState {
@@ -105,6 +106,7 @@ export const useStatsStore = create<StatsState>((set, get) => ({
   getStreak: () => {
     const pomodoroStore = usePomodoroStore.getState();
     const sessions = pomodoroStore.sessions;
+    const vacationStore = useVacationStore.getState();
 
     if (sessions.length === 0) return 0;
 
@@ -113,25 +115,52 @@ export const useStatsStore = create<StatsState>((set, get) => ({
       sessions.map(s => s.date.split('T')[0])
     );
 
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    // Encontrar a data inicial de verificação (pode recuar se os dias recentes forem férias)
+    let checkDate = new Date();
+    let safetyLimit = 0;
 
-    // Se não estudou hoje nem ontem, streak é 0
-    if (!uniqueDates.has(today) && !uniqueDates.has(yesterday)) {
-      return 0;
+    // Se hoje ou dias recentes forem de férias e não tiverem estudo, recua até o dia ativo antes das férias
+    while (safetyLimit < 60) {
+      const dateStr = checkDate.toISOString().split('T')[0];
+      if (uniqueDates.has(dateStr)) {
+        break;
+      }
+      if (vacationStore.isVacationDate(checkDate)) {
+        checkDate.setDate(checkDate.getDate() - 1);
+        safetyLimit++;
+      } else {
+        // Não é férias nem estudou hoje: verifica se ontem estudou
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        if (!uniqueDates.has(dateStr) && !uniqueDates.has(yesterday)) {
+          // Se ontem foi férias, continua recuando
+          const yesterdayDate = new Date(Date.now() - 86400000);
+          if (vacationStore.isVacationDate(yesterdayDate)) {
+            checkDate = yesterdayDate;
+            safetyLimit++;
+            continue;
+          }
+          return 0;
+        }
+        break;
+      }
     }
 
     let streak = 0;
-    let currentDate = uniqueDates.has(today) ? new Date() : new Date(Date.now() - 86400000);
+    let currentDate = new Date(checkDate);
+    let loopCount = 0;
 
-    while (true) {
+    while (loopCount < 365) {
       const dateStr = currentDate.toISOString().split('T')[0];
       if (uniqueDates.has(dateStr)) {
         streak++;
         currentDate.setDate(currentDate.getDate() - 1);
+      } else if (vacationStore.isVacationDate(currentDate)) {
+        // Dia de férias mantém o streak sem quebrar
+        currentDate.setDate(currentDate.getDate() - 1);
       } else {
         break;
       }
+      loopCount++;
     }
 
     return streak;

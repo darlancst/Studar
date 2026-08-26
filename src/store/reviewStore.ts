@@ -5,6 +5,7 @@ import { Review } from '@/types';
 import { useSettingsStore } from './settingsStore';
 import { addDays, parseISO, isWithinInterval, startOfDay, getDay } from 'date-fns';
 import { firebaseSync } from '@/services/firebaseSync';
+import { useVacationStore } from './vacationStore';
 
 interface ReviewState {
   reviews: Review[];
@@ -173,31 +174,35 @@ export const useReviewStore = create<ReviewState>()(
           let iterations = 0;
 
           while (iterations < 30) {
+            const isVacation = useVacationStore.getState().isVacationDate(current);
             let plannedCount = 0;
-            activeSchedules.forEach((schedule: any) => {
-              const scheduleStart = parseISO(schedule.startDate);
-              const scheduleEnd = parseISO(schedule.endDate);
 
-              if (!isWithinInterval(startOfDay(current), { start: startOfDay(scheduleStart), end: startOfDay(scheduleEnd) })) {
-                return;
-              }
+            if (!isVacation) {
+              activeSchedules.forEach((schedule: any) => {
+                const scheduleStart = parseISO(schedule.startDate);
+                const scheduleEnd = parseISO(schedule.endDate);
 
-              if (schedule.mode === 'weekly') {
-                const dayOfWeek = getDay(current);
-                const itemsCount = weeklyItems.filter((item: any) => item.scheduleId === schedule.id && item.dayOfWeek === dayOfWeek).length;
-                plannedCount += itemsCount;
-              } else {
-                const itemsCount = blockItems.filter((item: any) => {
-                  if (item.scheduleId !== schedule.id) return false;
-                  const start = parseISO(item.startDate);
-                  const end = parseISO(item.endDate);
-                  const inRange = isWithinInterval(startOfDay(current), { start: startOfDay(start), end: startOfDay(end) });
-                  const isRestDay = item.restDays?.includes(getDay(current));
-                  return inRange && !isRestDay;
-                }).length;
-                plannedCount += itemsCount;
-              }
-            });
+                if (!isWithinInterval(startOfDay(current), { start: startOfDay(scheduleStart), end: startOfDay(scheduleEnd) })) {
+                  return;
+                }
+
+                if (schedule.mode === 'weekly') {
+                  const dayOfWeek = getDay(current);
+                  const itemsCount = weeklyItems.filter((item: any) => item.scheduleId === schedule.id && item.dayOfWeek === dayOfWeek).length;
+                  plannedCount += itemsCount;
+                } else {
+                  const itemsCount = blockItems.filter((item: any) => {
+                    if (item.scheduleId !== schedule.id) return false;
+                    const start = parseISO(item.startDate);
+                    const end = parseISO(item.endDate);
+                    const inRange = isWithinInterval(startOfDay(current), { start: startOfDay(start), end: startOfDay(end) });
+                    const isRestDay = item.restDays?.includes(getDay(current));
+                    return inRange && !isRestDay;
+                  }).length;
+                  plannedCount += itemsCount;
+                }
+              });
+            }
 
             if (plannedCount > 0) {
               break;

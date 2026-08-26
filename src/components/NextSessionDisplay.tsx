@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useSubjectStore } from '@/store/subjectStore';
 import { useTopicStore } from '@/store/topicStore';
+import { useVacationStore } from '@/store/vacationStore';
 import { parseISO, isWithinInterval, startOfDay, getDay, isSameDay, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -9,6 +10,7 @@ export default function NextSessionDisplay() {
     const { schedules, weeklyItems, blockItems, isItemCompletedForDate } = useScheduleStore();
     const { subjects } = useSubjectStore();
     const { topics } = useTopicStore();
+    const { isVacationDate, vacationPeriods } = useVacationStore();
     const [currentTime, setCurrentTime] = useState(new Date());
 
     // Update current time every minute to keep "next" accurate
@@ -25,6 +27,7 @@ export default function NextSessionDisplay() {
 
         // Helper to get items for a specific date
         const getItemsForDate = (date: Date) => {
+            if (isVacationDate(date)) return [];
             let itemsForDate: any[] = [];
             activeSchedules.forEach(schedule => {
                 const scheduleStart = parseISO(schedule.startDate);
@@ -123,7 +126,7 @@ export default function NextSessionDisplay() {
 
         return null;
 
-    }, [schedules, weeklyItems, blockItems, isItemCompletedForDate, subjects, currentTime]);
+    }, [schedules, weeklyItems, blockItems, isItemCompletedForDate, subjects, currentTime, isVacationDate, vacationPeriods]);
 
     if (!nextSession) {
         return null;

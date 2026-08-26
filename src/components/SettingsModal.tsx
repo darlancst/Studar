@@ -628,6 +628,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                         weeklyItems: useScheduleStore.getState().weeklyItems,
                         blockItems: useScheduleStore.getState().blockItems,
                         completedScheduleItems: useScheduleStore.getState().completedScheduleItems,
+                        vacationPeriods: useVacationStore.getState().vacationPeriods,
                         settings: useSettingsStore.getState(),
                         exportDate: new Date().toISOString()
                       };
@@ -669,6 +670,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                             if (data.weeklyItems) useScheduleStore.setState({ weeklyItems: data.weeklyItems });
                             if (data.blockItems) useScheduleStore.setState({ blockItems: data.blockItems });
                             if (data.completedScheduleItems) useScheduleStore.setState({ completedScheduleItems: data.completedScheduleItems });
+                            if (data.vacationPeriods) useVacationStore.setState({ vacationPeriods: data.vacationPeriods });
                             
                             // Forçar sync pra nuvem
                             import('@/services/firebaseSync').then(m => m.firebaseSync.syncToCloud());

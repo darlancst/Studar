@@ -24,6 +24,7 @@ import { useDatesStore } from '@/store/datesStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useSimuladosStore } from '@/store/simuladosStore';
 import { useScheduleStore } from '@/store/scheduleStore';
+import { useVacationStore } from '@/store/vacationStore';
 import {
   format,
   subDays,
@@ -93,6 +94,7 @@ export default function Stats() {
   const { weeklyGoal } = useSettingsStore();
   const { simulados } = useSimuladosStore();
   const { schedules, weeklyItems, blockItems, isItemCompletedForDate } = useScheduleStore();
+  const { isVacationDate } = useVacationStore();
   const isDarkMode = useDarkMode();
 
   const [period, setPeriod] = useState<StatsPeriod>('week');
@@ -123,6 +125,7 @@ export default function Stats() {
   // Calcular Meta de Hoje (Horas Planejadas)
   const getTodayPlannedMinutes = () => {
     const today = new Date();
+    if (isVacationDate(today)) return 0;
     const activeSchedules = schedules.filter(s => s.isActive);
     let totalMinutes = 0;
 
@@ -154,6 +157,7 @@ export default function Stats() {
   // Obter próximo item a estudar
   const getNextStudyItem = () => {
     const today = new Date();
+    if (isVacationDate(today)) return null;
     const activeSchedules = schedules.filter(s => s.isActive);
     let plannedItems: any[] = [];
 

@@ -18,6 +18,12 @@ export interface VacationPeriod {
 interface VacationState {
     vacationPeriods: VacationPeriod[];
 
+    // Helper para verificar se uma data é de férias
+    isVacationDate: (date: Date | string) => boolean;
+
+    // Helper para obter o período de férias de uma data
+    getVacationPeriodForDate: (date: Date | string) => VacationPeriod | undefined;
+
     // Adiciona um período de férias e aplica o shift
     addVacation: (startDate: string, endDate: string) => void;
 
@@ -39,6 +45,36 @@ export const useVacationStore = create<VacationState>()(
     persist(
         (set, get) => ({
             vacationPeriods: [],
+
+            isVacationDate: (date) => {
+                const periods = get().vacationPeriods;
+                if (!periods || periods.length === 0) return false;
+
+                const dateStr = typeof date === 'string'
+                    ? (date.includes('T') ? date.split('T')[0] : date)
+                    : format(date, 'yyyy-MM-dd');
+
+                return periods.some(period => {
+                    const startStr = period.startDate.includes('T') ? period.startDate.split('T')[0] : period.startDate;
+                    const endStr = period.endDate.includes('T') ? period.endDate.split('T')[0] : period.endDate;
+                    return dateStr >= startStr && dateStr <= endStr;
+                });
+            },
+
+            getVacationPeriodForDate: (date) => {
+                const periods = get().vacationPeriods;
+                if (!periods || periods.length === 0) return undefined;
+
+                const dateStr = typeof date === 'string'
+                    ? (date.includes('T') ? date.split('T')[0] : date)
+                    : format(date, 'yyyy-MM-dd');
+
+                return periods.find(period => {
+                    const startStr = period.startDate.includes('T') ? period.startDate.split('T')[0] : period.startDate;
+                    const endStr = period.endDate.includes('T') ? period.endDate.split('T')[0] : period.endDate;
+                    return dateStr >= startStr && dateStr <= endStr;
+                });
+            },
 
             addVacation: (startDate, endDate) => {
                 const start = parseISO(startDate);
@@ -97,16 +133,26 @@ export const useVacationStore = create<VacationState>()(
 
                 useReviewStore.setState({ reviews: updatedReviews });
 
-                // 2. SHIFT BLOCOS DE ESTUDO (com endDate >= startFrom)
+                // 2. SHIFT BLOCOS DE ESTUDO
                 const scheduleStore = useScheduleStore.getState();
 
                 const updatedBlockItems = scheduleStore.blockItems.map(block => {
+                    const blockStart = parseISO(block.startDate);
                     const blockEnd = parseISO(block.endDate);
 
+                    // Se o bloco termina a partir do início das férias
                     if (isAfter(blockEnd, startOfDayFrom) || blockEnd.getTime() === startOfDayFrom.getTime()) {
+                        // Se o bloco começa a partir do início das férias, desloca tudo
+                        if (isAfter(blockStart, startOfDayFrom) || blockStart.getTime() === startOfDayFrom.getTime()) {
+                            return {
+                                ...block,
+                                startDate: format(addDays(blockStart, days), 'yyyy-MM-dd'),
+                                endDate: format(addDays(blockEnd, days), 'yyyy-MM-dd'),
+                            };
+                        }
+                        // Se o bloco já havia começado antes das férias, preserva startDate e estende endDate
                         return {
                             ...block,
-                            startDate: format(addDays(parseISO(block.startDate), days), 'yyyy-MM-dd'),
                             endDate: format(addDays(blockEnd, days), 'yyyy-MM-dd'),
                         };
                     }
@@ -115,9 +161,17 @@ export const useVacationStore = create<VacationState>()(
 
                 // 3. SHIFT CRONOGRAMAS (estende endDate para compensar dias perdidos)
                 const updatedSchedules = scheduleStore.schedules.map(schedule => {
+                    const scheduleStart = parseISO(schedule.startDate);
                     const scheduleEnd = parseISO(schedule.endDate);
 
                     if (isAfter(scheduleEnd, startOfDayFrom) || scheduleEnd.getTime() === startOfDayFrom.getTime()) {
+                        if (isAfter(scheduleStart, startOfDayFrom) || scheduleStart.getTime() === startOfDayFrom.getTime()) {
+                            return {
+                                ...schedule,
+                                startDate: format(addDays(scheduleStart, days), 'yyyy-MM-dd'),
+                                endDate: format(addDays(scheduleEnd, days), 'yyyy-MM-dd'),
+                            };
+                        }
                         return {
                             ...schedule,
                             endDate: format(addDays(scheduleEnd, days), 'yyyy-MM-dd'),

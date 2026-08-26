@@ -5,6 +5,7 @@ import { useTopicStore } from '@/store/topicStore';
 import { usePomodoroStore } from '@/store/pomodoroStore';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useReviewStore } from '@/store/reviewStore';
+import { useVacationStore } from '@/store/vacationStore';
 import { PlayIcon, PauseIcon, ArrowPathIcon, ForwardIcon, CheckCircleIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon, MagnifyingGlassIcon, XMarkIcon, BookmarkIcon } from '@heroicons/react/24/solid';
 import { format, startOfDay, isWithinInterval, parseISO, getDay, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -46,6 +47,7 @@ export default function Pomodoro() {
   const { generateReviewsForTopic, reviews, completeReview } = useReviewStore();
 
   const { schedules, weeklyItems, blockItems, completedScheduleItems, isItemCompletedForDate, toggleScheduleItemCompletion } = useScheduleStore();
+  const { isVacationDate, vacationPeriods } = useVacationStore();
 
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [selectedTopicOverrides, setSelectedTopicOverrides] = useState<Record<string, string>>({});
@@ -203,34 +205,37 @@ export default function Pomodoro() {
   // Obter itens planejados para hoje (Memoized)
   const todayPlannedItems = useMemo(() => {
     const today = new Date();
+    const isVacationToday = isVacationDate(today);
     const activeSchedules = schedules.filter(s => s.isActive);
     let plannedItems: any[] = [];
 
-    // 1. Itens de Cronogramas (Semanal e Blocos)
-    activeSchedules.forEach(schedule => {
-      const scheduleStart = parseISO(schedule.startDate);
-      const scheduleEnd = parseISO(schedule.endDate);
+    // 1. Itens de Cronogramas (Semanal e Blocos) - apenas se hoje NÃO for férias
+    if (!isVacationToday) {
+      activeSchedules.forEach(schedule => {
+        const scheduleStart = parseISO(schedule.startDate);
+        const scheduleEnd = parseISO(schedule.endDate);
 
-      if (!isWithinInterval(startOfDay(today), { start: startOfDay(scheduleStart), end: startOfDay(scheduleEnd) })) {
-        return;
-      }
+        if (!isWithinInterval(startOfDay(today), { start: startOfDay(scheduleStart), end: startOfDay(scheduleEnd) })) {
+          return;
+        }
 
-      if (schedule.mode === 'weekly') {
-        const dayOfWeek = getDay(today);
-        const items = weeklyItems.filter(item => item.scheduleId === schedule.id && item.dayOfWeek === dayOfWeek);
-        plannedItems = [...plannedItems, ...items];
-      } else {
-        const items = blockItems.filter(item => {
-          if (item.scheduleId !== schedule.id) return false;
-          const start = parseISO(item.startDate);
-          const end = parseISO(item.endDate);
-          const inRange = isWithinInterval(startOfDay(today), { start: startOfDay(start), end: startOfDay(end) });
-          const isRestDay = item.restDays?.includes(getDay(today));
-          return inRange && !isRestDay;
-        });
-        plannedItems = [...plannedItems, ...items];
-      }
-    });
+        if (schedule.mode === 'weekly') {
+          const dayOfWeek = getDay(today);
+          const items = weeklyItems.filter(item => item.scheduleId === schedule.id && item.dayOfWeek === dayOfWeek);
+          plannedItems = [...plannedItems, ...items];
+        } else {
+          const items = blockItems.filter(item => {
+            if (item.scheduleId !== schedule.id) return false;
+            const start = parseISO(item.startDate);
+            const end = parseISO(item.endDate);
+            const inRange = isWithinInterval(startOfDay(today), { start: startOfDay(start), end: startOfDay(end) });
+            const isRestDay = item.restDays?.includes(getDay(today));
+            return inRange && !isRestDay;
+          });
+          plannedItems = [...plannedItems, ...items];
+        }
+      });
+    }
 
     // 2. Tópicos Avulsos (Criados hoje, sem vínculo com cronograma)
     const todaysTopics = topics.filter(t => {
@@ -275,7 +280,7 @@ export default function Pomodoro() {
 
       return 0;
     });
-  }, [schedules, weeklyItems, blockItems, topics, isItemCompletedForDate, completedScheduleItems]);
+  }, [schedules, weeklyItems, blockItems, topics, isItemCompletedForDate, completedScheduleItems, isVacationDate, vacationPeriods]);
 
   // Obter as revisões pendentes estritamente para o dia de hoje (evita acumular atrasadas de outros dias)
   const todayReviews = useMemo(() => {
