@@ -161,7 +161,7 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
                   onChange={(e) => setQuestionStyle(e.target.value as QuestionStyle)}
                   className="w-full text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-2.5 py-2 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary-500 outline-none"
                 >
-                  <option value="multiple_choice">Múltipla Escolha (A-D)</option>
+                  <option value="multiple_choice">Múltipla Escolha (A-E)</option>
                   <option value="cebraspe">Certo / Errado (Cebraspe)</option>
                   <option value="flashcards">Flashcards / Perguntas Rápidas</option>
                 </select>

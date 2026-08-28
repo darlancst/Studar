@@ -119,7 +119,7 @@ export function buildSubjectPrompt({
       break;
     case 'multiple_choice':
     default:
-      styleInstructions = `Elabore ${questionCount} questões inéditas de múltipla escolha com 4 alternativas (A, B, C, D), trazendo situações hipotéticas e gabarito comentado alternativa por alternativa.`;
+      styleInstructions = `Elabore ${questionCount} questões inéditas de múltipla escolha com 5 alternativas (A, B, C, D, E), trazendo situações hipotéticas contextualizadas e gabarito comentado alternativa por alternativa.`;
       break;
   }
 
@@ -132,8 +132,8 @@ Com base nas fontes carregadas neste caderno de **${subjectName}**, analise com 
 ${uniqueLines.join('\n')}
 ---
 
-🎯 ETAPA 1: IDENTIFICAÇÃO E MAPEAMENTO DOS TÓPICOS
-1. Analise os PDFs e trechos acima nas fontes deste caderno e liste de forma clara e estruturada os principais temas, tópicos, regras, prazos e conceitos jurídicos/teóricos abordados exatamente nessas páginas.
+🎯 ETAPA 1: MAPEAMENTO COMPACTO DOS TÓPICOS
+1. Analise os PDFs e trechos acima nas fontes deste caderno e liste de forma DIRETA e COMPACTA (em tópicos concisos / bullet points objetivos, sem textos longos) os principais temas, regras e conceitos abordados exatamente nessas páginas.
 
 🎯 ETAPA 2: ELABORAÇÃO DO BANCO DE QUESTÕES
 2. ${styleInstructions}
