@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { XMarkIcon, BookOpenIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, BookOpenIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useSettingsStore } from '@/store/settingsStore';
 import TabBar from '@/components/TabBar';
 import Stats from '@/components/Stats';
@@ -9,6 +9,7 @@ import Calendar from '@/components/Calendar';
 import Pomodoro from '@/components/Pomodoro';
 import SubjectTopicManager from '@/components/SubjectTopicManager';
 import SettingsModal from '@/components/SettingsModal';
+import NotebookLMPromptModal from '@/components/NotebookLMPromptModal';
 import SimuladosPage from '@/app/simulados/page';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import PWADebug from '@/components/PWADebug';
@@ -30,14 +31,24 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabName>('stats');
   const [showSubjectManager, setShowSubjectManager] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showNotebookLMPrompt, setShowNotebookLMPrompt] = useState(false);
   const [showExitToast, setShowExitToast] = useState(false);
   const isDarkMode = useSettingsStore((state) => state.darkMode);
   const zenMode = usePomodoroStore((state) => state.zenMode);
   const isZenFocus = activeTab === 'pomodoro' && zenMode;
 
+  const isWeekend = typeof window !== 'undefined' && [0, 6].includes(new Date().getDay());
+
   // Register main modals with back button handler
   useRegisterModal(showSubjectManager, () => setShowSubjectManager(false));
   useRegisterModal(showSettings, () => setShowSettings(false));
+  useRegisterModal(showNotebookLMPrompt, () => setShowNotebookLMPrompt(false));
+
+  useEffect(() => {
+    const handleOpenPrompt = () => setShowNotebookLMPrompt(true);
+    window.addEventListener('open-notebooklm-prompt', handleOpenPrompt);
+    return () => window.removeEventListener('open-notebooklm-prompt', handleOpenPrompt);
+  }, []);
 
   // Ordem das abas para navegação via swipe
   const tabsOrder: TabName[] = ['stats', 'calendar', 'schedule', 'pomodoro', 'simulados'];
@@ -308,13 +319,29 @@ export default function Home() {
             <div className="pb-20 sm:pb-0">
               <div className="flex flex-row justify-between items-center gap-2 mb-2 w-full min-w-0">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight shrink-0">Agenda</h2>
-                <button
-                  onClick={() => setShowSubjectManager(true)}
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md hover:shadow-primary-600/10 transition-all duration-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5 sm:gap-2 shrink-0"
-                >
-                  <BookOpenIcon className="h-5 w-5" />
-                  <span>Matérias</span>
-                </button>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <button
+                    onClick={() => setShowNotebookLMPrompt(true)}
+                    className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-primary-600 hover:from-indigo-700 hover:to-primary-700 text-white px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold shadow-sm hover:shadow-md hover:shadow-purple-600/20 transition-all duration-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+                    title="Gerar Prompt para Gemini / NotebookLM"
+                  >
+                    <SparklesIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span>Prompt IA</span>
+                    {isWeekend && (
+                      <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-pink-500"></span>
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setShowSubjectManager(true)}
+                    className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-sm hover:shadow-md hover:shadow-primary-600/10 transition-all duration-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer"
+                  >
+                    <BookOpenIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span>Matérias</span>
+                  </button>
+                </div>
               </div>
               <Calendar activeTab={activeTab} />
             </div>
@@ -334,6 +361,11 @@ export default function Home() {
         {showSettings && (
           <SettingsModal onClose={() => setShowSettings(false)} />
         )}
+
+        <NotebookLMPromptModal 
+          isOpen={showNotebookLMPrompt} 
+          onClose={() => setShowNotebookLMPrompt(false)} 
+        />
 
         <PWAInstallPrompt />
         <PWADebug />

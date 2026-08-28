@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfDay, startOfWeek, endOfWeek, isWithinInterval, parseISO, getDay, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon, XMarkIcon, PlusIcon, CalendarIcon, ClockIcon, PlayIcon, ArrowPathIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon, XMarkIcon, PlusIcon, CalendarIcon, ClockIcon, PlayIcon, ArrowPathIcon, TrashIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 
 import { useSubjectStore } from '@/store/subjectStore';
@@ -355,10 +355,21 @@ function AgendaPanel({ date, topics, reviews, plannedItems, onCompleteReview, on
         {/* Reviews Section */}
         {reviews.length > 0 && (
           <section className="border-t border-gray-150/40 dark:border-gray-800 pt-4 space-y-3">
-            <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-2">
-              <ArrowPathIcon className="h-4 w-4 text-yellow-500" />
-              Revisões Planejadas
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                <ArrowPathIcon className="h-4 w-4 text-yellow-500" />
+                Revisões Planejadas
+              </h3>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-notebooklm-prompt'))}
+                className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
+                title="Gerar Prompt para NotebookLM / Gemini"
+              >
+                <SparklesIcon className="h-3 w-3" />
+                <span>Prompt IA</span>
+              </button>
+            </div>
             <div className="space-y-2">
               {reviews.map(review => {
                 const topic = allTopics.find(t => t.id === review.topicId);
