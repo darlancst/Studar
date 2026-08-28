@@ -749,20 +749,23 @@ export default function Calendar({ activeTab }: CalendarProps) {
         <div className="px-3 sm:px-4 py-2.5 border-t border-gray-150/40 dark:border-gray-800 bg-white/40 dark:bg-gray-900/30">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-[11px] text-gray-500 dark:text-gray-400">
             {/* Matérias do Dia Selecionado */}
-            <div className="flex flex-wrap items-center gap-2 max-w-full overflow-hidden">
-              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider shrink-0">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-full">
+              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider shrink-0 mr-0.5">
                 {showAllSubjects ? 'Todas as Matérias:' : `Legenda (${format(selectedDate, 'dd/MM')}):`}
               </span>
 
               {displaySubjects.length > 0 ? (
                 displaySubjects.map(sub => (
-                  <div key={sub.id} className="flex items-center gap-1 text-[10px] font-semibold text-gray-700 dark:text-gray-300">
+                  <div 
+                    key={sub.id} 
+                    className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100/70 dark:bg-gray-800/70 border border-gray-200/40 dark:border-gray-700/50 text-[10px] font-semibold text-gray-800 dark:text-gray-200 shadow-2xs"
+                  >
                     <div className="w-2 h-2 rounded-full flex-shrink-0 shadow-xs" style={{ backgroundColor: sub.color }} />
                     <span className="truncate max-w-[100px] sm:max-w-none">{sub.name}</span>
                   </div>
                 ))
               ) : (
-                <span className="text-[10px] text-gray-400 dark:text-gray-500 italic">
+                <span className="text-[10px] text-gray-400 dark:text-gray-500 italic py-0.5">
                   {subjects.length === 0 ? 'Nenhuma matéria cadastrada' : 'Sem matérias para este dia'}
                 </span>
               )}
@@ -771,7 +774,7 @@ export default function Calendar({ activeTab }: CalendarProps) {
                 <button
                   type="button"
                   onClick={() => setShowAllSubjects(!showAllSubjects)}
-                  className="text-[10px] font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline cursor-pointer ml-1 select-none transition-colors shrink-0"
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400 border border-primary-200/60 dark:border-primary-800/60 hover:bg-primary-100 dark:hover:bg-primary-900/40 cursor-pointer select-none transition-all active:scale-95 shrink-0"
                 >
                   {showAllSubjects ? 'Ver apenas do dia' : `Ver todas (${subjects.length})`}
                 </button>
@@ -779,7 +782,7 @@ export default function Calendar({ activeTab }: CalendarProps) {
             </div>
 
             {/* Guia de símbolos */}
-            <div className="flex items-center gap-3 text-[10px] font-medium text-gray-500 dark:text-gray-400 shrink-0">
+            <div className="w-full sm:w-auto flex items-center justify-around sm:justify-end gap-3 pt-2 sm:pt-0 border-t border-gray-150/40 dark:border-gray-800 sm:border-0 text-[10px] font-medium text-gray-500 dark:text-gray-400 shrink-0">
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 rounded-full bg-gray-600 dark:bg-gray-300" />
                 <span>Estudo</span>
