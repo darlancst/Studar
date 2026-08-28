@@ -445,6 +445,9 @@ export default function Calendar({ activeTab }: CalendarProps) {
   const { darkMode } = useSettingsStore();
   const { schedules, weeklyItems, blockItems, isItemCompletedForDate, toggleScheduleItemCompletion } = useScheduleStore();
   const { isVacationDate, vacationPeriods } = useVacationStore();
+  const { sessions } = usePomodoroStore();
+
+  const [showAllSubjects, setShowAllSubjects] = useState(false);
 
   const swipeHandlers = useSwipe({
     onSwipeLeft: () => setCurrentMonth(addMonths(currentMonth, 1)),
@@ -567,6 +570,48 @@ export default function Calendar({ activeTab }: CalendarProps) {
 
     return items;
   };
+
+  // Matérias presentes no dia selecionado (para a legenda dinâmica)
+  const selectedDaySubjects = useMemo(() => {
+    const dayItems = getDayItems(selectedDate);
+    const subjectMap = new Map<string, Subject>();
+
+    // 1. Matérias dos itens do calendário (estudos planejados e revisões do dia)
+    dayItems.forEach(item => {
+      if (item.subject && !subjectMap.has(item.subject.id)) {
+        subjectMap.set(item.subject.id, item.subject);
+      }
+    });
+
+    // 2. Tópicos avulsos criados no dia
+    const topicsToday = getTopicsForDay(selectedDate);
+    topicsToday.forEach(t => {
+      const sub = subjects.find(s => s.id === t.subjectId);
+      if (sub && !subjectMap.has(sub.id)) {
+        subjectMap.set(sub.id, sub);
+      }
+    });
+
+    // 3. Sessões de estudo concluídas no dia
+    sessions.forEach(s => {
+      try {
+        const sessionDate = parseISO(s.date);
+        if (isSameDay(sessionDate, selectedDate)) {
+          const topic = topics.find(t => t.id === s.topicId);
+          const sub = topic ? subjects.find(subj => subj.id === topic.subjectId) : subjects.find(subj => subj.id === s.topicId);
+          if (sub && !subjectMap.has(sub.id)) {
+            subjectMap.set(sub.id, sub);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    });
+
+    return Array.from(subjectMap.values());
+  }, [selectedDate, schedules, weeklyItems, blockItems, reviews, topics, subjects, vacationPeriods, sessions]);
+
+  const displaySubjects = showAllSubjects ? subjects : selectedDaySubjects;
 
   const updateSelectedDayInfo = (day: Date) => {
     setDayTopics(getTopicsForDay(day));
@@ -703,14 +748,34 @@ export default function Calendar({ activeTab }: CalendarProps) {
         {/* Legend */}
         <div className="px-3 sm:px-4 py-2.5 border-t border-gray-150/40 dark:border-gray-800 bg-white/40 dark:bg-gray-900/30">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-[11px] text-gray-500 dark:text-gray-400">
-            {/* Matérias do Usuário */}
+            {/* Matérias do Dia Selecionado */}
             <div className="flex flex-wrap items-center gap-2 max-w-full overflow-hidden">
-              {subjects.map(sub => (
-                <div key={sub.id} className="flex items-center gap-1 text-[10px] font-semibold text-gray-700 dark:text-gray-300">
-                  <div className="w-2 h-2 rounded-full flex-shrink-0 shadow-xs" style={{ backgroundColor: sub.color }} />
-                  <span className="truncate max-w-[90px] sm:max-w-none">{sub.name}</span>
-                </div>
-              ))}
+              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider shrink-0">
+                {showAllSubjects ? 'Todas as Matérias:' : `Legenda (${format(selectedDate, 'dd/MM')}):`}
+              </span>
+
+              {displaySubjects.length > 0 ? (
+                displaySubjects.map(sub => (
+                  <div key={sub.id} className="flex items-center gap-1 text-[10px] font-semibold text-gray-700 dark:text-gray-300">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0 shadow-xs" style={{ backgroundColor: sub.color }} />
+                    <span className="truncate max-w-[100px] sm:max-w-none">{sub.name}</span>
+                  </div>
+                ))
+              ) : (
+                <span className="text-[10px] text-gray-400 dark:text-gray-500 italic">
+                  {subjects.length === 0 ? 'Nenhuma matéria cadastrada' : 'Sem matérias para este dia'}
+                </span>
+              )}
+
+              {subjects.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllSubjects(!showAllSubjects)}
+                  className="text-[10px] font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline cursor-pointer ml-1 select-none transition-colors shrink-0"
+                >
+                  {showAllSubjects ? 'Ver apenas do dia' : `Ver todas (${subjects.length})`}
+                </button>
+              )}
             </div>
 
             {/* Guia de símbolos */}
