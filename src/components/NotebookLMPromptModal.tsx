@@ -86,15 +86,15 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md animate-fade-in overflow-y-auto">
       <div 
         className="relative w-full max-w-4xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-150/70 dark:border-gray-800 flex flex-col max-h-[92vh] overflow-hidden animate-scale-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-gray-150/60 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-primary-500/10 via-purple-500/10 to-blue-500/10 dark:from-primary-950/40 dark:via-purple-950/30 dark:to-blue-950/30">
+        <div className="p-4 sm:p-5 border-b border-gray-150/60 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-primary-500/10 via-purple-500/10 to-blue-500/10 dark:from-primary-950/30 dark:via-purple-950/20 dark:to-blue-950/20">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-primary-500/20">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 dark:from-primary-600 dark:to-indigo-700 flex items-center justify-center text-white shadow-md shadow-primary-500/20 dark:shadow-primary-950/50">
               <SparklesIcon className="w-5 h-5" />
             </div>
             <div>
@@ -108,7 +108,7 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95"
+            className="p-2 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 cursor-pointer"
             title="Fechar"
           >
             <XMarkIcon className="w-6 h-6" />
@@ -119,11 +119,11 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
           
           {/* Seletor de Período & Configurações */}
-          <div className="bg-gray-50/80 dark:bg-gray-850/50 p-3.5 sm:p-4 rounded-2xl border border-gray-150/60 dark:border-gray-800/80 space-y-3.5">
+          <div className="bg-gray-50/90 dark:bg-gray-850 p-3.5 sm:p-4 rounded-2xl border border-gray-200/80 dark:border-gray-800 space-y-3.5 shadow-2xs">
             {/* Período */}
             <div>
               <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                <CalendarDaysIcon className="w-4 h-4 text-primary-500" />
+                <CalendarDaysIcon className="w-4 h-4 text-primary-500 dark:text-primary-400" />
                 Período das Revisões
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
@@ -137,10 +137,10 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
                     key={item.id}
                     type="button"
                     onClick={() => setPeriod(item.id as PromptPeriod)}
-                    className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-200 text-center ${
+                    className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-200 text-center cursor-pointer ${
                       period === item.id
-                        ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/30'
-                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200/60 dark:border-gray-700/60 hover:bg-gray-100 dark:hover:bg-gray-750'
+                        ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/30 dark:shadow-primary-950/60'
+                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200/80 dark:border-gray-700/80 hover:bg-gray-100 dark:hover:bg-gray-750'
                     }`}
                   >
                     {item.label}
@@ -150,7 +150,7 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
             </div>
 
             {/* Ajustes de Questões */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 border-t border-gray-200/40 dark:border-gray-750/50">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-gray-200/60 dark:border-gray-750/70">
               {/* Estilo */}
               <div>
                 <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1.5">
@@ -159,11 +159,11 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
                 <select
                   value={questionStyle}
                   onChange={(e) => setQuestionStyle(e.target.value as QuestionStyle)}
-                  className="w-full text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-2.5 py-2 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary-500 outline-none"
+                  className="w-full text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700 rounded-xl px-2.5 py-2 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 outline-none"
                 >
-                  <option value="multiple_choice">Múltipla Escolha (A-E)</option>
-                  <option value="cebraspe">Certo / Errado (Cebraspe)</option>
-                  <option value="flashcards">Flashcards / Perguntas Rápidas</option>
+                  <option value="multiple_choice" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">Múltipla Escolha (A-E)</option>
+                  <option value="cebraspe" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">Certo / Errado (Cebraspe)</option>
+                  <option value="flashcards" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">Flashcards / Perguntas Rápidas</option>
                 </select>
               </div>
 
@@ -178,10 +178,10 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
                       key={qty}
                       type="button"
                       onClick={() => setQuestionCount(qty)}
-                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all ${
+                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
                         questionCount === qty
-                          ? 'bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 border-primary-300 dark:border-primary-800'
-                          : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-50'
+                          ? 'bg-primary-50 dark:bg-primary-950/80 text-primary-600 dark:text-primary-400 border-primary-300 dark:border-primary-800'
+                          : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200/80 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750'
                       }`}
                     >
                       {qty}
@@ -197,9 +197,9 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
                     type="checkbox"
                     checked={onlyCompleted}
                     onChange={(e) => setOnlyCompleted(e.target.checked)}
-                    className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-700"
+                    className="w-4 h-4 text-primary-600 rounded border-gray-300 dark:border-gray-600 focus:ring-primary-500 dark:bg-gray-800"
                   />
-                  <span>Apenas revisões já concluídas</span>
+                  <span>Apenas revisões concluídas</span>
                 </label>
               </div>
             </div>
@@ -212,10 +212,10 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
               {/* Header com indicador e botão de copiar todos */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                  <span className="text-xs font-bold text-gray-800 dark:text-gray-200">
                     Matérias Revisadas ({periodLabel}):
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-950/70 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-950/80 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">
                     {subjectPrompts.length} {subjectPrompts.length === 1 ? 'matéria' : 'matérias'} • {totalReviewsInPeriod} revisões
                   </span>
                 </div>
@@ -224,7 +224,7 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
                   <button
                     type="button"
                     onClick={handleCopyAllPrompts}
-                    className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 flex items-center gap-1.5 self-start sm:self-auto transition-all active:scale-95"
+                    className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-gray-200/80 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 flex items-center gap-1.5 self-start sm:self-auto transition-all active:scale-95 cursor-pointer"
                   >
                     {copiedAll ? (
                       <>
@@ -233,7 +233,7 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
                       </>
                     ) : (
                       <>
-                        <ClipboardDocumentIcon className="w-4 h-4 text-gray-500" />
+                        <ClipboardDocumentIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                         <span>Copiar Todas as Matérias</span>
                       </>
                     )}
@@ -250,10 +250,10 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
                       key={sp.subject.id}
                       type="button"
                       onClick={() => setActiveSubjectId(sp.subject.id)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition-all duration-200 ${
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition-all duration-200 cursor-pointer ${
                         isSelected
-                          ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md scale-[1.02] border-transparent'
-                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                          ? 'bg-gray-900 dark:bg-gray-750 text-white dark:text-white shadow-md border-gray-900 dark:border-primary-500/80 ring-1 ring-black/10 dark:ring-primary-500/30'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200/80 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                     >
                       <div 
@@ -263,8 +263,8 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
                       <span>{sp.subject.name}</span>
                       <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
                         isSelected 
-                          ? 'bg-white/20 dark:bg-black/20 text-white dark:text-gray-900' 
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                          ? 'bg-white/20 dark:bg-white/15 text-white' 
+                          : 'bg-gray-100 dark:bg-gray-700/90 text-gray-500 dark:text-gray-400'
                       }`}>
                         {sp.parsedTopics.length}
                       </span>
@@ -275,9 +275,9 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
 
               {/* Visualização e Cópia do Prompt da Matéria Ativa */}
               {activePromptData && (
-                <div className="bg-gray-50/50 dark:bg-gray-900/40 rounded-2xl border border-gray-200/80 dark:border-gray-800 p-4 space-y-4">
+                <div className="bg-gray-50/70 dark:bg-gray-850 rounded-2xl border border-gray-200/80 dark:border-gray-800 p-4 space-y-4 shadow-2xs">
                   {/* Informações da matéria selecionada */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200/60 dark:border-gray-800">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200/80 dark:border-gray-800">
                     <div className="flex items-center gap-2.5">
                       <div 
                         className="w-3.5 h-3.5 rounded-full shadow-xs" 
@@ -297,7 +297,7 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
                     <button
                       type="button"
                       onClick={() => handleCopyPrompt(activePromptData.subject.id, activePromptData.generatedPrompt)}
-                      className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 shadow-sm active:scale-95 ${
+                      className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 shadow-sm active:scale-95 cursor-pointer ${
                         copiedSubjectId === activePromptData.subject.id
                           ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-600/20'
                           : 'bg-primary-600 hover:bg-primary-700 text-white shadow-primary-600/20'
@@ -326,7 +326,7 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
                       {activePromptData.parsedTopics.map((pt, idx) => (
                         <span 
                           key={idx}
-                          className="text-xs px-2.5 py-1 rounded-lg bg-white dark:bg-gray-800 border border-gray-200/70 dark:border-gray-700/70 text-gray-800 dark:text-gray-200 font-medium"
+                          className="text-xs px-2.5 py-1 rounded-lg bg-white dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700 text-gray-800 dark:text-gray-200 font-medium"
                         >
                           {pt.formattedLine.replace(/^•\s*/, '')}
                         </span>
@@ -344,7 +344,7 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
                         readOnly
                         value={activePromptData.generatedPrompt}
                         rows={10}
-                        className="w-full font-mono text-xs p-3.5 bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-200 rounded-xl border border-gray-200 dark:border-gray-800 focus:outline-none select-all resize-y leading-relaxed"
+                        className="w-full font-mono text-xs p-3.5 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 rounded-xl border border-gray-200/80 dark:border-gray-750 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 select-all resize-y leading-relaxed"
                       />
                     </div>
                   </div>
@@ -354,7 +354,7 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
             </div>
           ) : (
             /* Estado Vazio */
-            <div className="text-center py-12 px-4 bg-gray-50/50 dark:bg-gray-850/30 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
+            <div className="text-center py-12 px-4 bg-gray-50/50 dark:bg-gray-850/50 rounded-2xl border border-dashed border-gray-200/80 dark:border-gray-800">
               <BookOpenIcon className="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-2" />
               <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">
                 Nenhuma revisão encontrada para {periodLabel.toLowerCase()}
@@ -366,9 +366,9 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
           )}
 
           {/* Dica de Uso com NotebookLM */}
-          <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-800/40 rounded-2xl flex items-start gap-3">
+          <div className="p-3.5 bg-blue-50/80 dark:bg-blue-950/25 border border-blue-200/70 dark:border-blue-900/40 rounded-2xl flex items-start gap-3">
             <InformationCircleIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-blue-900 dark:text-blue-200 space-y-1 leading-relaxed">
+            <div className="text-xs text-blue-900 dark:text-blue-300 space-y-1 leading-relaxed">
               <p className="font-bold">Como usar no Google NotebookLM:</p>
               <p>
                 1. Abra o <strong>NotebookLM</strong> no caderno referente à matéria desejada.
@@ -385,11 +385,11 @@ export default function NotebookLMPromptModal({ isOpen, onClose }: NotebookLMPro
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3.5 sm:p-4 border-t border-gray-150/60 dark:border-gray-800 flex justify-end bg-gray-50/50 dark:bg-gray-900/60">
+        <div className="p-3.5 sm:p-4 border-t border-gray-150/60 dark:border-gray-800 flex justify-end bg-gray-50/80 dark:bg-gray-900/90">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-750 transition-all active:scale-95"
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-750 transition-all active:scale-95 cursor-pointer"
           >
             Fechar
           </button>
